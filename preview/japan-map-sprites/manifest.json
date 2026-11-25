@@ -1,0 +1,186 @@
+{
+  "source": {
+    "name": "国土数値情報（行政区域データ）2026年版",
+    "url": "https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html",
+    "intermediate": "https://geo.maderaojen.me/en/",
+    "license": "CC BY 4.0",
+    "changes": "表示範囲を絞り、座標の変換と簡略化を行い、地図の断面素材に加工。"
+  },
+  "elevationSource": {
+    "name": "国土地理院 標高タイル（DEM10B）",
+    "url": "https://maps.gsi.go.jp/development/ichiran.html",
+    "specification": "https://maps.gsi.go.jp/development/demtile.html",
+    "tiles": "https://cyberjapandata.gsi.go.jp/xyz/dem_png/7/{x}/{y}.png",
+    "changes": "地図の座標に合わせて再サンプリングし、250m刻みの水平断面に加工。"
+  },
+  "projection": {
+    "yawDegrees": 20,
+    "pitch": 0.85,
+    "spacing": 2.4,
+    "layers": 20,
+    "baseLand": 4,
+    "elevationStepMetres": 250
+  },
+  "packing": "各PNGの断面は足元から上面へ左から順に並ぶ。sliceSizeごとに切り出し、各地方のworldOriginに重ねる。",
+  "regions": [
+    {
+      "name": "九州・沖縄",
+      "file": "kyushu.png",
+      "prefectureCodes": [
+        47,
+        46,
+        45,
+        44,
+        43,
+        42,
+        41,
+        40
+      ],
+      "worldOrigin": [
+        -721,
+        -7
+      ],
+      "sliceSize": [
+        581,
+        522
+      ]
+    },
+    {
+      "name": "中国",
+      "file": "chugoku.png",
+      "prefectureCodes": [
+        35,
+        32,
+        31,
+        33,
+        34
+      ],
+      "worldOrigin": [
+        -183,
+        -35
+      ],
+      "sliceSize": [
+        197,
+        134
+      ]
+    },
+    {
+      "name": "四国",
+      "file": "shikoku.png",
+      "prefectureCodes": [
+        38,
+        39,
+        37,
+        36
+      ],
+      "worldOrigin": [
+        -145,
+        72
+      ],
+      "sliceSize": [
+        143,
+        95
+      ]
+    },
+    {
+      "name": "近畿",
+      "file": "kinki.png",
+      "prefectureCodes": [
+        28,
+        27,
+        30,
+        29,
+        26,
+        25,
+        24
+      ],
+      "worldOrigin": [
+        -16,
+        22
+      ],
+      "sliceSize": [
+        123,
+        151
+      ]
+    },
+    {
+      "name": "中部",
+      "file": "chubu.png",
+      "prefectureCodes": [
+        23,
+        21,
+        18,
+        17,
+        16,
+        15,
+        20,
+        19,
+        22
+      ],
+      "worldOrigin": [
+        49,
+        -59
+      ],
+      "sliceSize": [
+        261,
+        217
+      ]
+    },
+    {
+      "name": "関東",
+      "file": "kanto.png",
+      "prefectureCodes": [
+        14,
+        13,
+        12,
+        8,
+        11,
+        10,
+        9
+      ],
+      "worldOrigin": [
+        91,
+        20
+      ],
+      "sliceSize": [
+        230,
+        746
+      ]
+    },
+    {
+      "name": "東北",
+      "file": "tohoku.png",
+      "prefectureCodes": [
+        7,
+        4,
+        6,
+        5,
+        3,
+        2
+      ],
+      "worldOrigin": [
+        245,
+        -196
+      ],
+      "sliceSize": [
+        196,
+        263
+      ]
+    },
+    {
+      "name": "北海道",
+      "file": "hokkaido.png",
+      "prefectureCodes": [
+        1
+      ],
+      "worldOrigin": [
+        340,
+        -408
+      ],
+      "sliceSize": [
+        387,
+        238
+      ]
+    }
+  ]
+}

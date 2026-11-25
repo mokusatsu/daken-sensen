@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f6f1">
+<title>キャラクター図鑑 | 打鍵戦線</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #f7f6f1;
+    --sheet: #fffefb;
+    --ink: #25223b;
+    --muted: #655e75;
+    --rule: #e1dce7;
+    --accent: #4a36ba;
+    --accent-soft: #ece6ff;
+    --mono: "Cascadia Mono", "Consolas", monospace;
+    font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  body:has(.detail[open]) { overflow: hidden; }
+  h1, h2, h3, p, figure { margin: 0; }
+  button, input, select { font: inherit; color: inherit; }
+  button, select { cursor: pointer; }
+  a { color: var(--accent); text-underline-offset: .2em; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+  canvas { display: block; image-rendering: pixelated; }
+  .wrap { max-width: 1300px; padding-inline: 36px; margin-inline: auto; }
+  .masthead { border-bottom: 1px solid var(--rule); background: var(--sheet); }
+  .masthead .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 69px; gap: 24px; }
+  .brand { display: inline-flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+  .brand-key {
+    display: grid; place-items: center; width: 34px; height: 33px; border-radius: 9px;
+    background: var(--accent); color: #fff; box-shadow: 0 3px #2a2169; font-size: 17px; font-weight: 800;
+  }
+  .brand-name { font-size: 19px; font-weight: 800; letter-spacing: .06em; }
+  .nav { display: flex; align-items: center; gap: 6px; }
+  .nav a {
+    padding: 9px 13px; border-radius: 9px; text-decoration: none; color: var(--muted);
+    font-size: 13px; font-weight: 700; white-space: nowrap;
+  }
+  .nav a:hover { color: var(--accent); background: #f3effc; }
+  .nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+  main.wrap { min-height: calc(100svh - 150px); }
+  .hero {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, .92fr);
+    min-height: 252px; margin: 31px 0 30px; border: 1px solid #ddd3fb;
+    border-radius: 24px; overflow: hidden; background: #f1ecff;
+  }
+  .hero-copy { align-self: center; padding: 32px clamp(24px, 4.5vw, 58px); }
+  .hero h1, .subhead h1 { font-size: clamp(30px, 4.12vw, 58px); letter-spacing: -.055em; line-height: 1.13; font-weight: 800; }
+  .hero-copy p { margin-top: 17px; font-size: 14px; line-height: 1.8; color: #51476b; }
+  .hero-facts { display: flex; gap: 18px; margin: 23px 0 0; }
+  .hero-facts div { display: flex; align-items: baseline; gap: 5px; padding-right: 18px; border-right: 1px solid #d1c5ed; }
+  .hero-facts div:last-child { border: 0; padding: 0; }
+  .hero-facts dd { order: -1; margin: 0; color: var(--accent); font: 700 25px/1 var(--mono); }
+  .hero-facts dt { font-size: 12px; font-weight: 700; color: #51476b; }
+  .hero-show {
+    position: relative; min-height: 216px; isolation: isolate; border: 0; padding: 0;
+    background: radial-gradient(ellipse at 50% 46%, #decfff 5%, transparent 67%),
+      radial-gradient(circle, #a594d3 1px, transparent 1.5px) 50% 50% / 19px 19px, #e8ddfd;
+  }
+  .hero-show:focus-visible { outline-offset: -5px; }
+  .hero-show canvas { position: absolute; object-fit: contain; }
+  .hero-side:first-of-type { inset: 17% auto auto 8%; width: 29%; height: 58%; transform: rotate(-7deg); }
+  .hero-side:last-of-type { inset: 16% 7% auto auto; width: 29%; height: 57%; transform: rotate(7deg); }
+  .hero-main { inset: 8% auto auto 31%; width: 37%; height: 76%; z-index: 1; }
+  .hero-label {
+    position: absolute; z-index: 2; right: 14px; bottom: 13px; display: inline-flex; align-items: center; gap: 9px;
+    padding: 7px 11px 7px 13px; border: 1px solid #dbd0f2; border-radius: 9px;
+    color: #362675; background: #fffdfaf5; font-size: 12px; font-weight: 700;
+  }
+  .hero-show:hover .hero-label { color: #fff; background: var(--accent); }
+  .toolbox { padding: 13px; border: 1px solid var(--rule); border-radius: 15px; background: var(--sheet); }
+  .filters { display: grid; grid-template-columns: minmax(205px, 1fr) repeat(3, minmax(145px, .43fr)) auto; align-items: end; gap: 10px; }
+  .filters label, .match-form label { display: grid; gap: 5px; font-size: 11px; font-weight: 700; color: var(--muted); }
+  input[type="search"], select, .plain-button {
+    min-width: 0; min-height: 42px; padding: 0 11px; border: 1px solid #dcd6e4;
+    border-radius: 9px; background: #fffefa; font-size: 13px;
+  }
+  input[type="search"] { padding-left: 34px; width: 100%; }
+  input::placeholder { color: #726b80; opacity: 1; }
+  .searchbox { position: relative; }
+  .searchbox::before {
+    content: ""; display: block; position: absolute; left: 13px; bottom: 17px;
+    width: 9px; height: 9px; border: 1.6px solid #6f647f; border-radius: 50%; pointer-events: none;
+  }
+  .searchbox::after {
+    content: ""; position: absolute; left: 22px; bottom: 14px; width: 5px; height: 1.6px;
+    transform: rotate(45deg); background: #6f647f; pointer-events: none;
+  }
+  .plain-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; }
+  .plain-button:hover { color: var(--accent); border-color: #aa98db; background: #f6f1ff; }
+  .plain-button:disabled { cursor: default; opacity: .45; }
+  .list-caption { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 24px 0 11px; }
+  .list-caption h2 { font-size: 19px; font-weight: 800; }
+  .count { color: var(--muted); font: 600 13px/1.6 var(--mono); }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .card {
+    background: var(--sheet); border: 1px solid var(--rule); padding: 0; text-align: start;
+    min-width: 0; overflow: hidden; border-radius: 15px;
+    transition: border-color .16s, box-shadow .16s, transform .16s;
+  }
+  .card:hover { border-color: #ab9ad4; box-shadow: 0 7px 16px #3c286016; transform: translateY(-2px); }
+  .tile, .turn-stage {
+    position: relative; isolation: isolate; display: block;
+    background: radial-gradient(circle, var(--dot, #b7a9cd) 1px, transparent 1.35px) 50% 50% / 14px 14px,
+      var(--tile, #f0ebfc);
+  }
+  .tile { height: 154px; }
+  .tile canvas { position: absolute; top: 10%; left: 14%; width: 72%; height: 84%; object-fit: contain; }
+  .unit-no, .tile-open {
+    position: absolute; z-index: 1; padding: 4px 6px; color: #49425c;
+    background: #fffefbe8; border-radius: 5px;
+  }
+  .unit-no { top: 10px; left: 10px; font: 700 11px/1.25 var(--mono); }
+  .tile-open { top: 9px; right: 9px; font: 700 16px/1 var(--mono); }
+  .card:hover .tile-open { color: #fff; background: var(--accent); }
+  .card-copy { display: grid; gap: 9px; padding: 12px 13px 13px; }
+  .card-name { line-height: 1.25; font-size: clamp(14px, 1.4vw, 19px); font-weight: 800; overflow-wrap: anywhere; }
+  .card-info { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .type-badge {
+    display: inline-flex; align-items: center; gap: 4px; width: fit-content; white-space: nowrap;
+    padding: 3px 7px; font-size: 11px; line-height: 1.3; border-radius: 5px;
+    color: var(--type-ink); background: var(--type-fill); font-weight: 700;
+  }
+  .type-badge::before { content: ""; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 1px; background: var(--type-ink); }
+  .role-chip { margin-left: auto; color: var(--muted); white-space: nowrap; font-size: 11px; font-weight: 700; }
+  .empty {
+    padding: 48px 18px; text-align: center; color: var(--muted); border: 1px dashed #c8bfd5;
+    background: var(--sheet); border-radius: 14px;
+  }
+  .page-foot { margin: 44px 0 0; padding-block: 19px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
+  .page-foot .wrap { display: flex; justify-content: space-between; gap: 16px; }
+  .subhead { padding: 38px 0 26px; }
+  .subhead h1 { font-size: clamp(30px, 4vw, 45px); }
+  .subhead p, .panel p { margin-top: 12px; color: var(--muted); line-height: 1.72; font-size: 14px; }
+  .panel { border: 1px solid var(--rule); border-radius: 16px; background: var(--sheet); padding: 21px; margin-bottom: 18px; }
+  .panel h2 { font-size: 20px; font-weight: 800; }
+  .panel h3 { font-size: 16px; }
+  .match-form { display: grid; grid-template-columns: 1fr 1fr 1fr minmax(94px, .55fr); align-items: end; gap: 13px; margin-top: 15px; }
+  .match-result {
+    align-self: stretch; display: grid; place-content: center; min-height: 62px; padding: 8px;
+    border-radius: 10px; text-align: center; background: var(--accent-soft); color: #37268c;
+  }
+  .match-result strong { font: 700 22px/1.15 var(--mono); }
+  .match-result span { font-size: 11px; margin-top: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 7px; margin: 13px 0; }
+  .legend span { border-radius: 5px; padding: 4px 7px; font-size: 12px; }
+  .table-scroll { overflow: auto; border: 1px solid #e6e0ea; border-radius: 9px; }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 9px; text-align: start; border-bottom: 1px solid #eae5ee; }
+  thead th { background: #f2eef8; }
+  tbody tr:last-child > * { border-bottom: 0; }
+  .matrix { min-width: 1050px; }
+  .matrix th[scope="row"], .matrix thead th:first-child { position: sticky; left: 0; background: #f5f1fa; box-shadow: 1px 0 #d9d0e5; }
+  .matrix th, .matrix td { text-align: center; padding: 6px 4px; }
+  .matrix th:first-child { min-width: 96px; }
+  .matrix td { border-left: 1px solid #eeeaf1; font: 600 11px/1.3 var(--mono); }
+  .effective { color: #7b2b25; background: #fce4db; }
+  .reduced { color: #1d497e; background: #e0edfb; }
+  .immune { color: #512d79; background: #eae0f7; }
+  .even { color: #665e74; background: #fbf9fd; }
+  .research-table { min-width: 840px; }
+  .research-table td { white-space: nowrap; }
+  .findings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .findings article { padding: 12px; background: #f7f3fe; border-radius: 9px; }
+  .findings p { margin-top: 6px; font-size: 13px; }
+  .role-table { min-width: 875px; }
+  .role-table th, .role-table td { text-align: center; }
+  .role-table th:first-child, .role-table td:last-child { text-align: start; }
+  .role-table td:last-child { width: 29%; }
+  .sources { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0; margin: 10px 0 0; font-size: 13px; }
+  .detail {
+    width: min(880px, calc(100vw - 36px)); max-height: min(90svh, 850px);
+    padding: 0; border: 1px solid #dcd3e8; border-radius: 20px; color: var(--ink); background: var(--sheet);
+    overscroll-behavior: contain; box-shadow: 0 24px 70px #17102f41;
+  }
+  .detail::backdrop { background: #241a3b93; }
+  .detail-header {
+    position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: var(--sheet); padding: 13px 19px; border-bottom: 1px solid var(--rule);
+  }
+  .detail-header p { color: var(--muted); font-size: 12px; font-weight: 700; }
+  .detail-nav { display: flex; align-items: center; gap: 5px; }
+  .icon-button { min-width: 38px; min-height: 36px; padding: 0 7px; font-size: 16px; }
+  .detail-content { display: grid; grid-template-columns: minmax(0, .96fr) minmax(0, 1fr); gap: 24px; padding: 20px; }
+  .turn-stage { overflow: hidden; min-height: 300px; height: clamp(300px, 43vh, 411px); border-radius: 12px; touch-action: pan-y; cursor: grab; }
+  .turn-stage:active { cursor: grabbing; }
+  .turn-stage canvas { position: absolute; inset: 5% 7%; width: 86%; height: 90%; object-fit: contain; pointer-events: none; }
+  .turn-hint { position: absolute; inset: auto 10px 10px auto; font-size: 11px; padding: 3px 6px; border-radius: 4px; color: #514462; background: #fffefaed; pointer-events: none; }
+  .motions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 9px; }
+  .motions button { min-height: 36px; font-size: 12px; }
+  .motions button[aria-pressed="true"] { border-color: #c3b1f1; color: var(--accent); background: var(--accent-soft); }
+  .motion-spec { min-height: 1.4em; margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+  .angle-row { display: grid; grid-template-columns: auto minmax(20px, 1fr) auto; align-items: center; gap: 9px; margin-top: 12px; }
+  .angle-row label { font-size: 12px; font-weight: 700; }
+  .angle-row input { accent-color: var(--accent); width: 100%; }
+  .angle-row output { font: 700 13px/1 var(--mono); width: 42px; text-align: end; }
+  .view-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .view-buttons .plain-button { min-height: 36px; font-size: 12px; }
+  .copy .eyeline { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .copy .role-chip { margin-left: 4px; }
+  .copy h2 { margin: 10px 0 12px; font-size: clamp(25px, 3.1vw, 36px); line-height: 1.2; letter-spacing: -.04em; overflow-wrap: anywhere; }
+  .description { color: #4e485e; font-size: 13px; line-height: 1.7; }
+  .flavor {
+    margin: 12px 0 16px; padding: 12px 13px; border-left: 3px solid #8f7bd8; border-radius: 0 8px 8px 0;
+    background: #f6f0fe; color: #44376a; font-size: 14px; line-height: 1.72;
+  }
+  .copy h3 { font-size: 14px; }
+  .role-summary { margin: 5px 0 10px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+  .meters { display: grid; gap: 4px; margin: 0; }
+  .meters div { display: grid; grid-template-columns: 83px minmax(0, 1fr); align-items: center; gap: 8px; }
+  .meters dt { font-size: 11px; font-weight: 700; }
+  .meters dd { margin: 0; font: 700 12px/1.25 var(--mono); }
+  .meter-value { display: grid; grid-template-columns: minmax(0, 1fr) 20px; align-items: center; gap: 8px; }
+  .meter { display: block; height: 7px; border-radius: 2px; background: #eee8f6; }
+  .meter i { display: block; height: 100%; border-radius: inherit; background: #6950c9; }
+  .defense { margin-top: 16px; color: var(--muted); font-size: 12px; }
+  .defense summary { cursor: pointer; color: var(--ink); font-weight: 700; }
+  .defense dl { display: grid; gap: 5px; margin: 8px 0 0; }
+  .defense dl > div { display: grid; grid-template-columns: 43px 1fr; align-items: baseline; gap: 5px; }
+  .defense dt { font: 700 11px/1.4 var(--mono); }
+  .defense dd { margin: 0; line-height: 1.6; }
+  @media (max-width: 990px) {
+    .wrap { padding-inline: 24px; }
+    .hero-copy { padding-inline: 29px; }
+    .filters { grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(111px, .6fr)) auto; }
+    .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 730px) {
+    .wrap { padding-inline: 17px; }
+    .masthead .wrap { gap: 9px; flex-wrap: wrap; padding-block: 11px 9px; }
+    .brand { gap: 9px; }
+    .brand-key { width: 29px; height: 28px; font-size: 15px; }
+    .brand-name { font-size: 16px; }
+    .nav { gap: 1px; }
+    .nav a { padding: 7px 8px; font-size: 11px; }
+    .hero { grid-template-columns: 1fr; margin: 21px 0 20px; }
+    .hero-copy { padding: 23px 22px 18px; }
+    .hero-copy p { margin-top: 10px; }
+    .hero-facts { margin-top: 13px; }
+    .hero-show { min-height: 178px; }
+    .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .searchbox { grid-column: 1 / -1; }
+    .tile { height: 131px; }
+    .list-caption { margin-top: 19px; }
+    .match-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .findings { grid-template-columns: 1fr; }
+    .detail-content { grid-template-columns: 1fr; gap: 18px; padding: 14px; }
+    .detail { width: calc(100vw - 20px); max-height: 94svh; }
+    .detail-header { padding: 9px 13px; }
+    .turn-stage { min-height: 213px; height: min(35vh, 275px); }
+    .panel { padding: 15px; }
+  }
+  @media (max-width: 530px) {
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .card-copy { padding: 9px 9px 10px; gap: 6px; }
+    .role-chip { margin-left: 0; }
+    .tile { height: 118px; }
+    .tile-open, .unit-no { top: 6px; }
+    .tile-open { right: 6px; }
+    .unit-no { left: 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="#roster"><span class="brand-key" aria-hidden="true">打</span><span class="brand-name">打鍵戦線</span></a>
+    <nav class="nav" aria-label="図鑑のメニュー">
+      <a href="#roster" aria-current="page">キャラクター</a>
+      <a href="#matchups">タイプ相性</a>
+      <a href="#design">能力設計</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <section id="roster" class="page" aria-labelledby="roster-title">
+    <div class="hero">
+      <div class="hero-copy">
+        <h1 id="roster-title">キャラクター図鑑</h1>
+        <p>町じゅうの変わり者が、打鍵の合図で出撃する。<br>全キャラクターを敵味方どちらの陣営でも編成できます。</p>
+        <dl class="hero-facts">
+          <div><dt>キャラ</dt><dd id="unit-total">200</dd></div>
+          <div><dt>タイプ</dt><dd id="type-total">18</dd></div>
+          <div><dt>役割</dt><dd id="role-total">10</dd></div>
+        </dl>
+      </div>
+      <button class="hero-show" id="hero-open" type="button" aria-label="ハンコ番を回転して見る" aria-haspopup="dialog">
+        <canvas class="hero-side" aria-hidden="true"></canvas>
+        <canvas class="hero-main" aria-hidden="true"></canvas>
+        <canvas class="hero-side" aria-hidden="true"></canvas>
+        <span class="hero-label">ハンコ番の回転ビュー <span aria-hidden="true">↗</span></span>
+      </button>
+    </div>
+    <form class="filters toolbox" id="filters">
+      <label class="searchbox">キーワード <input type="search" id="search" placeholder="名前・見た目・フレーバーで検索" autocomplete="off"></label>
+      <label>タイプ <select id="type-filter"><option value="">すべてのタイプ</option></select></label>
+      <label>役割 <select id="role-filter"><option value="">すべての役割</option></select></label>
+      <label>地区 <select id="district-filter"><option value="">すべての地区</option></select></label>
+      <button type="reset" class="plain-button">リセット</button>
+    </form>
+    <div class="list-caption"><h2>キャラクター一覧</h2><p class="count" id="result-count" aria-live="polite"></p></div>
+    <div class="cards" id="cards"></div>
+    <p class="empty" id="empty" hidden>条件に合うキャラクターがいません。</p>
+    <noscript><p class="empty">キャラクターの表示にはJavaScriptが必要です。</p></noscript>
+  </section>
+  <section id="matchups" class="page" aria-labelledby="matchups-title" hidden>
+    <header class="subhead">
+      <h1 id="matchups-title">タイプ相性</h1>
+      <p>1回の攻撃に使うタイプは1つ。防御側が複合タイプの場合は、各タイプへの倍率を掛け合わせます。</p>
+    </header>
+    <section class="panel" aria-labelledby="match-calc-title">
+      <h2 id="match-calc-title">ダメージ倍率を調べる</h2>
+      <form id="match-form" class="match-form">
+        <label>攻撃タイプ <select id="attack-type"></select></label>
+        <label>防御タイプ1 <select id="defense-type"></select></label>
+        <label>防御タイプ2 <select id="defense-second"><option value="">なし</option></select></label>
+        <output id="match-result" class="match-result" aria-live="polite"></output>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="matrix-title">
+      <h2 id="matrix-title">18タイプの相性表</h2>
+      <p>縦が攻撃タイプ、横が防御タイプです。</p>
+      <div class="legend" aria-label="凡例">
+        <span class="effective">×2 ばつぐん</span><span class="even">×1 通常</span><span class="reduced">×0.5 いまひとつ</span><span class="immune">×0 無効</span>
+      </div>
+      <div id="matrix" class="table-scroll" tabindex="0" role="region" aria-label="18タイプの相性表"></div>
+      <p><a href="https://zukan.pokemon.co.jp/typeaisyouhyou/">参照　ポケモンずかん公式タイプ相性表</a></p>
+    </section>
+  </section>
+  <section id="design" class="page" aria-labelledby="design-title" hidden>
+    <header class="subhead">
+      <h1 id="design-title">能力設計</h1>
+      <p>耐久、攻撃、移動、出撃の間隔に差をつけて、前線での使い方を変えます。</p>
+    </header>
+    <section class="panel" aria-labelledby="research-title">
+      <h2 id="research-title">にゃんこ大戦争の基本キャラ比較</h2>
+      <p>基本キャラ10体の第1形態。同じLv50相当・お宝コンプで比較し、出撃費は参照先の表示値を使っています。</p>
+      <div class="table-scroll" id="research-grid" tabindex="0" role="region" aria-label="基本キャラ10体の比較"></div>
+      <div class="findings">
+        <article><h3>壁役は出し直しやすい</h3><p>タンクネコはネコの4倍の体力。攻撃力は4分の1ですが、2秒で再出撃でき、前線を支えます。</p></article>
+        <article><h3>足の速さと届く距離は別</h3><p>ウシネコはネコの3倍の速度で接敵。ネコトカゲは射程400から攻撃でき、壁役の後ろに並べやすくなります。</p></article>
+        <article><h3>範囲攻撃にも得意な距離がある</h3><p>ネコノトリは短めの射程で繰り返し攻撃。巨神ネコは高耐久で近づけますが、再出撃まで18.2秒かかります。</p></article>
+      </div>
+      <ul class="sources">
+        <li><a href="https://nyanko-db.aoicream.com/units">数値の参照　アオイのにゃんこDB</a></li>
+        <li><a href="https://ponosgames.com/information/appli/battlecats/gacha/normal/N064.html">基本キャラの範囲　PONOS公式</a></li>
+      </ul>
+    </section>
+    <section class="panel" aria-labelledby="roles-title">
+      <h2 id="roles-title">打鍵戦線の10役割</h2>
+      <p>各能力は役割ごとの設計値です。1が低く5が高いことを示し、出撃費の5は高額、再出撃の5は短い待ち時間を表します。</p>
+      <div class="table-scroll" id="role-grid" tabindex="0" role="region" aria-label="10役割の能力差"></div>
+    </section>
+    <section class="panel" aria-labelledby="sprite-title">
+      <h2 id="sprite-title">回転スプライトの仕様</h2>
+      <p>キャラクターを水平なピクセルの層に分け、各層を同じ角度で回転させて足元から積み上げます。歩行と攻撃は6fpsで、回転と同時に再生できます。</p>
+      <p>「断面PNG」は選択中のモーションを保存します。各行は左から足元、頭の順に並ぶ断面で、上から順にアニメーションのコマです。ファイル名に断面の幅×奥行き×層数、コマ数とfpsが入ります。</p>
+      <ul class="sources"><li><a href="https://github.com/danielwh2/sprite-stacking">技法の参照　Sprite Stacking</a></li></ul>
+    </section>
+  </section>
+</main>
+<footer class="page-foot"><div class="wrap"><span>打鍵戦線 / キャラクター図鑑</span><a href="#roster">一覧へ戻る</a></div></footer>
+<dialog class="detail" id="detail" aria-labelledby="detail-title">
+  <header class="detail-header">
+    <p id="detail-id"></p>
+    <div class="detail-nav">
+      <button class="plain-button icon-button" id="prev-unit" type="button" aria-label="前のキャラクター">←</button>
+      <button class="plain-button icon-button" id="next-unit" type="button" aria-label="次のキャラクター">→</button>
+      <form method="dialog"><button class="plain-button icon-button" type="submit" aria-label="詳細を閉じる" autofocus>×</button></form>
+    </div>
+  </header>
+  <div class="detail-content">
+    <div>
+      <figure class="turn-stage" id="turn-stage" aria-label="回転プレビュー。左右の矢印キーで回転" tabindex="0">
+        <canvas id="turn-canvas" aria-hidden="true"></canvas>
+        <figcaption class="turn-hint">ドラッグで回転</figcaption>
+      </figure>
+      <div class="motions" id="motions" role="group" aria-label="モーション">
+        <button type="button" class="plain-button" data-motion="idle" aria-pressed="true">静止</button>
+        <button type="button" class="plain-button" data-motion="walk" aria-pressed="false">歩行</button>
+        <button type="button" class="plain-button" data-motion="attack" aria-pressed="false">攻撃</button>
+      </div>
+      <p id="motion-spec" class="motion-spec"></p>
+      <div class="angle-row">
+        <label for="angle">回転角</label><input id="angle" type="range" min="0" max="359" step="1" value="0"><output id="degrees" for="angle">0°</output>
+      </div>
+      <div class="view-buttons">
+        <button type="button" class="plain-button" id="spin" aria-pressed="false">自動回転</button>
+        <button type="button" class="plain-button" id="face-front">正面</button>
+        <button type="button" class="plain-button" id="download-strip">断面PNG</button>
+      </div>
+    </div>
+    <article class="copy">
+      <div id="unit-types" class="eyeline"></div>
+      <h2 id="detail-title"></h2>
+      <p id="unit-look" class="description"></p>
+      <blockquote class="flavor" id="unit-flavor"></blockquote>
+      <h3>能力の目安</h3>
+      <p class="role-summary" id="role-summary"></p>
+      <dl class="meters" id="unit-meters"></dl>
+      <details class="defense"><summary>防御側のタイプ相性</summary><dl id="unit-defense"></dl></details>
+    </article>
+  </div>
+</dialog>
+<script>
+"use strict";
+
+// タイプは表示順に並べ、攻撃側から見た ×2、×0.5、×0 の相手を指定する。
+const types = {
+  N: ["ノーマル", "#64526c", "#ece3ed", "", "RM", "H"],
+  G: ["くさ", "#3d6240", "#e3eed8", "WRD", "GFBVPLM", ""],
+  F: ["ほのお", "#933f30", "#fbe4d5", "GBIM", "WRFL", ""],
+  W: ["みず", "#245b80", "#deeff8", "FDR", "GWL", ""],
+  E: ["でんき", "#745419", "#f9edc9", "WV", "GEL", "D"],
+  B: ["むし", "#566619", "#ebefcf", "GSA", "FVPKHMY", ""],
+  V: ["ひこう", "#514989", "#ebe6ff", "GBK", "ERM", ""],
+  R: ["いわ", "#6d5039", "#ede6d5", "FVBI", "DKM", ""],
+  P: ["どく", "#783a79", "#f3e0f3", "GY", "PRDH", "M"],
+  D: ["じめん", "#754920", "#f4e7d1", "FEMPR", "GB", "V"],
+  I: ["こおり", "#2b6172", "#e0f5f5", "GVDL", "FWIM", ""],
+  K: ["かくとう", "#8b3e33", "#f7e1dc", "NIRAM", "VBPSY", "H"],
+  S: ["エスパー", "#8a3d61", "#f9e1ed", "PK", "SM", "A"],
+  H: ["ゴースト", "#624082", "#ebe0f6", "SH", "A", "N"],
+  L: ["ドラゴン", "#4b3a92", "#e6e1f9", "L", "M", "Y"],
+  A: ["あく", "#574454", "#ebe3e8", "SH", "KAY", ""],
+  M: ["はがね", "#44576a", "#e5ecf1", "RIY", "FWEM", ""],
+  Y: ["フェアリー", "#87466b", "#f7e3ef", "KLA", "FPM", ""],
+};
+
+const metrics = ["体力", "一撃の威力", "射程", "移動速度", "攻撃頻度", "出撃費", "再出撃"];
+const roles = {
+  m: ["量産", [2, 1, 1, 3, 3, 1, 5], "単体", "手早く出して、部隊が前進する時間を稼ぐ。"],
+  w: ["防壁", [5, 1, 1, 1, 2, 2, 4], "単体", "短い射程で前に立ち、後ろの仲間を守る。"],
+  r: ["速攻", [2, 3, 1, 5, 3, 2, 3], "単体", "先に接敵し、空いた前線を素早く押し上げる。"],
+  s: ["連打", [2, 2, 2, 4, 5, 3, 3], "単体", "間隔の短い攻撃を重ね、近くの相手を削る。"],
+  l: ["狙撃", [2, 4, 5, 2, 2, 4, 2], "単体", "壁役の後ろから、遠くの一体を狙う。"],
+  a: ["範囲", [2, 3, 3, 2, 4, 3, 3], "範囲", "中距離から、密集した相手をまとめて攻撃する。"],
+  b: ["重前衛", [5, 4, 1, 2, 2, 4, 1], "範囲", "前線に踏みとどまり、近距離で重い攻撃を返す。"],
+  h: ["大技", [3, 5, 4, 1, 1, 5, 1], "範囲", "長い間隔で遠くまで届く大きな一撃を放つ。"],
+  c: ["妨害", [2, 1, 3, 3, 3, 3, 3], "範囲", "相手の歩みを一時的に遅くし、味方が攻撃する間を作る。"],
+  u: ["中衛", [3, 3, 3, 3, 3, 3, 3], "単体", "前衛に続いて進み、中距離を安定してカバーする。"],
+};
+
+// 名前、タイプ、役割、外見、フレーバー、断面モデル、移動の形（省略時は足踏み）。
+const districts = [
+  ["まちの朝番", [
+    ["ハンコ番","N","m","朱色の縁がついたクリーム色の角胴。金色の取っ手をかぶり、紺の短靴を履く。","どの申請にもとりあえず丸を押す。忙しい日は自分の額で間に合わせる。","k 6 1 3 4 5 3 deep;b 0 0 14 12 9 10 4 iv;b 0 0 22 12 9 3 2 red;t 0 0 24 7 4 6 .95 sun;e 0 0 33 8 6 4 gold;k 13 2 13 3 3 4 apr;f 0 14 4 grin"],
+    ["半券ポコ","N","m","端が桃色の切り取り線になった、薄い入場券。小さな足で立ち、片目をつむる。","切り離されたほうの半券。かつての相方がまだ財布にいると信じている。","k 5 0 2 4 4 2 deep;b 0 0 16 12 4 13 2 iv;b 0 0 25 11 4 4 1 pink;e -11 4 17 2 2 2 void;e 11 4 17 2 2 2 void;l -7 4 9 7 4 9 1.1 gum;f 0 17 4 wink"],
+    ["立て札チョビ","NM","w","オレンジの台座にのった白い立て札。横から見ると斜めの支え棒が二本ある。","通行止めを守る係。自分が休憩に行くので、いちばん最初に抜け道を覚えた。","b 0 0 3 16 10 3 2 sun;a 8 -6 5 8 0 26 2 steel;b 0 3 21 14 4 16 3 iv;b 0 3 32 13 4 4 1 red;l -9 7 12 9 7 12 1.3 slate;f 0 22 5 stern","slide"],
+    ["はき残し坊","NV","r","細長いほうきの柄を背負う、藁色の小坊主。束ねた穂先が右に突き出る。","道の落ち葉を全部集めて、最初に掃いた場所に戻す。本人いわく落ち葉の帰宅。","k 5 2 3 4 4 3 tea;e 0 1 12 10 8 10 iv;f 0 13 4 grin;l -10 -5 6 13 -4 37 2 wood;l 9 -4 30 18 -4 43 4 sun;l 11 -7 32 19 -7 42 2 tan;l 7 -4 29 13 -4 35 2.5 red"],
+    ["口いっぱい郵便箱","M","w","赤い郵便箱に太い金属脚。前面の広い投函口から白い封筒が飛び出している。","速達を大事にしすぎて一晩抱いて寝る。その日の集荷には間に合ったことがない。","k 8 0 3 6 6 3 steel;b 0 0 17 15 10 12 4 red;b 0 8 20 12 3 3 1 ink;f 0 13 6 low;b 5 12 22 6 4 1.5 .7 iv;b 9 0 31 3 3 3 1 sun;b 0 -10 13 7 2 4 1 clay"],
+    ["朝刊ころげ","NV","r","大きな朝刊ロールを斜めに抱える白い早足。巻き口は濃い色だ。","配り切るまで朝刊を読まない。もう誰もいない道で、毎朝ニュースに驚いている。","k 5 2 3 3 5 3 deep;e 0 0 12 9 7 10 iv;f 0 14 4 wow;l -19 -3 16 18 -2 27 4.5 ash;l -19 -3 16 17 -2 27 3.5 iv;e 21 -2 28 2.6 3 3 lil"],
+    ["居残りマグ","NF","u","ベージュのマグに渦巻く泡と片側の取っ手。底から黒っぽい短い足がのぞく。","自分が空になると閉店らしい。底に一口だけ残す仕事を十年続けている。","k 6 1 2 4 4 2 deep;t 0 0 4 20 10 13 .84 iv;r 13 -1 15 6 2.4 y tan;t 0 0 24 2 13 13 .85 tea;e -3 1 26 6 5 2 foam;e 2 -2 27 4 4 2 iv;f 0 16 4 doze"],
+    ["先ばしりスリッパ","N","s","空色のスリッパを二足つないだ横長の体。上の白いバンドから眠そうな顔が出る。","来客があると先に玄関を飛び出す。四軒先の家まで履きに来てもらう。","k 8 0 4 8 12 4 sky;k 8 4 8 7 6 5 iv;b 0 -3 6 8 4 3 2 ash;b 0 5 11 5 5 4 3 foam;f 0 12 3 doze"],
+    ["ゼブラ巡回","ND","u","低い角胴に白黒の帯を三本のせる。黄色い耳と、前へ伸びた短い鼻が目印。","横断歩道を渡るたびに自分の縞を数える。計算が合うまで道路に残る。","k 9 5 3 3 4 3 deep;k 9 -6 3 3 4 3 deep;b 0 0 10 14 9 7 4 iv;b -8 0 12 2 9 7 1 deep;b 0 -1 12 2 9 7 1 deep;b 8 0 12 2 9 7 1 deep;e 0 8 17 8 7 7 iv;k 5 6 22 2 2 5 gold;f 0 18 3 calm"],
+    ["待合カバン長","M","b","留め金で口を閉じた角いトランク。太い足と、頭頂にコの字形の金色の取っ手を持つ。","待合室の椅子をすべて占領中。詰めたものは替えの待合室だと言い張る。","k 9 1 4 6 6 4 deep;b 0 0 20 18 10 14 4 tan;b -12 0 21 2 10 13 1 wood;b 12 0 21 2 10 13 1 wood;r 0 0 34 7 2 y gold;b 0 10 15 5 2 3 1 gold;f 0 24 4 stern"],
+    ["三輪タクポン","ME","s","三つの濃紺タイヤで走る黄色い車体。丸い水色の窓の上に短い行灯がある。","急ぎの客ほど遠回りをサービスする。メーターは自分のおなかで進む。","k 12 5 5 3 5 5 deep;e 0 -8 5 5 4 5 deep;b 0 0 13 14 13 7 4 sun;b 0 -2 20 10 8 6 3 iv;b 0 5 20 9 3 4 2 sky;b 0 -3 27 5 3 2 1 red;k 8 12 12 2 2 2 gold;f 0 15 4 grin","roll"],
+    ["輪ゴムうず","N","c","ラベンダーの太い輪に目がつく。床に接する部分を二つの朱色のつま先が支える。","一本で留まるはずの袋に七周する慎重派。外すとついでに輪唱が始まる。","r 0 0 15 12 3.5 y lil;k 7 2 2 4 4 2 red;b 0 2 24 8 3 3 1 gum;f 0 24 3 calm;l -11 -2 8 -15 -2 14 2 plum","hop"],
+    ["くつひも号","NY","l","紫の紐を巻いた糸巻きの体。先端に白い留め具をつけ、片方だけ長く伸ばす。","結び方を披露するたび自分が蝶結びになる。ほどき方だけは練習していない。","t 0 0 0 4 13 13 .8 wood;t 0 0 4 19 9 9 .92 lil;r 0 0 8 8.8 1.6 z plum;r 0 0 18 8.8 1.7 z gum;t 0 0 22 4 13 13 .8 wood;f 0 17 4 wink;l 7 -3 15 23 0 20 2.3 lil;l 22 0 20 26 1 23 2 iv"],
+    ["台所どら丸","M","a","銅色の大きな円盤を抱えた白い丸胴。右脇に持つ小さな木槌が後ろからも見える。","食事ができると鳴るはずが、味見のたびに一回鳴る。近所では夕方から数えない。","k 8 1 3 5 5 3 deep;e 0 -3 17 11 8 15 iv;r 0 5 16 12 3 y tea;e 0 5 17 12 5 13 gold;e 0 9 17 4 2.3 4 sun;l 13 0 8 23 5 24 2 wood;e 24 5 26 4 4 4 red;f 0 18 4 wow"],
+    ["口笛すずまる","V","a","丸い白い鳥。口の前に黄色い笛を突き出し、胴には短い水色の羽がある。","音程は一つも合わない。夕方の合図だけは、町じゅうの鳥が一斉に返事する。","k 4 1 2 3 4 2 sun;e 0 -1 15 11 11 12 iv;k 9 -1 13 5 8 6 sky;f 0 21 4 calm;b 0 11 15 4 6 2 1 gold;l 0 -8 14 0 -15 20 3 lil"],
+    ["すみっこ塩袋","R","c","紙袋の形をした白い体。口は赤いひもで絞られ、底が少しだけ四角い。","清められそうになると物陰へ走る。自称、料理にしか効かない塩。","b 0 0 9 12 8 8 4 iv;e 0 0 17 11 8 10 iv;t 0 0 22 8 5 8 .55 iv;r 0 0 22 5 1.7 z red;l 5 0 23 10 4 18 1.7 red;f 0 14 4 low"],
+    ["改札かじり","MK","l","群青の改札ばさみに白い大きな顎。背に丸い蝶番があり、足は細い。","切符の切り口に毎日新しい模様を試す。今日はうっかり終点の形にした。","k 7 0 3 4 4 3 slate;b 0 -4 13 13 9 10 4 sky;b 0 4 22 12 14 3 1 iv;b 0 7 10 11 13 2 1 steel;r 0 -7 24 5 2 y gold;f 0 16 4 stern"],
+    ["水たまり看守","WD","b","紺の長靴を二つ並べた足で、水色の胴と緑の広いつばを支える。","水たまりの深さを毎日測る。昨日より浅いと、こっそり水を足しておく。","k 8 3 6 7 9 6 deep;e 0 0 18 13 10 12 sky;t 0 0 28 3 17 17 .8 moss;t 0 0 31 6 11 9 .82 lime;f 0 21 5 low;b 0 -9 15 7 5 7 3 steel"],
+    ["ごみ箱トーチカ","MA","h","灰色のごみ箱に丸蓋と持ち手。正面の広い口と背面の朱色の留め金が目立つ。","中身からいちばん大きな音を見つけて発射する。今日は空き缶の大合唱。","t 0 0 0 29 12 16 .8 steel;t 0 0 28 4 18 16 .84 slate;r 0 0 34 5 2 y gold;b 0 12 17 9 3 4 2 ink;k 13 1 20 4 3 3 iv;b 0 -12 17 4 2 7 1 red;f 0 24 5 stern"],
+    ["まちどけい大将","MS","h","鉄青の据え時計が太い台座で直立。丸い文字盤には太い二本の針が重なる。","毎日一分だけ早く鳴る。その一分を町のみんなから預かっているらしい。","b 0 0 3 16 11 3 2 deep;b 0 0 20 13 8 15 4 slate;e 0 7 25 11 4 11 iv;l 0 11 25 0 11 32 1.3 ink;l 0 11 25 6 11 22 1.35 red;b 0 8 9 5 2 3 1 gold;r 0 -2 36 5 2 y gold"],
+  ]],
+  ["火口横丁", [
+    ["窯もり","FR","b","茶色い焼き窯の胴に、黒いアーチ口。中に橙色の熾火がのぞき、背から煙突が伸びる。","パンを見守ること六十年。焦がした耳だけで作る積み木が、もう物置を埋めた。","k 9 2 3 5 5 3 deep;b 0 0 13 15 11 11 5 clay;e 0 0 21 15 11 12 tea;b 0 9 15 9 4 7 4 ink;e 0 12 11 7 3 3 red;k 6 12 12 2.5 2.5 2.5 sun;t 6 -4 27 13 4 5 .93 wood;t 6 -4 39 3 6 6 1 clay;f 0 26 5 stern"],
+    ["みみ焦げパン","FN","m","耳が濃い茶色の四角いトースト。桃色の頬と短い足を持つ。","焦げた角から名乗る流儀。呼ばれた名前は日によって右耳だったり左耳だったりする。","k 5 2 2 3 4 2 tea;b 0 0 15 11 5 13 4 wood;b 0 4 15 8 2 10 3 tan;k 6 0 25 5 5 4 wood;f 0 17 4 grin"],
+    ["炭羽がらす","FV","r","黒い炭の羽と橙色のくちばしを持つ丸い鳥。尻に二本の炭棒を立てる。","羽ばたくたびに少し煤が落ちる。電線に並ぶ仲間が全員まっ黒なのはそのため。","k 4 2 2 3 3 2 tea;e 0 0 13 10 9 11 deep;k 9 -1 13 5 8 4 slate;f 0 17 4 stern;e 0 11 13 4 5 3 sun;a 3 -6 14 5 -15 19 2 ink"],
+    ["しわ伸ばしアイロ","FE","s","三角の赤い底をもつ白いアイロン。上の太い取っ手が背中まで渡る。","紙ナプキンをぴんと伸ばしすぎ、風を受けて飛んでいった。いま探している。","v 0 0 5 13 21 6 red;e 0 -1 11 11 13 9 iv;r 0 -1 18 7 2.7 x deep;b 0 -8 10 7 6 4 2 steel;f 0 10 3 stern;l 3 -11 14 11 -18 12 1.8 ink","slide"],
+    ["一味ばさみ","FP","s","赤いつやの大きな実が、手前に開いた白い二枚ばさみを持つ。葉のへたが傾いている。","調味料の棚から五回追い出された。自分を甘口だと書き直す予定らしい。","k 5 0 2 4 4 2 wood;e 0 0 15 10 9 14 red;l -3 0 27 -8 -3 33 2 moss;a 6 5 12 13 12 16 2.4 iv;a 7 4 10 13 12 7 2.2 ash;f 0 20 4 grin"],
+    ["湯笛ヤカロ","FW","a","銅やかんの胴に出っぱった長い注ぎ口。上には煤色の大きな取っ手が弧を描く。","沸く前から笛が鳴る。誰よりも早くお茶の時間にしたいだけ。","t 0 0 0 5 12 13 .86 wood;e 0 0 13 14 11 12 tea;t 0 0 20 4 10 8 .91 gold;r 0 -2 24 10 2 y deep;l 11 1 12 23 4 23 3 gold;e 23 4 23 3 4 1.7 ink;f 0 16 4 wow"],
+    ["灯芯まとう","FH","l","灰色の火皿から白い幽霊が伸びる。頭の橙の炎が右に傾き、底には青い皿がある。","足元の火を消すと寝る。朝になると火の番をしていた夢だけ覚えている。","t 0 0 1 4 12 14 .8 slate;t 0 0 5 6 11 14 .82 sky;e 0 0 19 8 8 12 iv;f 0 22 3 doze;e 0 0 32 5 5 6 sun;v 3 0 37 5 4 8 red;e 0 2 31 3 3 4 gold"],
+    ["曲がり煙管","FM","c","エルボ形の赤茶色の排気管。曲がり角に白い小顔がはまり、先端がぽっかり開く。","煙の行き先を曲げるついでに、話の筋も一度だけ曲げる。","k 6 1 3 4 5 3 deep;l -8 0 6 -8 0 24 7 steel;l -8 0 24 13 0 24 7 clay;r 14 0 24 6 2 x tan;e 16 0 24 2 4 4 ink;e -8 7 18 7 4 7 iv;f -8 20 3 calm"],
+    ["火あおぎ団長","FV","a","丸い白胴の後ろで、朱と金の団扇が扇形に広がる。柄を片手で高く掲げる。","うちわの表に「強火」、裏に「いったん休憩」。だいたい裏を向けている。","k 5 0 3 4 4 3 tea;e -4 1 12 10 8 10 iv;f -4 14 4 wink;l 5 4 9 12 1 23 2 wood;e 11 0 29 15 3 11 red;e 11 2 29 12 1.8 8 sun;l 11 1 20 11 2 35 1.4 gold"],
+    ["石炭ごろばこ","FR","w","黒い石炭を山ほど積んだ四輪のトロッコ。前面に白い数字札の形の顔がある。","満載になると動かないふりをする。坂では涼しい顔で一番下まで行く。","k 12 7 4 3.5 4 4 deep;k 12 -7 4 3.5 4 4 deep;b 0 0 10 14 12 6 3 slate;b 0 1 11 9 11 4 1 wood;e 0 0 17 13 10 6 deep;v 0 -4 23 7 6 6 ink;v -7 4 20 6 5 5 slate;v 7 0 20 6 5 5 ink;b 0 12 11 7 2 5 1 ash;f 0 13 3 low","roll"],
+    ["一本マッチ子","F","r","赤い先端と木色の細い体が真っすぐ伸びる。片方の靴だけ赤い。","箱を抜け出した日のことを『箱出』と呼ぶ。妹たちは今日も整列している。","e -3 1 2 3 4 2 tea;e 3 2 2 3 4 2 red;b 0 0 16 4 4 14 2 tan;e 0 0 33 8 6 9 red;f 0 32 3 grin;a 2 1 17 8 4 10 1.8 wood"],
+    ["かまど巻貝","FR","w","白い軟体の背に、斜めについた橙の窯と小さな排気筒をのせる。","焼いたものを冷ませないので持ち帰り専門。受け取りはお客様の軍手で。","e 0 2 7 18 11 7 iv;e 9 5 13 7 7 9 iv;a 5 6 14 7 6 24 1.6 tan;t -5 -1 8 19 13 10 .83 clay;t -6 -2 25 11 4 5 1 tea;r -5 10 19 7 2 y tan;e -5 11 19 6 2 6 red;f 9 13 3 low","slide"],
+    ["網目こがし","FM","l","真鍮の焼き網を縦に構える四角い焚き火。網目の奥から赤い火の粒がのぞく。","冷めた話だけを焼き直す職人。話を持ち込むと、前より長くなる。","k 7 1 3 5 5 3 deep;b 0 -4 14 12 8 12 4 tea;e 0 1 15 9 6 10 red;b 0 6 17 15 2 13 2 gold;b 0 6 17 12 2.5 10 1 void;l -8 6 7 -8 6 27 1.35 tan;l 0 6 7 0 6 27 1.35 tan;l 8 6 7 8 6 27 1.35 tan;l -12 6 14 12 6 14 1.35 tan;l -12 6 21 12 6 21 1.35 tan;f 0 26 4 stern"],
+    ["面かぶり火花","ME","u","濃紺の面に横長の水色窓。両手で、黄色い先端の作業棒を抱える。","火花を集めて星座を作る。できあがったものはだいたい窓の外に帰る。","k 6 1 3 4 4 3 deep;e 0 0 14 10 9 11 iv;b 0 1 24 11 9 9 3 slate;b 0 8 24 8 3 3 1 sky;b 0 11 24 5 1.5 1.5 .7 ice;l -10 5 8 14 6 17 2.15 steel;v 18 6 18 5 3 5 sun"],
+    ["団子あぶり名人","FK","b","白い丸胴に太い赤鉢巻き。肩に三色団子の串を掲げ、背面に小さな火傷跡がある。","一番上の団子で火加減を確かめる。いつも二本目を試すので客の分がなくなる。","k 7 0 3 5 5 3 deep;e 0 0 15 14 10 13 iv;r 0 0 22 10 2.5 z red;f 0 18 5 stern;l -12 -4 10 17 1 36 2 wood;e 8 -1 28 5 5 5 moss;e 13 0 33 5 5 5 iv;e 18 1 37 5 5 5 pink;e 3 -9 13 3 2 3 apr"],
+    ["釉薬たまご","FP","m","紫がけの陶器の卵。底に白い焼き足があり、頭の釉薬が一筋だけ垂れる。","焼き上がったら名前を決めると約束した。すでに焼き上がって三ヶ月。","k 4 1 2 3 4 2 iv;e 0 0 15 10 9 14 ash;e 0 0 23 9 8 7 plum;l 5 7 23 5 8 17 2.35 lil;f 0 12 4 doze","hop"],
+    ["火山灰ハコブ","FD","h","灰色の石臼に陶色の長いすり棒を差し、角ばった足で立つ。","灰をすって細かくしてから風に渡す。風からは一度も領収書をもらっていない。","k 9 1 3 6 6 3 deep;t 0 0 6 20 13 16 .88 ash;t 0 0 24 4 17 17 .88 slate;e 0 0 28 12 10 2 deep;l -4 -1 26 15 -2 46 4 clay;f 0 19 5 stern"],
+    ["けむり道化","FY","c","すそが波形の白い煙。左右で色の違う先端の二股帽子をかぶる。","登場時の煙を自分で出す。追い風の日は舞台から先に帽子だけ出る。","k 7 -1 5 5 7 5 ash;e 0 0 13 12 9 12 foam;f 0 14 4 grin;t -5 0 20 14 7 1 .75 lil;t 5 0 20 13 7 1 .75 red;k 7 0 34 3 3 3 gold;l 8 -6 6 13 -10 2 2.6 ash"],
+    ["湯たんぽ黙々","FW","u","背中が平たい赤の湯たんぽ。金属の栓、毛糸の帯、ちいさな両足がつく。","お湯を入れられても文句を言わない。朝に冷めたふりをして五分だけ寝坊する。","k 5 2 2 4 4 2 deep;b 0 0 15 12 6 13 5 red;b 0 0 11 12 6 4 2 gum;t 0 0 27 5 5 5 .92 steel;f 0 19 4 doze;l -8 -5 15 8 -5 15 1.4 pink"],
+    ["閉店鉄板ベル","FM","h","分厚い鉄板に赤いベルを載せる。下に四本の短い脚があり、煙穴が背に開く。","一度鳴ると一枚焼ける。開店中は無音なので、焼けるのは毎晩閉店後。","k 13 8 4 4 4 4 deep;k 13 -8 4 4 4 4 deep;b 0 0 10 17 13 4 2 steel;e 0 0 19 13 11 13 red;t 0 0 11 4 14 14 .83 tea;e 0 0 32 6 6 4 gold;k 9 -8 17 2.4 2.4 3 ink;f 0 23 5 wow"],
+  ]],
+  ["雨どい港", [
+    ["貝だまり","WR","w","背中に貝殻の蓋をかぶった、ほおの丸い白い生き物。貝殻の筋が後ろへ伸びる。","満潮になると家の玄関を閉める。自分が外にいることに引き潮まで気づかない。","e 0 2 7 18 14 7 foam;e 2 9 13 12 8 9 iv;f 2 14 4 doze;e 0 -4 18 16 11 13 ice;l -10 -4 25 -14 -8 12 1.6 sky;l 0 -7 29 0 -14 15 1.7 sea;l 10 -4 25 14 -8 12 1.6 sky"],
+    ["あわの伝令","W","m","水色の泡を頭にのせた三つぶの小さな体。頬に淡い水の帯が入る。","出発した合図が『ぷく』、到着も『ぷく』。二度目のぷくを聞き間違えることがある。","k 5 0 3 4 4 3 sky;e 0 1 10 8 7 8 ice;e 1 0 22 10 9 10 foam;e 8 -2 31 4 4 4 sea;e -6 3 26 2.4 2 2 iv;f 1 22 3 wow","hop"],
+    ["つめ研ぎハサミ","WM","s","平たい朱色のカニに青い三対の脚。右と左でつめの開き方が違う。","爪を切ってくれると評判だが、切っているのは通りに落ちている紐ばかり。","e 0 0 11 14 8 7 red;a 8 0 8 19 -9 4 2 sky;a 9 0 7 20 0 4 2 sky;a 9 1 7 16 9 3 2 sky;l -9 4 10 -20 10 15 3 red;l 9 4 10 22 11 17 3 red;l -20 10 15 -26 14 20 3 steel;l -20 10 15 -27 12 14 2.7 iv;l 22 11 17 25 13 21 4 steel;f 0 13 4 grin"],
+    ["浮き輪ぐるり","W","u","白と朱に塗り分けた太い浮き輪。中央の穴で水色の小さな顔が揺れる。","泳げるが使ってもらうのが好き。誰も来ない日は波に浮かんでもらう。","r 0 0 16 14 4 y iv;b -13 0 16 5 5 4 2 red;b 13 0 16 5 5 4 2 red;e 0 1 13 7 5 6 sky;k 7 1 2 3 4 2 tea;f 0 14 3 grin"],
+    ["錨ひき三郎","WM","b","白い水夫の背より高い青黒い錨。太い綱が灰色の腰を一周している。","錨を引きずる音で出港を知らせる。まだ引き上げていないうちが一番やかましい。","k 7 2 4 5 5 4 deep;e -4 3 15 12 9 12 iv;r -4 1 12 10 2 z tan;f -4 18 4 stern;l 12 -5 8 12 -5 38 3 slate;r 12 -5 40 4 2 y steel;l 5 -5 25 19 -5 25 2 steel;a 7 -5 9 19 -5 8 2.3 deep;l 19 -5 8 24 -5 15 3 slate;l 7 -5 9 3 -5 14 3 slate"],
+    ["雨樋のびーる","WM","l","銀色の長い樋が頭の横を前に伸びる。胴に青い水滴印、背中に金属の留め具が二つ。","雨をためてからサービスで五軒先の植木に渡す。道を曲がるときだけ半分こぼす。","k 7 2 3 5 5 3 slate;b -6 -2 16 9 9 13 4 steel;e -6 5 19 7 5 8 iv;f -6 19 3 low;l -7 -3 25 21 10 29 4 steel;l -6 -2 27 22 10 31 2.3 sky;e 23 11 29 3 3 3 deep;v 7 9 11 3 2 5 sky;k 7 -11 19 2 2.5 4 wood"],
+    ["網うち帆っこ","WV","l","水色の帆を張った木の小舟。丸い虫取り網のような投網を右前に構える。","宇宙まで網を投げたつもりでいる。引き上げた戦利品はいつも靴下の片方。","e 0 0 5 12 18 6 wood;b 0 1 10 6 8 4 2 iv;f 0 11 3 grin;l -4 -4 10 -4 -4 36 2 tea;v -6 -5 24 12 4 15 ice;l 7 4 11 18 10 22 2 tan;r 19 11 26 6 1.8 y gold","slide"],
+    ["そこなしバケツ","WD","h","青いバケツの上に持ち手が大きな弧を描く。縁より一回り小さい黒い内側が見える。","底を抜いてから水をくむのが上手になった。帰り道がまるごと川になる。","k 7 1 3 5 5 3 deep;t 0 0 4 22 11 15 .88 sky;t 0 0 24 4 16 16 .88 steel;t 0 0 27 1 13 13 .87 deep;r 0 -1 31 13 2 y steel;f 0 18 5 wow;e 0 -10 6 8 6 3 sea"],
+    ["斜めオール","WK","r","とがったオールの先を背に突き出した白い早足。胴にしめた緑の帯が斜めに走る。","陸上では走り、水上ではこぐ。玄関の段差だけは毎日助けてもらう。","k 5 2 3 4 5 3 deep;e -4 0 14 10 8 12 iv;l -11 2 12 1 6 20 2.8 sea;f -4 20 4 stern;l -12 -3 5 16 -2 32 2.15 wood;e 20 -2 37 5 3 8 tan;l 17 0 33 23 0 39 1.4 gold"],
+    ["くらげ行灯","WH","c","白紫の傘の下に太い触手が三本。傘の縁が光るように薄い青に塗られている。","停電すると港じゅうを照らす。請求書の宛名は昔から海のまま。","l -9 0 15 -13 2 6 2.5 lil;l 0 1 14 4 -2 3 3 ice;l 8 -2 15 13 -3 6 2.4 sea;e 0 0 22 15 12 9 lil;e 0 0 18 16 13 4 ice;e -3 -2 28 7 7 5 ash;f 0 25 5 doze","glide"],
+    ["さび樽もぐり","WR","w","円筒形の木樽に鉄輪が二本。正面の小窓から白い顔だけが出ている。","水がしみてくると数字を数える。去年から続きを忘れて毎回一から始める。","t 0 0 0 5 12 14 .92 wood;t 0 0 5 18 14 14 .92 clay;t 0 0 23 6 14 12 .92 wood;t 0 0 5 3 15 15 .92 slate;t 0 0 21 3 15 15 .92 slate;e 0 12 15 8 3 8 deep;e 0 14 15 6 3 6 iv;f 0 15 3 low","slide"],
+    ["泡立ちせっけん","WY","s","青緑の楕円形せっけん。大きさの違う泡が上と右の隅にくっついている。","からだを洗うと、その人の口癖まで泡になる。市場にはやたら『おまけ』の泡が多い。","k 6 1 2 4 4 2 sea;b 0 0 11 14 9 8 5 sea;e -5 -1 20 6 6 5 foam;e 2 1 23 5 5 6 iv;e 11 2 17 5 5 5 ice;e 15 1 24 3 3 3 foam;f 0 12 4 wink"],
+    ["波乗りバンザイ","WV","r","先の反った長いボードの上で、白い胴から腕を大きく上げている。","波が来ない日は板ごと走る。走り出すと船が少しだけ波を立ててくれる。","e 0 0 4 6 22 3 sky;l -4 -17 5 -4 17 5 1.5 iv;e 0 3 15 8 7 10 iv;a 6 3 15 14 3 25 2.35 tan;k 3 3 8 3 3 3 deep;f 0 16 3 wow","slide"],
+    ["雨粒測り","WE","c","メモリの入った細長い採水筒。黄色い浮子が登り、頭に漏斗が広がる。","一滴ずつ違う名前をつける。豪雨の日はあきらめて全員『雨さん』。","t 0 0 0 4 9 8 .85 slate;t 0 0 4 22 7 7 .9 ice;t 0 0 26 7 6 13 .85 sky;t 0 0 32 2 13 13 .85 sea;t 0 0 34 1 10 10 .87 deep;l 5 5 8 5 5 18 1.4 gold;k 4 0 2 3 4 2 slate;f 0 20 3 calm"],
+    ["見回りタツノ","WL","u","曲がった青い胴が尾の輪に乗る。角ばった白い口と黄色い小さな背びれがつく。","巡回中ずっと同じ場所にいる。水を町のほうから順番に通すやり方らしい。","r -2 1 8 6 3 y sea;l -1 0 9 -4 -1 24 4 sky;e -2 0 27 8 7 7 sky;b 4 6 24 8 5 3 1 foam;v -7 -6 19 4 6 9 gold;l -5 0 30 -9 -1 35 2 sea;f -2 28 3 stern"],
+    ["海図まき","WS","m","クリーム色の海図を丸めた体。端が青い帯で結ばれ、前で紙の裾が広がる。","北は何度見ても上だと思っている。逆さまに開いた客の前で固まった。","k 5 0 2 4 4 2 tea;t 0 0 4 21 8 8 1 iv;r 0 0 25 5 2 z tan;r 0 0 12 8 1.7 z sky;l 7 4 11 16 10 8 2 iv;b 16 10 9 5 3 3 1 iv;f 0 18 3 low"],
+    ["イカ墨ハイタツ","WP","a","とがった濃紺の頭と、広げた先が紫の短い足。胸に白い宛名札をつける。","インク代が要らないと聞いて就職した。発送伝票まで全部まっ黒になった。","k 3 3 4 3 6 4 plum;k 9 1 5 4 6 4 deep;e 0 0 16 11 9 11 deep;v 0 0 25 12 8 12 slate;k 8 -2 20 7 4 4 plum;b 0 9 12 5 1.7 3 1 iv;f 0 19 4 wink"],
+    ["汽笛のしぶき","WE","h","青い小型ボイラーに斜めの汽笛が二本。足元に白い水しぶきの房が上がる。","汽笛で港の時刻を知らせる。息が余ると次の時間の分まで続けて鳴らす。","e 0 0 5 17 11 6 foam;k 10 3 8 6 6 7 ice;b 0 0 18 13 9 12 5 sky;a 5 -2 27 11 -2 39 3 steel;k 11 -2 40 4 5 2 gold;t 0 0 27 4 8 7 .8 slate;f 0 21 4 wow"],
+    ["磯のさんかく","WR","a","珊瑚色の突起が何本も出た巻き貝。三角の外殻から白い顔がのぞく。","ソ、ラ、ミだけで一曲作った。演奏のたび曲名を変えるので誰も気づかない。","k 6 2 2 4 4 2 berry;e 0 0 13 13 9 11 pink;v 0 1 21 14 9 14 red;a 6 -2 17 19 -3 23 2.6 apr;l 0 -5 19 2 -12 30 2.6 pink;e 0 8 13 8 5 7 iv;f 0 14 3 grin"],
+    ["桟橋ドッシリ","WD","b","板張りの低い桟橋に太い杭が四本。船を結ぶ青いロープが後ろへ垂れる。","旅立つ船にだけ頭を下げる。戻る船には場所を空けようと一歩横へずれる。","k 14 9 5 4 4 5 tea;k 14 -9 5 4 4 5 tea;b 0 0 12 19 13 4 2 wood;b -10 0 17 3 12 2 1 tan;b 2 0 17 3 12 2 1 tan;b 13 0 17 3 12 2 1 tan;l -13 -7 15 -16 -12 7 2 sea;l -16 -12 7 -23 -12 3 2 sky;f 0 12 6 stern"],
+  ]],
+  ["根っこ市場", [
+    ["葉つきかぶり","GD","m","白いカブから三枚の緑の葉が生える。下に細い根の脚が二本ある。","畑を抜け出した瞬間から野菜売り場へ向かっている。値段は自分で決めたい。","k 4 0 3 2.6 3 3 tan;e 0 0 13 12 10 11 iv;f 0 14 4 grin;a 2 0 20 8 -2 34 2.7 moss;e 0 0 31 4 3 9 lime;k 8 -2 32 4 3 7 moss","hop"],
+    ["ねぐせコケ玉","GR","w","平たい石を覆う緑色の苔。寝ぐせのように一束だけ高く、とろい白目がのぞく。","目覚ましを少しずつ包んだ。長いこと鳴っていたらしいが、いまは苔が厚くて聞こえない。","b 0 0 7 15 12 7 5 slate;e 0 0 13 15 12 7 moss;e 3 -2 20 9 7 6 lime;l 7 -3 20 13 -7 27 3 moss;e 0 10 11 7 5 6 foam;f 0 12 3 doze"],
+    ["小道のジョウロ","WG","c","緑色のじょうろで、片側は長い注ぎ口、逆側は丸い取っ手。前面に居眠り顔。","自分の足元だけ水やりを忘れる。そこにだけ、雨好きの草が待っている。","k 6 0 2 4 4 2 tea;e 0 0 15 12 10 11 moss;t 0 0 23 4 7 8 .86 lime;r -12 -1 17 6 2 y tea;l 10 2 12 22 3 24 2.9 sea;e 23 3 26 5 3 4 lime;f 0 17 4 doze"],
+    ["種飛ばしゴマ太","G","l","くびれた茶色い種。お腹から漏斗のような発射口を片側に向ける。","飛ばした種の行方をノートにつける。明日までに着くところばかり覚えている。","k 5 1 2 4 4 2 wood;e 0 0 15 10 8 13 tan;f 0 19 4 stern;l 8 3 13 21 7 20 2.7 wood;e 22 8 20 5 4 4 sun;e 25 9 21 2 2.8 2.6 tea;l -3 -4 23 0 -7 32 2 moss"],
+    ["葉っぱ傘配り","GV","r","白い短足の上に、大きな葉が一枚斜めに張り出す。葉脈は明るい黄緑。","一つの傘に何人入るか数えている。強風の日は傘のほうが一人ずつ連れていく。","k 5 2 3 4 4 3 tan;e 0 1 11 9 7 9 iv;f 0 12 4 wow;l 0 0 10 4 0 29 2 moss;e 9 0 28 17 11 3 moss;l -4 0 30 23 0 30 1.4 lime;a 4 0 29 11 6 29 1 lime"],
+    ["袋みの吉","BG","w","縦向きの繭の胴を、葉と枝の外套で守る。丸い入り口から眠そうな顔が出る。","自前の寝袋を着ているので、宿に入ると布団屋だと思われる。値切りには弱い。","e 0 0 17 11 10 17 moss;k 8 -4 14 4 8 13 wood;l -10 2 8 -7 2 26 2 tan;l 10 -1 8 7 -1 26 2 moss;e 0 9 19 7 4 9 lime;e 0 11 19 5 2.8 6 iv;f 0 20 3 low"],
+    ["からからサヤ豆","G","s","弓なりの豆のさやに、黄緑の丸い豆が三つ。先端のひげは片側へカーブする。","中にいる豆たちは走るリズムを順番に決める。四番目の休符が一番人気。","e 0 1 6 16 7 5 moss;l -13 2 5 -11 1 13 3 lime;l 12 2 5 16 0 15 3 lime;e -8 2 10 6 6 6 lime;e 1 2 9 6 6 6 lime;e 10 2 11 6 6 6 lime;l 16 0 14 20 -2 19 2 moss;f 1 10 3 grin;k 6 1 2 3 4 2 tan"],
+    ["空鉢えらそう","GR","b","植木鉢の上に赤茶色の分厚い縁。中央だけ土がへこみ、側面に白い取っ手を持つ。","芽を出しそうな顔で五年目。空いていると思って鍵を預ける常連がいる。","k 9 1 3 5 5 3 deep;t 0 0 5 21 10 17 .86 clay;t 0 0 23 6 18 18 .87 tea;t 0 0 29 1 15 15 .85 wood;k 16 0 19 4 4 3 iv;f 0 17 5 stern"],
+    ["手押しカブト","BM","b","固い緑の甲に、前へ出た黒い熊手の角。後脚だけ橙色の車輪になっている。","荷物を載せるとつい角を持ち上げる。速達扱いになった荷物は向かいの屋台に落ちる。","k 11 -8 5 3.5 5 5 gold;k 11 5 3 4 4 3 deep;e 0 -1 13 13 14 10 moss;l 0 -10 19 0 8 19 1.85 lime;e 0 11 13 9 8 7 slate;f 0 14 4 stern;l 0 14 14 0 23 21 3 deep;a 0 21 20 9 22 26 2.2 steel","roll"],
+    ["陽だまりキノコ","GP","a","幅広のかさに赤茶の丸い斑点。白く太い軸と、短い手足が見える。","傘を貸すときだけ背が伸びる。返してもらう頃には広場の待ち合わせ場所になっている。","k 5 1 2 4 4 2 tan;t 0 0 3 18 7 8 .93 iv;e 0 -1 22 17 13 8 sun;k 8 -2 27 4 4 3 clay;e 0 7 27 3 3 2 red;e 0 -7 28 4 3 2 red;f 0 14 4 grin","hop"],
+    ["笹笛チロリ","BV","a","羽のような細い笹の葉を左右に張る、小さな虫。口から長い薄緑の笛が出る。","鳴き声がかすれると笹を一枚交換する。一年分の鳴き声は隣の竹やぶに取ってある。","k 5 1 3 3 4 3 tea;e 0 0 13 8 9 11 moss;k 9 -1 19 10 4 4 lime;a 2 1 22 6 3 30 1.8 sun;e 0 6 19 7 4 7 foam;f 0 20 3 calm;l 3 8 16 17 18 17 2 lime"],
+    ["根っこモグ","DK","s","扁平な土色のモグラ。胸に抱えた三本の根を、傾けながら掘り進む。","まっすぐ掘った自信がある。地上に出るたび店主が別人なのがおかしい。","k 6 1 2 4 5 2 wood;e 0 0 12 13 10 11 tea;e 0 8 14 8 5 6 tan;f 0 15 4 low;l -6 9 8 -9 14 3 2 moss;l 0 12 8 1 15 5 2.5 tan;l 6 9 8 10 13 6 2 moss;k 10 5 9 4 4 3 ash"],
+    ["つる縄おけい","GK","l","白い胴の横に草色の輪を掲げ、先端の細いつるが斜め上へ伸びる。","結ぶのは得意だが引っ張る向きをよく忘れる。ほどく係が後をついて歩く。","k 6 1 3 4 4 3 wood;e -4 1 15 10 9 12 iv;f -4 16 4 stern;r 11 1 20 11 2.4 y moss;l 17 2 29 23 5 37 2 lime;e 24 5 38 4 2 3 lime"],
+    ["葉かげブランコ","GY","c","黄緑の葉でできた横木から、白い豆がひもの間にぶら下がる。","誰かが押してくれるまで前に進まない。向かい風が吹く日は待ち合わせなしで出発する。","l -13 0 2 -12 0 28 2.6 wood;l 13 0 2 12 0 28 2.6 wood;l -13 0 28 13 0 28 2.6 moss;k 9 -1 30 9 5 3 lime;a 5 1 28 5 1 9 1.55 tan;b 0 1 8 8 5 2 1 wood;e 0 1 12 6 5 6 iv;f 0 14 3 doze","slide"],
+    ["昼寝スイカ台","GW","u","濃い緑の半球を木の四本足が支える。背面には種模様が三つ浮かぶ。","昼になると切り分けられる予定表を作る。お昼寝の時間が延び、予定表ばかり増えた。","k 8 6 3 4 4 3 tea;k 8 -6 3 4 4 3 tea;e 0 0 14 15 12 10 moss;t 0 0 14 8 14 9 .8 lime;e 0 0 22 10 8 3 red;e 0 -8 18 2 2 2 ink;k 6 -8 16 1.7 2 1.9 ink;f 0 13 5 doze"],
+    ["木札メモリ","GS","u","背の高い木札に白い小顔。上に赤い紐の輪があり、裏面に横向きの溝が並ぶ。","立てられた場所の出来事を全部覚える。値札売り場では値引きの順番に厳しい。","k 4 1 2 4 4 2 wood;b 0 0 19 9 5 16 3 tan;b 0 4 19 6 2 6 1 iv;r 0 0 36 5 1.85 y red;l -5 -5 10 5 -5 10 1 tea;l -5 -5 15 5 -5 15 1 tea;l -5 -5 20 5 -5 20 1 tea;f 0 20 3 low"],
+    ["芽待ちどんぐり","G","m","小さな橙のドングリに焦げ茶の帽子。正面からは芽のような曲がったツノが見える。","発芽の時刻を何度も確認する。発芽すると帽子を返す契約なので、一日ずつ延ばす。","k 4 1 2 3 4 2 tea;e 0 0 12 9 8 10 sun;t 0 0 16 5 10 8 .9 wood;l 0 0 20 3 -1 28 2 moss;e 6 -1 29 4 3 2 lime;f 0 13 3 grin","hop"],
+    ["西瓜わり石","RK","h","大きな板状の石が白い小顔を背負い、横に木刀のような棒を突き出す。","目隠し役を任されすぎて、割る仕事に応募した。初日から見渡す限りを割ってしまった。","k 9 2 4 5 5 4 deep;v 0 0 15 19 12 16 slate;b 0 0 12 12 9 8 3 ash;e 0 0 29 9 7 8 iv;f 0 29 4 stern;l -14 4 9 24 7 27 3 wood;l 11 7 22 24 7 27 1.6 tan"],
+    ["落ち葉トンボ","BV","r","水色の細い腹に赤い目。四枚の葉の羽が斜め四方に伸びている。","夕焼けの色に似せて羽を整える。仕事帰りの風が本物の落ち葉を連れてくる。","l 0 9 15 0 -20 12 3 sea;e 0 11 17 7 6 6 apr;k 5 13 19 3 4 3 red;k 10 5 16 12 5 2.5 moss;k 12 -4 16 12 6 2.5 lime;f 0 16 3 wink;k 3 2 3 3 3 3 wood;a 4 2 5 5 5 12 1.5 tea","glide"],
+    ["林の大うす","GD","h","幹をくり抜いた臼の胴に、太い根と横に伸びた巨大なすりこぎ。","根が地面をくすぐるときだけ笑う。町の全員が臼を引こうとした日が一番にぎやかだった。","k 12 5 4 7 6 4 wood;k 9 -7 4 6 6 4 moss;t 0 0 4 22 14 17 .82 wood;t 0 0 24 4 18 18 .84 tan;t 0 0 28 1 14 14 .86 deep;l -7 -3 22 20 -7 43 4 clay;l 13 -6 38 20 -7 43 2.3 tan;f 0 20 5 stern"],
+  ]],
+  ["積み木採石場", [
+    ["角待ち小石","R","m","三角に近い灰色の石が、黄土色の靴を履く。ひびの入りかけがうしろに一本ある。","山から転がってきたが、本人は徒歩と主張する。靴を買ったのは着いてから。","k 5 1 2 4 4 2 tan;v 0 0 12 12 10 12 ash;b 0 0 9 7 6 7 3 ash;l -4 -6 12 -1 -3 20 1.4 slate;e 7 -3 10 4 5 3 steel;f 0 12 3 calm"],
+    ["つみコロ親方","RD","w","大中小の石の角材がずれて三段に重なる。土色の脚がいちばん下から出る。","積み上げの見本として立っていた。合図がなかったので今もこの形のまま。","k 9 1 4 5 5 4 wood;b 0 0 11 17 12 6 2 slate;b -3 1 21 13 9 5 2 tan;b 4 0 29 10 8 4 2 ash;f 4 29 4 stern;b -9 -2 35 5 4 2 1 gold"],
+    ["粉ふきチョーク","R","m","短い白チョークの頭が不揃いに欠けている。台に薄紫の粉が散らばっている。","黒板に明日の天気を書く。雨の予報の日だけ自分の字が流れないか心配で眠れない。","e 0 0 1 13 8 1 lil;t 0 0 2 22 7 7 .92 iv;b -3 0 25 4 5 3 2 ash;e 4 -1 25 3 3 3 iv;e -11 4 3 3 3 3 foam;f 0 17 3 grin","hop"],
+    ["転てこヤスリ","MR","r","先が平たい銀の棒を抱えた橙色の小足。棒の上に削り目が三列入っている。","へこんだ道を平らにしてから急ぐ。その丁寧さで毎回集合に遅刻する。","k 4 1 3 4 5 3 deep;e -3 0 12 9 8 9 sun;f -3 14 4 stern;l -13 3 9 19 7 21 3 steel;b 10 7 21 10 4 2 1 ash;l 5 10 22 5 6 24 1.2 slate;l 10 10 23 10 6 25 1.2 slate;l 15 10 23 15 6 25 1.2 slate"],
+    ["ねじ頭スパナ","MK","s","古いボルトの頭をもつ低い銀の胴。頭より大きなスパナを横にかかえる。","ゆるんだら締め直す。寝ぐせを見つけたときも同じ手順を踏むので不評。","k 6 2 3 4 4 3 deep;t 0 0 4 16 8 8 .95 steel;t 0 0 19 4 11 11 .87 ash;r 0 0 7 8 1.6 z slate;r 0 0 12 8 1.6 z slate;f 0 16 3 stern;l 6 3 8 22 2 27 2.7 steel;r 23 2 28 5 2.2 y steel;b 25 2 30 5 3 3 1 void"],
+    ["調整ねこじゃらし","MK","l","灰白の作業員が伸びる目盛り棒を構える。頭に四角い茶色の作業帽がある。","同じ地点を違う長さに測る職人。『伸びしろ』の欄だけどの報告書も埋まっている。","k 6 1 3 5 5 3 deep;b -5 0 14 10 8 12 5 iv;b -5 0 26 10 8 3 2 tea;f -5 17 4 low;l -13 6 13 27 6 22 2.8 gold;l 3 7 16 3 7 20 1.3 ink;l 10 7 18 10 7 22 1.3 ink;l 17 7 20 17 7 24 1.3 ink"],
+    ["採石ゴロ車","RD","w","灰色の装輪車が巨大な砕石を背負う。正面にはせまい黄色の丸窓が二つ。","積める石の数を聞かれると一個と答える。小石を積むには荷台が重すぎる。","k 13 7 4 4 5 4 deep;k 13 -7 4 4 5 4 deep;b 0 0 10 17 14 6 3 clay;v -2 -1 24 17 13 15 slate;b 0 12 11 9 3 3 1 steel;k 6 15 11 1.8 1.3 1.8 gold;l -7 -6 23 4 -8 32 1.5 ash","roll"],
+    ["板バネぺこり","M","s","波板のように折れた銀色の体。二つの厚い台座の間が交互に曲がっている。","会釈の回数が多い現場で採用された。止まるために深々とお辞儀する。","b 0 0 3 11 9 3 2 slate;l -7 0 6 7 0 12 2.7 steel;l 7 0 12 -7 0 18 2.7 steel;l -7 0 18 6 0 24 2.7 steel;b 0 0 27 11 8 4 3 ash;b 0 5 26 7 3 4 1 iv;f 0 26 4 doze","hop"],
+    ["そろばん砂利師","RS","u","橙色の枠から小石の玉が見えるそろばん。左に白い小さな指し棒をもつ。","小石を数えきれなかった日は、そろばんの珠を減らして帳尻を合わせる。","k 8 1 3 4 4 3 deep;b 0 0 16 15 5 13 2 wood;b 0 0 16 12 6 10 1 void;l -7 0 8 -7 0 25 1.5 steel;l 0 0 8 0 0 25 1.5 steel;l 7 0 8 7 0 25 1.5 steel;e -7 0 13 3 4 3 gold;e 0 0 19 3 4 3 ash;e 7 0 23 3 4 3 tan;e -7 0 23 3 4 3 slate;l -13 5 7 -20 8 22 1.8 iv;f 0 28 5 low","slide"],
+    ["砂ならしモーラ","D","c","幅の広い砂ならし板を前に押す、砂色の作業員。刃先は四角く尖る。","きれいな波紋を描いたあと自分の足跡で台無しにする。採石場ではそれも含めて名物。","k 6 0 3 4 4 3 tea;e 0 -3 16 12 9 13 tan;f 0 22 4 doze;a 8 0 16 10 10 13 2.6 wood;b 0 13 8 16 4 5 2 slate;k 13 15 3 2 3 2 steel;k 5 15 3 2 3 2 steel"],
+    ["断層めくり","RD","a","断面の違う岩板を扇形に開く。中央に白い顔、その足元に細長い砂地がある。","地層を一枚めくるたび昨日の昼ごはんを思い出す。深いところは給食らしい。","e 0 0 3 18 10 3 tan;l -5 -3 6 -19 -2 21 5 clay;l -1 0 7 -10 -1 30 5 slate;l 3 -1 7 8 -2 32 5 ash;l 7 -3 7 20 -4 23 5 tea;e 0 6 15 8 6 9 iv;f 0 17 4 wow"],
+    ["ビー玉バウンド","R","r","大きな青いビー玉に、受け皿のような白い靴。玉の内側を淡い緑の模様が横切る。","転がせばよく進むが、跳ねるほうが拍手をもらえる。段差を見つけると目を輝かせる。","e 0 1 16 13 12 13 sky;k 7 0 2 5 5 2 iv;l -8 6 9 8 8 22 2.3 sea;l -4 10 13 6 10 22 1.5 ice;f 0 20 4 grin","hop"],
+    ["片手てこ太","DK","b","下に太い石の支点を置き、白い胴から長いてこ棒を右上へ伸ばす。","重たいものを見つけると片手で持とうとする。手を使ったかと聞くと、使ったと言う。","k 7 1 3 5 6 3 deep;e -3 0 16 13 10 13 iv;f -3 20 4 stern;v 1 9 7 8 8 7 slate;l -20 8 5 26 10 25 3 wood;e 25 10 26 4 4 4 gold;e 12 6 16 4 4 4 iv"],
+    ["鉄傘パラポン","MR","u","山形に広い鉄の屋根の下に白い小さな胴。返りのついた赤い縁が一方に伸びる。","雨も火花も気にしない。唯一困るのは傘立てに入るか聞かれたとき。","k 6 1 3 5 4 3 slate;e 0 1 12 11 9 11 iv;f 0 15 4 low;t 0 0 22 13 18 3 .73 steel;t 0 0 21 3 20 16 .73 red;l 14 -4 20 20 -7 15 2.2 tea;e 0 -1 35 3 3 3 gold"],
+    ["杭うちカンカン","MK","a","木の柄が長い角頭の槌を担ぐ。四角い白胴と赤い大きな軍手が並ぶ。","集合の合図に杭を一つ打つ。解散してから人数分打ってしまったことに気づく。","k 5 1 3 4 5 3 wood;b -5 0 13 10 8 10 4 iv;f -5 17 4 stern;l -13 -4 6 17 2 31 2.4 tan;b 17 2 34 9 6 5 2 steel;b 25 2 34 3 6 5 1 slate;e 6 4 17 5 5 5 red"],
+    ["鉱脈ききみみ","RS","c","背の高い鉱石に耳のようなじょうごが二つ。石の正面を紫色の筋が走る。","地中の声が聞こえるという。よく聞いてみると仲間が昼休みを知らせている。","k 7 1 3 5 5 3 deep;v 0 0 19 16 12 19 slate;v 0 6 20 11 7 14 plum;l -8 7 11 7 7 32 2.25 lil;a 6 -1 22 13 -1 34 2 steel;k 13 -1 36 5 5 3 ash;f 0 21 4 wow"],
+    ["夕日プリズマ","RY","l","やや透明に見える黄色の結晶。先端だけ白く、基部は青い結晶の束になっている。","拾った夕日を七つに分けた。いちばん好きな色だけポケットに戻す。","k 6 1 3 5 5 3 steel;v 0 0 22 15 11 21 gold;v -5 5 13 9 7 11 sky;v 8 -1 12 9 7 10 sea;v 0 2 36 5 4 8 foam;f 0 23 4 calm"],
+    ["崩れ止め枠王","MD","b","石塗りの角い外枠。支柱のはざまに赤い三角の補強材がのぞく。","倒れないことが誇り。掲示板に斜めの写真を貼られると自分でまっすぐに立て直す。","k 13 0 4 5 7 4 deep;b 0 0 18 17 9 14 2 steel;b 0 0 18 11 10 8 1 void;l -11 1 10 11 1 25 3 red;l 11 1 10 -11 1 25 3 clay;e 0 4 28 7 6 6 ash;f 0 30 3 stern"],
+    ["てこの峡谷砲","RM","h","石台の上の黒い金床に、太く長い青銀の筒が斜めに据えられている。","反動を確かめるたび台が一寸だけ沈む。もう崖と背の高さを争うのをやめた。","b 0 0 5 19 13 5 3 slate;b 0 0 13 14 9 4 2 ash;b -3 0 24 12 7 7 4 deep;f -3 24 4 stern;l -10 -5 23 20 7 38 5.3 steel;l 18 6 38 25 9 42 5.4 slate;e 26 10 42 3 4 4 ink"],
+    ["足場ギシギシ","DM","h","三層の細長い足場に金属の斜材。上の小さな顔が黄色い安全帽をかぶる。","違う高さで鳴るきしみを覚えた。点検の歌を歌うと全員無言になる。","k 12 0 3 5 7 3 slate;a 12 0 4 12 0 45 2.5 steel;b 0 0 13 14 6 2 1 slate;b 0 0 29 14 6 2 1 slate;b 0 0 42 15 8 2 1 steel;l -12 1 13 12 1 29 2 clay;l 12 1 29 -12 1 42 2 red;e 0 0 47 7 6 7 iv;t 0 0 50 4 9 6 .85 sun;f 0 48 3 low"],
+  ]],
+  ["高架の風便", [
+    ["屋根上ふうせん","V","m","青白い風船に短い紐と小さな錘。ちいさな白い手が左右に伸びる。","目的地を胸に書いてもらった。逆さになった日は風の行き先を信じる。","e 0 0 24 12 11 14 ice;k 11 0 21 4 4 3 iv;f 0 23 4 wow;l 0 1 13 3 1 4 1.9 lil;b 3 1 2 4 4 2 1 deep","glide"],
+    ["伝線スズメ","EV","r","白い丸鳥の背から黄色い稲妻形の翼が開く。尾は赤い電線でできている。","一羽いると電線の電話がつながる。三羽集まるとみんながいっぺんに話し始める。","k 3 1 2 3 4 2 sun;e 0 0 13 10 9 10 iv;e 0 8 13 4 5 3 gold;f 0 17 4 grin;a 7 -2 12 18 -4 21 2.6 sun;a 15 -5 20 23 -4 16 2.3 gold;l 0 -8 13 3 -18 18 2.3 red","glide"],
+    ["雨待ち風見","VM","u","鉄の土台からのびる棒の先に矢印をのせる。矢印の中央に白い顔がつく。","町でいちばん早く風を読む。ただし気に入らない風の日は矢印を押さえている。","t 0 0 0 4 11 8 .86 slate;l 0 0 4 0 0 31 3 steel;l -18 0 30 18 0 30 2.6 wood;v 19 0 30 8 5 6 gold;b -17 0 30 5 3 5 2 red;e 0 2 33 8 6 7 iv;f 0 35 4 stern"],
+    ["雲またぎ郵便","V","l","左右に薄い青翼を広げた白い郵便袋。枕のような雲台に細い脚がつく。","空路が空いていても雲の縁をまわる。封筒を濡らさない決まりを守っている。","e 0 0 4 11 11 4 ash;e 0 0 18 10 9 13 iv;b 0 5 18 8 4 5 2 tan;f 0 22 4 low;k 14 -2 20 10 5 3.5 ice;a 7 -2 20 21 -6 23 1.8 sky;l 0 -8 18 0 -14 24 2.4 sun","glide"],
+    ["ほお鳴り変圧器","EM","w","鉄箱から白い碍子が二本のびる。各碍子に橙の輪が三段、前面に四角いほっぺ。","口を閉じると静かになる。あえて閉じないのが街灯を励ますコツだという。","k 9 1 3 5 5 3 deep;b 0 0 14 15 10 11 4 slate;b 0 9 15 10 2 7 2 ash;a 7 -3 23 7 -3 40 3 iv;k 7 -3 27 5 5 2 sun;k 7 -3 33 5 5 2 gold;k 7 -3 39 5 5 2 sun;f 0 17 4 low"],
+    ["風切りパタ札","V","s","赤い二枚の札が白胴の左右に広がる。下に向く札の端だけ紺で塗られている。","無事と書いた札が回ると上下が入れ替わる。読み取った人は大体うなずく。","k 4 1 2 4 4 2 deep;e 0 0 15 9 8 13 iv;f 0 18 4 wink;a 7 -1 17 17 2 17 2.5 slate;b -14 2 17 4 3 10 2 red;b 14 2 17 4 3 10 2 red;k 14 2 9 4 3 3 deep","glide"],
+    ["空うがい雲","WV","a","水色の三つの雲の塊をつなぎ、口の前に白い泡が集まる。細い雨脚が三本降りる。","薄曇りになると空にうがいをすすめる。返事の代わりに駅の屋根が濡れる。","e 0 0 17 13 10 12 ice;k 10 0 16 8 8 8 foam;e 0 -2 22 11 8 10 iv;f 0 19 4 wow;k 6 0 4 2 2 4 sky;l 0 0 8 -2 1 2 2.1 sky;e 0 10 14 5 4 4 foam;e 5 11 12 3 3 3 ice","glide"],
+    ["しっぽプロペラ","VE","s","背が群青の小さな飛行艇。尾の上に回転翼が二枚あり、前の窓から白い顔が出る。","尾を前と間違えたまま飛行免許を取った。着陸だけ誰よりも上手。","e 0 0 11 9 17 8 sky;e 0 7 15 7 8 8 iv;k 12 -2 11 8 6 2.5 steel;f 0 18 3 grin;l 0 -13 15 0 -15 26 2 slate;l -12 -15 27 12 -15 27 2.3 red;e 0 -15 28 4 4 3 gold","glide"],
+    ["蓄雷キューブ","ER","b","切り石の角胴に金の四角い稲妻片がつく。下の脚は赤いゴムで覆われる。","雷が苦手なので貯めこまないようにしていた。今朝、自分が雷を集めていると知らされた。","k 7 1 4 5 5 4 red;b 0 0 17 14 10 12 3 slate;v 1 9 18 7 4 11 gold;l -4 2 27 4 0 36 3 sun;v 4 0 37 7 5 7 gold;f 0 23 4 stern"],
+    ["コードこより","E","c","黄いろのコードを輪に巻き、左右に紫のプラグが出る。中央に白い顔がはさまる。","からまるほど長い話を聞くのが好き。巻き直されると冒頭しか覚えていない。","r 0 0 15 12 4 y gold;r 0 -3 14 9 2.3 y sun;e 0 0 14 7 6 8 foam;f 0 15 3 doze;l -11 -1 15 -22 -1 23 2 tan;l 11 -1 16 22 1 10 2 tan;b -23 -1 24 4 4 4 1 plum;b 23 1 9 4 4 4 1 plum"],
+    ["屋上コイル博士","ES","h","研究台の上に紫のコイルが三段。底の白い小窓と、高い位置の金属球が目印。","雷を音階に変える実験中。助手はずっとラの音にうなされている。","b 0 0 5 14 11 5 2 slate;b 0 0 15 10 8 6 2 ash;b 0 8 15 7 2 3 1 iv;f 0 16 3 low;l 0 0 20 0 0 48 3 deep;r 0 0 25 9 2.3 z plum;r 0 0 33 9 2.3 z lil;r 0 0 41 8 2.3 z plum;e 0 0 50 7 7 6 steel"],
+    ["消え灯信号","EV","c","三つの色窓が縦に並ぶ黒い信号機。片側から伸びる足と上部のひさしを持つ。","夜だけ赤と青の順を交代させている。黄色は最初からひと休み中。","k 5 0 3 4 5 3 slate;b 0 0 23 8 7 19 4 deep;b 0 4 41 9 9 3 2 slate;e 0 7 13 5 3.5 4.7 sea;e 0 7 23 5 3.5 4.7 sun;e 0 7 34 5 3.5 4.7 red;e -9 1 17 4 4 3 steel"],
+    ["避雷ぐし","EM","l","細い柱の先で銀の三つ又が広がる。手前の丸い胴に計器がついている。","好みの雷を選べると自慢する。毎晩、何も落ちない方角だけを慎重に選んでいる。","b 0 0 3 12 10 3 2 steel;e 0 0 15 11 9 12 iv;b 0 8 11 6 3 3 1 sea;f 0 18 4 wow;l 0 -2 23 0 -2 48 2.65 steel;a 5 -2 37 10 -2 46 2.6 steel;k 10 -2 47 3 3 3 gold;e 0 -2 49 3 3 3 gold"],
+    ["風つかみミトン","VK","b","身の丈ほどある桃色の手袋が左右に開く。白い胴から青い留め具がのぞく。","風向きが悪くなると手袋を取り替える。左手用が二枚あった日も仕事は続けた。","k 7 1 4 5 5 4 deep;e 0 -1 17 12 10 14 iv;f 0 24 4 stern;k 14 2 16 8 6 12 pink;k 10 8 16 5 4 6 apr;k 15 2 8 7 6 4 sky"],
+    ["昼電池カラカロ","E","m","黄土色の小さな電池に白い帯。頭の小さな端子をぐらぐらさせて歩く。","使い切ったあとがいちばん元気。頼まれても昼寝への充電にしか応じない。","k 4 0 2 3 4 2 deep;t 0 0 2 21 8 9 .92 gold;t 0 0 9 8 9 9 .92 iv;t 0 0 23 3 7 6 .91 steel;e 3 -1 27 4 4 3 sun;f 0 15 3 doze","hop"],
+    ["滑車つり日和","VM","u","梁の下に一本の滑車を吊るす白い荷役係。暗い赤のかぎが紐の先に下がる。","重さを当てるのが趣味。自身を吊ったときだけ、秤の数字を読まない。","k 6 1 3 5 5 3 slate;e -6 0 13 9 8 10 iv;f -6 14 4 calm;l -8 -4 9 -8 -4 32 2.4 wood;l -9 -4 32 15 -4 32 3 steel;r 11 -3 28 5 2 y gold;l 11 -2 25 13 -1 11 1.8 slate;r 14 -1 10 3.5 1.7 y red"],
+    ["気圧はかれ","VS","a","四角い計器に水色の針と上向きの送風口。後ろには白い布のひれが二枚出る。","天気を聞かれると『いま計っています』と答える。ほとんどの雨はその間に上がる。","k 6 1 3 4 4 3 deep;b 0 0 17 13 8 12 4 steel;e 0 7 19 9 3.5 9 iv;l 0 11 19 5 10 24 1.25 sky;t 0 0 28 5 7 10 .8 lil;k 12 -5 16 6 3 8 foam;f 0 11 4 low"],
+    ["凧つなぎニロ","VY","r","二枚の菱形凧が黄と桃。下のちいさな結び目に顔と白い靴がついている。","自分を追い風に結んだつもりでいる。風が変わるたび二か所に手紙を送る。","k 4 1 2 4 4 2 iv;e 0 0 10 8 6 8 foam;f 0 10 3 grin;l -2 -3 10 -12 -6 28 1.7 tan;l 3 -2 10 14 -1 21 2 tan;v -12 -6 29 11 4 13 gold;v 14 -1 24 10 5 13 pink;l -12 -8 29 -12 -8 38 1.3 tea;l 14 -4 24 14 -4 31 1.3 berry","glide"],
+    ["高架おんぶ台","VD","w","高架橋の脚が二本並ぶ大柄な胴。橋面には白い小顔と橙の反射帯が走る。","高い場所が苦手な乗客を背負う。歩くと景色が動くので、いちばん怖いとよく言われる。","b 0 0 19 19 11 6 3 slate;k 13 0 7 4 8 7 steel;b 0 5 24 18 6 3 1 tan;l -17 11 21 17 11 21 2 sun;e 0 0 28 8 8 6 iv;f 0 29 4 low;l -14 -6 10 14 -6 20 2 clay","slide"],
+    ["電線ロケット店長","EF","h","白い胴にオレンジの尖ったカバー。左右に伸びる赤い支えと大きな噴射口を持つ。","町の電線の端まで飛ぶ契約だが、最後の電柱で必ずおじぎして引き返す。","t 0 0 0 7 13 10 .91 deep;t 0 0 7 24 10 10 .99 iv;t 0 0 30 13 11 1 .98 red;k 11 -2 10 5 4 10 clay;r 0 0 6 10 2 z steel;f 0 23 4 stern;l 0 -9 16 0 -14 28 2 sun","glide"],
+  ]],
+  ["氷室の夜勤", [
+    ["氷皿ポン","I","m","水色の製氷皿に角氷が三つ。手前の角氷にちいさな目がつく。","押されると氷が飛び出す。自分の番になる前に皿ごと逃げたことがある。","k 7 1 2 4 4 2 sky;b 0 0 7 14 10 4 2 sea;b -7 -3 13 5 5 4 1 ice;b 7 -3 13 5 5 4 1 ice;b 0 5 13 5 5 5 1 foam;f 0 13 2.8 grin"],
+    ["除雪口ブルン","ID","w","前に幅広い鉄の除雪板。箱形の白い胴と青い車輪が、板の後ろからのぞく。","積もる前から出動している。通りで会うと、今日は積もりませんよと教えてくれる。","k 10 6 4 4 5 4 deep;k 10 -7 4 4 5 4 deep;b 0 0 12 11 12 8 4 ice;b 0 -2 19 8 8 7 3 iv;f 0 20 3 stern;k 9 13 9 7 4 7 steel;e 0 15 7 12 4 7 sky;l -15 13 3 15 13 3 2 slate","roll"],
+    ["さかさツララ","IV","l","白い首の長い胴に、下向きの細長い氷を三つ抱える。先端は濃い水色。","つららは上から下へ伸びると思っている。自分だけ下から伸びれば当たらない、とのこと。","k 6 1 3 4 5 3 deep;e 0 0 19 9 8 16 iv;f 0 23 4 calm;l -1 2 32 16 6 35 2 slate;t 14 6 5 28 1 6 .92 ice;t -11 1 11 19 1 4 .93 sky;t 8 9 14 18 1 4 .92 foam"],
+    ["耳当てぴょん番","I","r","白い丸胴から片方だけ曲がった長耳。青耳当てと黄色いすり減った靴がつく。","雪の中に靴を埋めて跳ぶ練習をする。地図には跳んだ地点より着いた地点が多い。","k 5 2 3 4 5 3 gold;e 0 0 15 11 9 13 iv;l -4 -2 23 -7 -1 42 3 iv;l 4 -2 23 7 -2 37 3 iv;l 7 -2 37 13 -1 40 3 apr;k 9 0 20 4 5 5 ice;f 0 20 4 wow","hop"],
+    ["霜ふきポット","IW","a","水色のポットから白い霜の塊が上がる。足元が薄紫で注ぎ口がうしろへ曲がる。","熱いお茶を淹れるのが夢。相談相手は、湯気を出しているみそ汁の椀。","t 0 0 0 4 12 10 .85 plum;e 0 0 15 11 9 13 ice;l -7 -4 15 -15 -15 21 3 sea;r 10 -1 17 6 2 y steel;k 5 0 27 5 4 5 foam;e 0 0 33 6 5 5 iv;f 0 19 4 doze"],
+    ["耳の雪はたき","IN","s","白い毛房のはたきが斜めに伸びる。濃紺の柄と、はたきに寄った眠たげな目。","朝一番に窓を掃く。掃き終えたころには自分の頭に新しい雪が積もっている。","k 5 0 2 4 4 2 deep;e -3 1 13 10 9 11 lil;f -3 16 4 doze;l -15 -3 7 12 2 29 2.2 deep;l 8 2 25 19 2 37 4 ice;e 18 2 35 7 5 8 iv;e 20 -1 40 5 4 4 foam"],
+    ["融けぎわ岩塩","IR","b","四角い岩塩が重なった厚い体。うす桃色の層を氷色の帯でしばる。","道路を守っているつもりでふんばる。でもあまりに冷たい朝だけ、両足が浮く。","k 8 1 4 5 5 4 steel;v 0 0 14 19 13 14 gum;b 0 0 16 13 10 11 2 ash;b 0 0 8 13 10 3 1 ice;v 1 0 30 12 9 12 pink;v -9 -3 21 8 6 8 apr;f 1 21 4 stern"],
+    ["冷蔵線トコトコ","IM","r","青白い荷車が氷の箱を載せ、背面だけ低い赤の連結器が突き出す。","次は冷蔵庫前と必ず案内する。客の牛乳はすっかり行き先を覚えた。","k 10 -9 4 4 4 4 deep;k 10 8 4 4 4 4 deep;b 0 0 10 15 16 5 2 steel;b 0 -3 20 11 13 8 3 foam;b 0 12 16 9 6 8 2 sky;b 0 -17 9 6 5 2 1 red;k 7 18 15 2.4 2 2.3 gold;f 0 17 4 grin","roll"],
+    ["氷すだれ","IH","c","白い横木から長さが違う四本の氷が下がる。脇に紺色の兜のような支柱がある。","夜風が通るたび四つの音を鳴らす。風の吹かない日は小声で鳴ったふりをする。","k 13 0 2 5 6 2 slate;a 13 0 4 13 0 34 2.3 deep;b 0 0 34 16 6 3 2 iv;t -9 0 11 21 1 3.5 .85 ice;t -3 0 6 24 1 3 .86 sky;t 3 0 14 18 1 3.5 .85 foam;t 9 0 18 14 1 3.5 .85 ice;e 0 3 35 7 4 5 ash;f 0 36 3 doze"],
+    ["雪まみれ鼻スコ","ID","b","雪玉のような胴から赤い鼻と紺のスコップが出る。後ろに短い巻き尾がある。","埋もれて助けを呼ぶが、鼻だけはいつも雪の外。先に鼻を見て安心される。","k 9 1 4 6 6 4 deep;e -2 0 17 15 11 14 foam;e 1 9 15 6 5 3 red;f -1 21 5 wow;r 0 -11 13 4 1.6 y gum;l -12 4 11 18 5 29 2.5 tea;b 20 5 34 7 4 6 2 slate"],
+    ["結露すくい","IW","u","青い雫が白い手押し台に乗る。皿の横から細長いひしゃくを上へ伸ばす。","窓に残る水滴を集める。時々、誰かが描いた相合傘までそっと持ち帰る。","k 9 6 3 3.6 4 3 deep;k 9 -6 3 3.6 4 3 deep;b 0 0 7 12 12 3 2 sky;e -2 2 17 10 8 11 ice;v -2 1 25 7 6 10 sky;f -2 16 4 grin;l 8 -2 10 20 -1 25 2.2 steel;e 20 -1 27 6 6 3 iv","roll"],
+    ["氷上クルリン","IR","s","平たい灰色の石に青い取っ手。底の丸い朱色の靴が左右に小さくつく。","床はピカピカに磨く。磨きすぎて自分が帰れなくなるところまでが日課。","k 8 1 2 4 5 2 red;t 0 0 2 6 14 16 .86 slate;e 0 0 10 16 13 6 ash;r 0 -1 16 7 2 y sky;b 0 0 14 9 6 3 1 steel;f 0 11 5 wink","slide"],
+    ["零下の温度番","IS","l","長い白い温度計の前面に赤い太線。底の球が指先のようにふくらむ。","数字を読むときだけ声が裏返る。零が来ると両手で拍手してから続きを読む。","k 4 1 2 4 4 2 slate;b 0 0 24 6 5 20 3 iv;e 0 2 9 8 7 8 ice;e 0 8 8 5 2 4 red;l 0 5 9 0 5 33 1.6 red;l 3 5 17 6 5 17 1 ink;l 3 5 25 6 5 25 1 ink;l 3 5 33 6 5 33 1 ink;f 0 39 2.7 stern"],
+    ["板ぞりガロ","IK","s","木のそりの前を上にそらし、白い乗り手が二本の青いストックを持つ。","止まる練習を始めたのは、ふもとの塀の持ち主と友達になってから。","a 6 -14 2 6 10 2 2 wood;a 6 9 2 6 16 7 2 wood;b 0 -1 6 10 13 2 1 tan;e 0 -1 16 8 7 10 iv;f 0 18 4 wow;a 6 1 16 11 10 31 1.7 sky;k 11 10 32 2 2 2 gold","slide"],
+    ["氷菓の断面","IY","a","白い四角いケーキに青と桃の断面。上から赤い実と傾いた白い匙が出る。","冷たすぎて誕生会では歌の間に切れない。自分で曲を長くすることを覚えた。","k 7 1 2 4 5 2 wood;b 0 0 13 13 10 10 2 iv;b 0 0 10 13 10 2 1 sky;b 0 0 17 13 10 2 1 pink;e 0 -2 26 4 4 4 red;e 8 -1 26 2.8 3 2.8 berry;l -6 0 21 -17 0 31 1.6 steel;e -17 0 32 4 2 4 iv;f 0 16 4 grin"],
+    ["眠気カチ割り","IK","h","氷の角胴よりも大きな金槌。逆側の手に黄色いコップを下げる。","眠くなると床に槌を置く。その音で起き直すので、最近はずっと槌を持っている。","k 9 1 4 5 5 4 deep;b -3 0 18 13 11 14 5 ice;f -3 20 5 stern;l -10 -5 9 18 -2 38 3 steel;b 20 -2 40 10 6 6 2 slate;b 29 -2 40 3 6 6 1 ash;t -16 5 5 8 4 5 .85 gold"],
+    ["穴釣りシロしん","IW","u","白い胴が青い穴の縁に座り、先のたわんだ竿を左から右へ伸ばす。","釣り糸を下げる場所は毎日同じ。見に来る魚のほうが穴の開け方を教わった。","e 0 0 3 18 12 3 sky;e 4 3 5 8 7 2 deep;e -6 -3 12 10 9 9 iv;b -6 -4 20 10 9 4 3 lil;f -6 14 4 doze;l -5 3 13 18 9 31 1.9 wood;l 18 9 31 24 11 23 1.55 tan;l 24 11 23 20 10 9 1 ice;e 20 10 9 2.6 2.6 2.6 red"],
+    ["霧切りスイッチ","IE","c","薄い紫の箱に赤い大きなレバー。側面から白い霧の塊が左右に出る。","見通しのつまみを毎日調整する。見通しが良くなると自分が見られるので少し恥ずかしい。","k 5 1 2 4 4 2 deep;b 0 0 14 11 9 11 3 lil;b 0 7 17 8 3 5 2 iv;f 0 17 3 low;l 0 0 23 8 4 35 2.6 slate;e 8 4 35 5 5 5 red;k 12 -2 9 7 5 5 foam;k 16 -4 14 5 4 4 ice"],
+    ["北風ソリ舎","IV","w","青い曲面屋根の小さな物置。床から反ったそり板だけが長く出る。","外に道具を置くと雪に埋まると聞き、道具小屋を自分ごと移動させる係になった。","a 9 -16 2 9 15 2 2.3 wood;a 9 13 2 9 19 8 2.3 wood;b 0 0 6 14 15 3 2 slate;b 0 0 18 12 12 9 2 ice;e 0 0 26 14 13 8 sky;b 0 11 15 5 2 5 1 deep;f 0 23 5 calm","slide"],
+    ["氷室の取締り","IM","h","縦長の冷凍ロッカー。銀の太いハンドルと、表で光る小さい青の表示窓がある。","開けてすぐ閉めるかをチェックする。自分が出てくるまで見届ける人はだいたい凍える。","k 8 1 3 5 5 3 steel;b 0 0 23 14 10 20 4 ash;b 0 10 24 11 2 17 2 ice;b 0 12 30 8 1.5 6 1 deep;l 8 13 11 8 13 22 2 steel;f 0 31 4 low;b 0 -10 18 7 3 8 2 slate;t 0 0 43 4 8 7 .83 foam"],
+  ]],
+  ["閉店後の劇場", [
+    ["暗幕のすき間","HA","m","紺の布が二枚広がり、そのすき間に白い顔が浮かぶ。下端の足だけ布の外に出る。","開幕を告げると恥ずかしくなって閉じる。観客はその一瞬にも拍手してくれる。","k 6 1 2 4 4 2 deep;l -4 0 26 -13 1 5 5 plum;l 4 0 26 13 1 5 5 deep;l -13 -1 27 13 -1 27 2.5 gold;e 0 4 17 7 6 8 iv;f 0 19 3 low"],
+    ["逆さの舞台灯","HM","l","角の丸いランプが逆さに傾く。紫の台座から伸びた白い湾曲アームがつながる。","照らされた役者の名前を全員覚えている。カーテンコールは暗くするので自分は見えない。","b 0 0 3 13 9 3 2 slate;l 4 -3 5 4 -3 28 2.8 iv;l 4 -3 28 -9 1 34 2.8 iv;b -9 4 24 9 8 8 3 deep;e -9 12 23 6 3 6 gold;f -9 24 3 doze;b -9 4 32 12 9 2 1 plum"],
+    ["糸引きタント","HY","c","朱色の胴が三本の糸で吊られる。上に木の十字、下にだらりと垂れた白い手足。","人形を操る係の人形。右に進む糸と帰る糸の区別だけはきっちりつける。","k 6 1 4 3 3 4 iv;e 0 0 14 9 7 9 red;e 0 0 23 7 7 6 iv;f 0 24 3 grin;a 6 1 16 10 1 32 1.45 tan;l 0 0 29 0 0 42 1.5 tan;l -15 0 42 15 0 42 2.1 wood;l 0 -7 42 0 7 42 2.1 wood;k 9 2 14 3 3 3 iv"],
+    ["紙冠ベルベ","YA","u","ギザギザの金色の紙冠をかぶる紫の胴。短い赤マントが後ろへひるがえる。","王様の役だけは譲らない。冠は自分で折るので袖の上映案内が毎週減っていく。","k 5 1 2 4 4 2 deep;e 0 0 15 10 9 13 plum;e 0 6 21 8 5 7 iv;b 0 -7 12 12 4 10 3 red;l 0 -9 11 8 -16 6 3 berry;t 0 0 26 4 10 10 .91 gold;k 7 0 33 4 4 6 gold;v 0 6 34 5 3 6 sun;f 0 22 4 stern"],
+    ["紙吹雪のタネ","YV","a","とがった二色の筒に白い小顔。口の周りから桃、黄、水色の紙片が広がる。","派手に撒いた紙の一枚だけに次回公演の日時が書いてある。よく拾われずに終わる。","k 6 1 2 4 4 2 deep;t 0 0 3 23 6 12 .91 pink;t 0 0 24 3 13 13 .91 lil;t 0 0 27 1 9 9 .9 plum;f 0 17 4 wow;v -10 2 33 5 2 4 gold;v 9 -5 35 4 2 5 sky;v -2 3 39 4 2 4 foam;v 14 4 30 3 2 3 berry","glide"],
+    ["映写グルル","MS","h","黒い映写機が台にのり、頭の両側に大きな巻き取り輪。前には橙のレンズがある。","映写が始まると咳払いする。咳払いのあとに上映が始まるとみんなが思っている。","b 0 0 4 16 10 4 2 slate;l 0 0 5 0 0 24 4 steel;b 0 0 26 12 9 8 3 deep;r -8 0 39 7 2 y steel;r 8 0 39 7 2 y slate;b 0 0 39 12 2 2 1 plum;e 0 10 27 8 4 6 gold;e 0 13 27 5 2 4 apr;f 0 22 4 low"],
+    ["カギ穴チラ見","HA","r","黒い角胴の中心が鍵穴形に抜ける。裏に橙色の小さな点が一つ灯る。","のぞく役の専門家。今夜はなぜか通る人に先にのぞきこまれる。","k 5 1 2 4 4 2 slate;b 0 0 17 12 7 15 4 deep;e 0 0 22 6 9 6 void;v 0 0 15 5 14 7 void;e 0 -8 21 2.5 2.5 2.5 sun;k 7 5 23 2.15 2.15 2.4 ash;l -11 -1 13 -16 -3 19 2 plum"],
+    ["横顔ふたつミラー","SY","w","背中合わせの楕円の鏡。表は白い額、裏は紫の額で、台座は一つだけ。","稽古をした前の顔と、稽古をさぼった後ろの顔。どちらが舞台に出たかは楽屋だけの秘密。","b 0 0 4 15 11 4 3 steel;e 0 3 20 13 6 15 gold;e 0 -3 20 13 6 15 plum;e 0 8 20 10 2.5 12 ice;e 0 -8 20 10 2.5 12 lil;f 0 20 4 stern;k 4 -10 22 1.5 1.5 2 ink;l -2 -10 16 2 -10 16 1 ink"],
+    ["あし音くつろぎ","H","s","左右で丈が違う紫の古靴。片方にだけ、白い足首と小さな顔が浮かんでいる。","昼は一足分。夜になると見知らぬ足音を連れて稽古をし、三人分で帰る。","e -7 2 5 7 13 5 plum;e 8 0 5 7 13 5 deep;b -7 -3 10 6 7 8 3 lil;b 8 -4 13 6 7 10 3 slate;e 8 -4 24 5 5 6 iv;a 4 7 8 6 2 10 1.3 iv;f 8 25 2.6 doze"],
+    ["大入り袋ガヤ","NY","m","赤い口紐で結んだ白い祝儀袋。紐の余りが両側に出て、底に小さな足がある。","入った拍手の数でふくらむ。客が一人の夜も、帰るころにはいつもいっぱい。","k 5 0 2 4 4 2 tea;b 0 0 12 11 7 10 4 iv;t 0 0 20 7 5 9 .68 ash;r 0 0 21 5 1.7 z red;a 4 2 21 12 3 18 1.75 red;f 0 13 4 grin"],
+    ["無拍子メトロ","SM","u","木の三角胴に金の振り子が斜めに出る。重りの部分だけ深い朱色。","間の取り方を覚えると振り子を止めて考える。団員はそこで全員一緒に息をつぐ。","b 0 0 3 13 10 3 2 tea;t 0 0 5 29 11 2 .66 tan;b 0 5 12 6 2 8 2 deep;l -6 8 29 4 8 10 1.85 gold;b -4 8 25 4 3 3 1 red;f 0 9 3 low"],
+    ["だけ役のおばけ","HY","s","ひょろりと伸びた白布の胴に斜めの腕。胸に舞台の目印の小さな星をつける。","出番は一度だけと聞いて、同じ場面を毎晩見ている。台詞のない役を極めた。","k 6 0 6 5 6 6 ash;e 0 0 19 10 8 16 foam;f 0 23 4 wow;l -7 2 17 -16 4 25 2.4 iv;l 7 0 14 15 2 10 2.3 iv;v -6 8 12 4 2 4 gold;l 0 -5 25 -4 -8 34 1.8 lil","glide"],
+    ["オルガン箱とら","SY","a","角い木の胴に、長さの違う黄色い管が三列。胴の先には白い鍵盤が突き出す。","音を伸ばすために息を止める。曲が終わるころには聴いている人も息を止めている。","k 8 2 3 5 5 3 wood;b 0 0 13 15 10 9 3 tan;b 0 9 10 13 5 3 1 iv;f 0 18 5 doze;l -9 10 12 -9 10 15 1.25 ink;l 9 10 12 9 10 15 1.25 ink;a 10 -3 21 10 -3 30 2.7 gold;a 5 -3 21 5 -3 38 2.7 gold;l 0 -3 21 0 -3 44 3 sun"],
+    ["額縁マボロ","SH","c","大きな金の空額縁に、白い伏し目が半分だけ収まっている。下から紫の肘が出る。","描かれた場面を抜け出した。額の裏に元の絵が今も隠れていると思っている。","k 8 0 2 4 5 2 wood;b 0 0 20 15 6 17 2 gold;b 0 0 20 11 7 13 1 void;e -3 2 17 8 6 9 foam;f -3 20 4 doze;l 3 2 12 12 6 8 2.5 plum;l 12 6 8 15 6 12 2.2 lil"],
+    ["拍手もらい太鼓","NK","b","紫と赤の帯が巻かれた太鼓の胴。太い両腕の先に橙のばちがある。","鳴らす音は控えめ。拍手が聞こえると仕事を忘れて振り返るので、裏面にも顔を描いた。","k 8 0 4 5 5 4 deep;t 0 0 4 21 12 14 .91 plum;t 0 0 23 3 15 15 .91 red;t 0 0 26 2 14 14 .91 iv;a 12 1 13 20 3 19 4 red;a 20 3 20 24 1 33 2.2 sun;f 0 16 5 grin;k 5 -13 17 1.8 2 2 ink;l -2 -14 12 2 -14 12 1.2 ink"],
+    ["書き割り山彦","HR","w","平らな山形の背景板が手足を出す。表に雪色の頂、裏に木のつっかえ棒がある。","『ヤッホー』と呼ぶと板の裏から返事がある。誰が言ったか、自分でも見たことがない。","k 9 1 3 5 6 3 tea;v 0 1 19 20 5 19 slate;b 0 1 10 17 5 7 2 moss;v 0 1 31 8 5 8 ice;a 9 -3 10 9 -11 3 2 wood;e 0 6 17 7 4 6 iv;f 0 18 3 low","slide"],
+    ["幕間コウモリ","AV","r","耳が片側だけ上がった黒い丸胴。左右に細い骨の走った紫の翼を広げる。","休憩が終わるベルを聞くと逆さになる。待っている間に天井の指定席ができた。","e 0 0 19 8 8 11 deep;k 5 0 29 3.5 3.5 6 plum;l -4 -1 30 -6 -2 36 2 deep;a 7 -1 20 20 -3 28 3 slate;k 15 -2 19 11 4 6 plum;a 11 1 19 22 1 25 1.5 lil;f 0 22 3 stern","glide"],
+    ["星つき見習い","SY","l","短い白マントの奥から小さな顔。横に紫の長い杖が直立し、金色の星が載る。","呪文が長くなりすぎたので一語ずつ練習中。星は待ち時間に少しずつ磨いている。","k 5 0 2 4 4 2 plum;t -3 0 3 21 11 7 .82 iv;e -3 0 23 8 8 7 ash;t -3 0 28 7 9 2 .86 lil;f -3 23 3 stern;l 11 2 4 12 3 42 2 plum;v 12 3 42 8 4 9 gold;v 12 4 42 11 3 3 sun"],
+    ["大詰めグランド","SH","h","鍵盤が前へ広がる黒いピアノ。上の蓋を棒でつっかえ、紫の裏地が見える。","最後の一音を長く伸ばしたい。開演前から最後の音だけを何度も弾いている。","k 10 8 4 4 4 4 deep;e 0 -10 4 5 5 4 deep;b 0 1 13 14 15 6 3 deep;b 0 14 13 13 5 3 1 iv;f 0 19 4 low;a 7 14 16 7 9 16 1.2 ink;l -12 -3 20 13 -3 34 3 slate;l -12 5 20 13 5 34 3 plum;l -10 5 20 11 5 31 1.8 gold;l 10 -7 18 10 -6 29 1.9 deep"],
+    ["星くずの最後列","YH","b","空色の座席が厚い肘掛けを持つ。席に残った星の束が、背もたれからはみ出す。","舞台側より客席側が好き。最後に残った観客として拍手が尽きるまで座っている。","k 10 0 4 6 7 4 slate;b 0 2 11 16 12 5 4 plum;b 0 -8 23 13 5 15 4 lil;k 13 3 17 6 9 5 deep;v -6 4 19 7 5 9 gold;v 4 6 22 7 4 10 sun;v 8 -6 36 7 4 8 ice;f 0 25 4 low"],
+  ]],
+  ["裏庭の理科室", [
+    ["ため息試験管","P","m","細い青色の試験管に桃色の液。黄土色の栓を斜めにかぶり、白い靴を履く。","長い話を聞くと液面が下がる。ため息を水で割っているところは見せない。","k 4 1 2 3 4 2 iv;t 0 0 3 25 6 6 .92 ice;t 0 1 6 12 5.4 5.6 .89 pink;t 0 0 28 4 7 7 .89 tan;b -1 -2 32 5 5 2 1 gold;f 0 16 3 doze"],
+    ["混ぜずにフラ助","PW","c","下がふくらんだフラスコに、青緑と紫の二層。丸栓の横に付箋がはためく。","横倒し厳禁の札を自分で貼った。早足になるほど札だけが大きく揺れる。","k 6 1 3 4 4 3 slate;e 0 0 14 12 11 11 lil;e 0 2 9 11 10 7 sea;t 0 0 19 14 6 5 .95 ice;e 0 0 34 7 7 3 tan;b 8 -3 28 5 2 5 1 gold;f 0 17 4 worry"],
+    ["防塵メガッポ","PM","w","白い防塵帽の前に二つの青い丸レンズ。太い灰色の手袋と胴の紫ライン。","ゴーグルの内側まできっちり拭く。拭き終わるまで全員で見えないふりをしてくれる。","k 8 1 4 5 5 4 slate;e 0 0 16 13 10 13 iv;e 0 0 32 12 10 10 ash;r 0 0 27 11 2.2 z plum;k 6 8 32 5 4 5 slate;k 6 11 32 3.5 2.3 3.5 sky;k 15 0 17 6 5 5 steel;e 0 10 27 3 2.5 2.5 deep"],
+    ["無菌フタ丸","PB","m","薄い透明皿のような円盤。水色の縁から、緑と桃の丸い模様が浮かぶ。","今日は誰にも触られなかったと報告するため、帳面だけはそっと触る。","k 6 0 2 3 4 2 lil;t 0 0 3 9 12 16 .83 ice;t 0 0 12 3 16 16 .83 foam;e -6 2 15 4 4 2 pink;e 6 -4 15 4 4 2 lime;e 1 6 15 3 3 2 gum;f 0 11 4 low","hop"],
+    ["試料のミミズ員","BD","r","茶色の土台から紫がかった胴をくねらせ、頭に白い測定札をつける。","長さを測られるたびに姿勢を正す。測定記録は全部違うけれど同じ個体。","e 0 0 4 14 10 4 tea;l -8 1 7 7 -1 12 4 gum;l 7 -1 12 -4 1 20 4.1 pink;l -4 1 20 3 2 27 4.3 gum;e 3 2 29 6 5 6 apr;b 8 -1 30 4 3 3 1 iv;f 3 28 3 grin","slide"],
+    ["気泡筋プチポンプ","PB","s","ポンプ型の白胴に橙の太い押し棒。紫色の短いチューブが足元へ下がる。","泡の大きさを揃えるのが得意。最後にひとつだけ、丸くない泡をこっそり混ぜる。","k 6 1 3 4 4 3 deep;b 0 0 15 12 9 11 4 iv;t 0 0 24 8 5 5 .92 steel;b 0 0 33 10 6 3 2 sun;l 9 -4 19 16 -4 10 2.6 plum;l 16 -4 10 15 5 5 2.6 plum;f 0 18 4 stern"],
+    ["糸雲まゆべん","BP","c","繭の黄色い胴に紫の帯。背から曲がった金の輪、前にごく小さな触角。","繭から出る予定表がふわふわで読めない。結局、一日おきにまた中に戻る。","k 4 0 2 3 4 2 wood;e 0 0 16 10 9 15 gold;r 0 0 13 9 2.2 z plum;f 0 20 4 doze;r 9 -5 24 8 1.8 y sun;a 3 4 25 6 5 31 1.7 tea"],
+    ["すみの胞子傘","PG","a","深紫のキノコ傘を二段に重ね、傘の下に黄緑の粒が三つ浮く。","掃除当番が来るとほこりのふりをする。机に忘れた掃除当番表が裏返っていた。","k 5 0 2 3 4 2 deep;t 0 0 3 23 7 8 .86 ash;e 0 0 23 14 11 5 plum;e 3 -2 31 12 10 8 lil;k 9 4 18 3 3 3 lime;e 0 7 19 3 2.8 3 gold;f 0 14 3 grin"],
+    ["シロアリ墨引き","BD","s","白い節を三つ並べる小さいアリ。黒い細身のペンを前脚に抱えている。","かじった木に定規で線を引く。自分でたどれる道が増えすぎて昼休みに迷う。","k 6 -5 2 3 4 2 tea;k 5 4 2 3 4 2 tea;e 0 -8 7 8 9 7 ash;e 0 0 7 6 7 6 iv;e 0 8 10 8 7 7 foam;f 0 11 3 stern;a 3 7 14 7 10 20 1.5 tan;l 8 6 8 18 14 17 2.2 deep;v 18 14 17 3 4 4 ink"],
+    ["鉄粉うろこまる","BE","w","青灰色の団子虫。節に沿って灰色の鉄粉が三列うろこのようにくっつく。","丸くなる前にくっついた物を申告する。最近は遠くのスプーンまで名乗り出る。","k 8 4 3 4 4 3 deep;k 8 -4 3 4 4 3 deep;e 0 0 13 15 13 12 slate;k 7 -5 18 7 9 8 steel;e 0 1 20 14 5 8 ash;e 0 8 15 13 5 7 steel;e 0 11 9 9 5 5 iv;f 0 11 4 low"],
+    ["観察フクロ","PS","u","白いフクロウのような胴。右目だけ紫の大きな拡大鏡に入り、角い白衣が足にかかる。","観察日記には自分の背中だけ描けない。毎日、白衣のポケットで代筆を頼む。","k 6 3 3 4 4 3 tan;e 0 0 16 13 10 14 iv;k 7 -2 28 4 4 5 ash;k 11 0 15 4 7 8 lil;f 0 22 5 stern;r 5 10 24 5 1.6 y plum;l 8 10 20 14 11 14 1.75 slate;b 0 9 9 8 2 4 1 steel"],
+    ["羽根のろ紙","BV","r","黄色い蛾の胴。大きく開いた白いろ紙の羽に、紫のしみが二枚とも残っている。","ろ過できなかった雫を運ぶ。暗くなると雫のついた羽を明かりに近づけて乾かす。","e 0 0 18 6 8 12 gold;e 0 5 22 7 6 6 iv;k 13 -3 21 12 4 9 foam;k 16 -3 20 5 5 5 lil;k 10 0 16 7 3 3 plum;a 3 4 24 7 5 34 1.6 tan;f 0 23 3 wow","glide"],
+    ["石けん膜レンズ","PE","l","脚付きの白いレンズ台。穴を囲む青い円から桃色の薄い膜が丸く盛り上がる。","膜が割れるたび、一回分の電気を数える。生活には使えないが日記にはよく使う。","k 7 1 3 5 5 3 steel;e 0 0 12 11 9 9 iv;f 0 13 4 low;r 0 0 26 12 2.8 y sky;e 0 1 26 10 3 10 gum;e -4 4 30 3 1.6 3 foam;l -10 -3 10 -7 -3 24 2 slate"],
+    ["緑光フタゴ瓶","PG","u","黄緑の大小二瓶が青紫の管でつながる。小さい瓶のほうが少し背が高い。","どちらが本体か毎朝議論する。容器を洗う時間だけは意見が一致している。","b 0 0 3 15 9 3 2 slate;t -6 0 4 17 8 8 .93 lime;t -6 0 20 4 8 6 .93 moss;t 8 0 4 24 5 5 .93 sea;t 8 0 26 4 6 6 .93 foam;l -6 -2 24 0 -4 32 2 lil;l 0 -4 32 8 -2 28 2 plum;f -6 15 3 grin"],
+    ["鉛芯ハカリ係","PM","l","白い細脚に細長い鉛筆状の計測具。胸に紫の計器、先端には濃紺の尖り。","重さを小声で教える。数字の方が恥ずかしい場合もあると心得ている。","k 5 1 3 4 4 3 slate;e -6 0 15 9 8 12 iv;b -6 7 14 6 3 4 1 plum;f -6 20 4 low;l -16 -4 9 21 0 30 2.7 sun;l 18 0 28 26 0 33 2 tan;v 26 0 33 4 2.7 3 ink"],
+    ["フラスコ沼の主","PH","b","紫の広い底に沈んだ白い顔。背から三本の紫と緑の揮発管が伸びる。","沼に映る月を採取したい。月が見えない日は自分の頭をすすいで帰る。","e 0 0 10 17 14 10 plum;k 8 6 6 7 7 6 lil;e 0 7 14 11 8 8 foam;f 0 15 4 doze;a 7 -3 15 13 -5 34 2.8 moss;l 0 -6 16 0 -7 38 3 lil;k 13 -5 35 4 4 3 lime;e 0 -7 39 5 5 3 plum"],
+    ["試験紙フラッグ","PV","a","白い小型の胴から、色の違う検査紙が片側へ四枚並んでひらめく。","雨が降ると自分が今日何色かを見せに来る。晴れた日だけ妙におとなしい。","k 5 1 2 4 4 2 steel;e -6 0 13 9 8 11 iv;f -6 15 4 grin;l -7 -3 9 16 -1 37 2.05 steel;b 5 -2 21 8 2 2 1 lime;b 10 -1 27 9 2 2 1 gold;b 15 -1 32 8 2 2 1 pink;b 20 -1 37 7 2 2 1 plum"],
+    ["寝不足顕微カン","MS","h","銀の曲がり腕に黒い接眼部。台座に青いガラス板があり、頭は大きく前へ張り出す。","遠くにあるものより小さなものが好き。月を見るときも床の影からのぞく。","b 0 0 4 14 13 4 3 slate;l -8 -7 7 -8 -7 28 4 steel;l -8 -7 28 1 1 40 4 steel;l 1 1 40 8 5 48 4.8 deep;l 1 1 39 4 4 27 3 slate;b 1 5 13 10 8 2 1 ash;b 1 5 16 6 5 1.2 .7 sky;e -8 0 22 7 6 7 iv;f -8 24 3 doze","slide"],
+    ["うろこ目薬ウルル","PB","h","縦長の白い容器から青い注液口。胴に緑の小さな二枚羽と、中央に丸い目のような円。","一滴さすたび目が一つ休む。休ませる目が多すぎて起きたら日が暮れていた。","k 6 1 3 4 4 3 deep;b 0 0 15 13 9 12 4 foam;t 0 0 26 7 10 7 .86 sky;t 0 0 32 9 7 2 .92 sky;k 12 -2 20 7 4 7 moss;e 0 9 17 8 3 7 sea;e 0 12 17 5 2 5 ink;e -1 14 19 2 1 2 iv"],
+    ["ゴム栓はじき","PK","b","紫の台に、太い橙色のゴム栓を斜めに載せる。左右の粉色のこぶしが名刺ほど大きい。","栓を抜く音で開館を知らせる。きれいな音が出なかった日は入館料を返す。","k 8 1 4 6 5 4 deep;b 0 0 13 15 10 9 3 plum;k 13 2 14 6 5 5 apr;f 0 17 5 stern;l -3 -2 23 12 2 36 7 tan;l 7 0 33 13 2 38 7 wood;e 15 1 37 5 5 5 sun"],
+  ]],
+  ["はての宿場", [
+    ["折り竜スジ太","LV","r","折り紙のような角ばった白い竜。朱色の薄い翼と、細くとがる尾がつく。","雨の日は宿の外に出ない。急ぎの手紙でも内側から窓のすき間に押し込む。","k 5 1 3 3 4 3 tea;v 0 0 13 10 10 13 iv;v 0 7 21 8 9 8 foam;b 0 13 18 6 5 3 1 iv;k 12 -2 19 11 4 4 red;l 0 -5 13 3 -20 20 2.5 ash;v 3 -20 20 5 5 4 sun;f 0 23 4 grin","glide"],
+    ["街道どらやき","LY","m","白い小竜が焦げ茶の丸い生地を二枚はさむ。白い耳に金色の短い角。","温かいうちに届けるため、自分が途中で少しずつ温まる。半分眠そうなのはこのせい。","k 5 2 3 4 4 3 deep;e 0 0 8 14 11 5 tea;e 0 0 12 13 10 4 red;e 0 0 16 14 12 5 tan;e 0 8 19 8 6 7 iv;k 4 6 25 2.3 2.5 4 gold;f 0 21 3 doze;l 0 -9 14 0 -16 19 2.3 ash","hop"],
+    ["宿札クビナガ","LN","l","長い陶色の首に小さな黄角。首から白い宿札が正面へ下がり、胴は地面に近い。","早朝の客だけ低い声で迎える。返事がないと名前を部屋の戸に貼っておいてくれる。","k 8 -1 3 4 5 3 wood;e 0 -4 11 12 13 9 clay;l 0 1 12 -5 4 38 4.2 tea;e -5 7 40 8 7 7 clay;b -5 12 38 6 5 3 1 tan;k 4 4 46 2 2 4 gold;r -4 4 24 4.4 1.5 z tan;b -4 10 23 5 2 4 1 iv;f -5 42 4 low"],
+    ["寝巻き番頭","A","m","白い寝巻きの上に深紫の帽子。赤い提灯を低く下げ、半分だけ片目が開く。","誰よりも早く起きる。見回りに出たまま寝てしまうのは点呼が済んだあとのこと。","k 5 1 2 4 5 2 plum;t -3 0 2 19 12 8 .81 iv;e -3 0 22 9 8 7 foam;t -3 -1 25 6 10 2 .84 plum;f -3 22 3 wink;l 6 1 13 15 5 18 1.7 wood;e 15 5 12 5 5 7 red;t 15 5 18 2 5 5 .84 gold"],
+    ["峠のこぶ石竜","LR","w","うろこが灰色の石塊になった、地べたを這う幅広の竜。白い鼻先だけ低く突き出す。","寝る場所を決めるのに夕方までかかる。歩き出してから、そこが昨日の寝床だったと気づく。","k 10 4 3 5 5 3 deep;e 0 -1 12 16 13 10 slate;k 8 -5 20 7 8 8 ash;v 0 -9 24 7 7 9 steel;e 0 10 11 10 9 7 iv;k 5 4 19 3 3 5 gold;l 0 -10 10 -8 -24 6 4 ash;f 0 13 4 low","slide"],
+    ["鍵ならしイタチ","AM","s","紺のイタチの首に鍵の束。前に一本だけ長い金の鍵をくわえている。","部屋の鍵を音で聞き分ける。大浴場の札が鳴ると、全員いっぺんに首を向ける。","k 5 1 3 4 4 3 deep;e 0 -2 12 8 12 9 slate;e 0 7 18 8 8 9 iv;k 5 5 25 2.7 3 4 plum;f 0 20 3 grin;l 0 -11 13 10 -21 18 3 deep;r 7 8 10 5 1.7 y steel;l -5 13 16 13 14 17 2 gold;r 14 14 17 4 1.7 y gold"],
+    ["屋号の巻きヒゲ","LS","c","輪をつくる薄紫の胴に、木版の屋号札。札の両端に巻いた白い髭が見える。","お客の名を一度で覚える。自分の宿の名前は看板を振り返らないと出てこない。","r 0 0 13 10 3 y plum;l 5 -1 21 7 -2 29 4 lil;e 4 3 30 8 8 8 lil;b 3 10 27 9 3 4 2 wood;f 4 32 4 doze;r -6 10 27 4 1.7 y iv;r 12 10 27 4 1.7 y iv;v 4 0 39 4 5 6 gold","slide"],
+    ["たび底カワラ","DK","w","二枚の瓦のような足に白い前掛け。青い幅広の瓦を頭に斜めにのせる。","道に落ちている瓦を拾う。自分の片足を屋根に戻そうとして一度転んだ。","k 9 1 5 8 11 5 slate;k 8 2 7 7 9 3 sky;e 0 0 17 12 9 10 tan;b 0 7 15 7 3 6 1 iv;l -14 0 27 12 0 31 4 deep;l -13 4 27 13 4 31 3 sky;f 0 20 4 stern"],
+    ["早駕籠カララ","VK","r","木の小さな駕籠から白い足。前後に長く出た橙の担ぎ棒と薄紫の房飾り。","どの客よりも先に目的地を知っている。道案内をするのはだいたい乗客の方。","k 9 7 3 4 4 3 wood;k 9 -7 3 4 4 3 wood;b 0 0 13 13 11 9 4 tan;b 0 0 24 15 13 3 2 clay;l 0 -24 23 0 24 23 2.3 wood;e 0 10 15 8 4 6 iv;f 0 16 4 wow;k 12 5 17 2.7 3 5 lil"],
+    ["夜道のランタン竜","LF","a","赤い竜の胴をぐるりと囲む金の格子。背中に輪の取っ手、口元に小さな炎。","通った坂道だけほんのり暖かい。客に礼を言われても自分のことだとは思わない。","k 7 0 3 4 5 3 deep;e 0 0 17 13 10 15 red;r 0 0 9 12 2 z gold;r 0 0 27 11 2 z gold;a 10 3 11 10 2 26 1.6 tea;r 0 0 35 5 2 y steel;f 0 22 4 wow;e 0 12 17 4 4 5 sun;l 7 -8 14 13 -16 21 2.5 red"],
+    ["毛布パタン","YI","u","折れた白い毛布が青い縁をめくる。中に薄い桃の長方形が重なり、小さな顔がある。","寒い客には端を貸す。貸したあと畳み方を思い出せず宿の人に手伝ってもらう。","k 7 1 2 4 4 2 plum;b 0 0 8 15 11 6 3 foam;b 0 -3 17 15 7 4 2 ice;b 0 -4 23 14 6 4 2 pink;l -13 5 12 12 5 12 1.8 sky;e 0 9 12 9 4 6 iv;f 0 13 4 doze"],
+    ["枕投げゴン太","LK","b","帯を巻く樽のような白い竜。大きな桃枕を両拳に挟み、尻尾が床を支える。","そっと投げたつもりの枕が隣の部屋に届く。謝罪用の枕も毎晩用意する。","k 9 2 4 6 6 4 deep;e 0 0 18 15 12 14 iv;r 0 0 12 13 2 z plum;k 6 -1 31 3 3 5 gold;f 0 23 5 stern;b 0 12 13 13 7 6 4 pink;k 13 11 14 5 5 5 iv;l 9 -7 13 18 -15 4 4 ash"],
+    ["影ふみ宿借り","HA","c","黒と紫で塗り分けられた細長い影。足元は床にはうように、一方向へ長い。","昼に鏡を見ても何も映らない。影同士の会議にだけ、きちんと顔を出す。","e 0 -3 3 12 20 3 deep;l 0 1 5 -6 3 30 4.3 plum;e -6 3 32 8 6 9 slate;e -6 8 32 6 2.5 6 ash;f -6 34 4 low;l 4 -10 3 15 -22 3 2.8 plum","slide"],
+    ["竜鈴キンと鳴る","LM","a","青い竜の頭と金の大鈴がつながる。下に赤い舌のような打ち棒がつく。","音がいいと褒められると何度も鳴る。日が暮れると褒めた人の居所を思い出せない。","k 7 1 3 4 5 3 slate;e 0 0 16 12 10 12 sky;r 0 0 11 11 2 z gold;t 0 0 6 13 14 9 .86 gold;e 1 5 25 9 8 8 iv;k 6 3 31 3 3 5 sky;f 1 27 4 grin;l 0 11 8 0 15 3 3 red;l 3 -9 15 11 -17 24 2.6 sky"],
+    ["山びこ湯守","LW","h","青い岩風呂のような台座に白い竜首。のぞく口から水色の湯気が二方向に出る。","温度を聞くと、あとから奥の谷も同じ温度を答える。自慢にならないよう小声で案内する。","b 0 0 6 17 13 6 5 slate;t 0 0 8 5 16 16 .81 sky;t 0 0 13 2 13 13 .8 sea;l -4 -3 11 -3 1 34 5 foam;e -3 5 36 10 8 8 iv;k 7 0 43 3 4 5 ice;f -3 38 4 wow;l 0 12 32 12 16 40 3 ice;e 12 17 43 6 5 5 foam;e -14 8 30 4 4 5 ash"],
+    ["七曲がり案内竜","LD","l","黄土色の首が二つに折れ曲がり、片側へ朱の矢印が並ぶ。下は低い谷型の台。","近道を聞いた客には曲がるたびにひとつ景色を教える。宿に着くと皆が少し詳しくなる。","e 0 0 5 13 11 5 clay;l -5 0 6 6 1 16 4 tan;l 6 1 16 -5 2 25 4.2 tan;l -5 2 25 5 3 34 4.5 tan;e 5 4 38 8 7 8 iv;f 5 40 4 stern;l -7 -2 19 -17 -2 19 2.3 wood;v -18 -2 19 5 3 4 red;l 7 -2 30 17 -2 30 2.1 wood;v 18 -2 30 5 3 4 red"],
+    ["母屋の梁ゴロウ","LR","b","分厚い木の梁から灰色の胴と四本の短脚。うしろに木目のような縞が渡る。","改装と聞いてから玄関をまたげなくなった。手伝いに来た大工の休憩台を務めている。","k 11 7 4 5 5 4 deep;k 11 -7 4 5 5 4 deep;e 0 0 15 16 12 12 slate;b 0 0 23 22 7 6 3 wood;b -10 5 21 2 3 6 1 tan;b 10 -6 24 2 3 6 1 tan;e 0 12 15 8 5 7 iv;f 0 17 4 stern;l -6 -11 14 -15 -22 11 3.5 ash"],
+    ["のぞき火の茶釜","AF","s","黒い茶釜から片側の三角耳。短い脚と、背でふるえる黄土色のしっぽがつく。","狸かと聞かれると蓋をして黙る。本人が言いたいのは、お茶はまだということ。","k 6 1 3 4 4 3 deep;e 0 0 15 13 11 12 slate;t 0 0 23 4 10 9 .89 steel;e 0 0 28 4 4 3 gold;v -7 -1 29 4 4 8 deep;e 0 9 17 8 4 6 ash;f 0 18 4 wink;l 7 -7 14 15 -16 24 3 tan;e 14 -16 26 4 4 5 sun"],
+    ["月待ち車掌","AY","u","月のかたちの金色の輪から緑がかった小さな顔。赤い車掌帽が輪の上で傾く。","終電のあと月に点呼を取る。雨の日は屋根にいる誰かが小さく返事をする。","k 6 1 2 4 4 2 deep;r 0 0 17 13 3.6 y gold;e -6 1 15 8 6 9 foam;f -6 17 4 low;b -5 0 30 9 7 3 1 red;b -5 5 32 10 6 2 1 berry;v 12 1 23 4 4 5 ash;l 9 0 12 15 1 7 2 sun"],
+    ["終点巻雲竜","LH","h","長い雲の胴が輪になり、紺の角をもつ大きな白い顔が飛び出す。水色の風の尾がうしろへ流れる。","始発の前にゆっくり点検する。客がいないときだけ、自分で終点のアナウンスをまねる。","r 0 -1 15 13 5 y lil;e -8 1 28 11 9 9 foam;e -5 8 24 10 7 4 iv;f -8 30 5 low;a 4 -1 32 8 -3 43 2.8 deep;l 8 -2 15 19 -11 18 4 ice;l 19 -11 18 24 -18 25 3.7 sky;e -13 -4 23 6 6 5 ash","glide"],
+  ]],
+];
+
+const research = [
+  ["ネコ", "2,700", "216", 3, 10, 140, 1.23, 0.27, 2, 75, "単体", "安価なつなぎ"],
+  ["タンクネコ", "10,800", "54", 1, 8, 110, 2.23, 0.27, 2, 150, "範囲", "短射程の壁"],
+  ["バトルネコ", "5,400", "675", 3, 12, 150, 0.9, 0.27, 2, 300, "単体", "近接の連打"],
+  ["キモネコ", "10,800", "2,700", 3, 10, 350, 4.23, 0.27, 2.2, 600, "単体", "後方からの単体攻撃"],
+  ["ウシネコ", "13,500", "351", 5, 30, 140, 0.33, 0.2, 2, 750, "単体", "高速突入と手数"],
+  ["ネコノトリ", "8,100", "3,780", 4, 10, 170, 1.63, 0.33, 2, 975, "範囲", "短射程の範囲攻撃"],
+  ["ネコフィッシュ", "18,900", "4,860", 3, 10, 150, 1.77, 0.33, 4.2, 1200, "単体", "高耐久の近接攻撃"],
+  ["ネコトカゲ", "21,600", "9,450", 3, 10, 400, 4.3, 0.33, 10.2, 1500, "単体", "長射程の大きな一撃"],
+  ["巨神ネコ", "27,000", "7,560", 1, 8, 150, 2.23, 0.6, 18.2, 1950, "範囲", "高耐久の重前衛"],
+  ["ネコ超人", "18,900", "11,340", 10, 38, 250, 2.4, 0.23, 19.53, 2400, "範囲", "高機動・長い再出撃待ち"],
+];
+
+// 各色の影、中間色、明部。描画時に重ねる輪郭は全モデルで共通。
+const pigment = {
+  iv: ["#baa9bb", "#f1e6d8", "#fff8e8"],
+  ash: ["#938caa", "#cdc6d5", "#ece6eb"],
+  ink: ["#231c35", "#342940", "#4e3950"],
+  red: ["#a64452", "#db6357", "#ff9c7c"],
+  sun: ["#c77935", "#f4ad43", "#ffdc86"],
+  apr: ["#bb6f60", "#f2a083", "#ffccab"],
+  tea: ["#7c4f45", "#b97853", "#dfa977"],
+  pink: ["#ae557d", "#e684af", "#ffc0ce"],
+  sea: ["#287480", "#3faca8", "#8cdbbf"],
+  sky: ["#3b69a2", "#65a9d4", "#a5d9ed"],
+  ice: ["#6898ba", "#a8d4e7", "#ddf4f2"],
+  lil: ["#7361a8", "#a88ad5", "#d9b9ed"],
+  plum: ["#524273", "#7d5b9e", "#aa8bc7"],
+  moss: ["#4c5c46", "#698b59", "#a6b77d"],
+  lime: ["#7f8b45", "#b9c65c", "#e1e99b"],
+  wood: ["#6f4850", "#a36c56", "#d6a276"],
+  clay: ["#995741", "#cf8662", "#efb387"],
+  slate: ["#4f4a65", "#74758f", "#a2a6bb"],
+  deep: ["#30273c", "#49435c", "#686282"],
+  steel: ["#62738a", "#a0b4bf", "#d0dddc"],
+  foam: ["#9ab6bc", "#d9eee0", "#f6f8df"],
+  gold: ["#b28a45", "#e5bd57", "#ffeba0"],
+  gum: ["#995a84", "#cb90ad", "#f1c4d9"],
+  berry: ["#813857", "#b55274", "#e4819a"],
+  tan: ["#996d64", "#ca9e7c", "#efd2a7"],
+};
+
+function rgba(hex, alpha = 255) {
+  const rgb = Number.parseInt(hex.slice(1), 16);
+  return ((rgb >> 16) | (rgb & 65280) | ((rgb & 255) << 16) | (alpha << 24)) >>> 0;
+}
+
+const materialNames = ["void", ...Object.keys(pigment)];
+const materials = Object.fromEntries(materialNames.map((name, index) => [name, index]));
+const pixelColors = [0, ...Object.values(pigment).flatMap(ramp => ramp.map(color => rgba(color)))];
+const pixelColor = (material, tone) => (material - 1) * 3 + tone + 1;
+const voxelAxis = 36;
+const voxelSize = voxelAxis * 2 + 1;
+const voxelPlane = voxelSize * voxelSize;
+const voxelLevels = 64;
+const pitch = 0.65;
+const outerInk = rgba("#282137");
+const shadowInk = rgba("#4a3c66", 42);
+
+function voxelIndex(x, y, z) {
+  return z * voxelPlane + (y + voxelAxis) * voxelSize + x + voxelAxis;
+}
+
+function projection(radii) {
+  let top = Infinity;
+  let bottom = 5;
+  let orbit = 0;
+  for (let z = 0; z < radii.length; z++) {
+    const radius = radii[z];
+    if (radius < 0) continue;
+    orbit = Math.max(orbit, radius);
+    top = Math.min(top, -z - radius * pitch);
+    bottom = Math.max(bottom, -z + radius * pitch);
+  }
+  return {
+    frameHalf: Math.ceil(orbit) + 2,
+    floor: Math.ceil(-top) + 2,
+    frameHeight: Math.ceil(bottom) + Math.ceil(-top) + 7,
+  };
+}
+
+function sculpt(recipe) {
+  const volume = new Uint8Array(voxelPlane * voxelLevels);
+  let levels = 0;
+  let halfWidth = 0;
+  let halfDepth = 0;
+
+  function paint(x, y, z, rx, ry, rz, material, inside) {
+    const x0 = Math.max(-voxelAxis + 1, Math.ceil(x - rx));
+    const x1 = Math.min(voxelAxis - 1, Math.floor(x + rx));
+    const y0 = Math.max(-voxelAxis + 1, Math.ceil(y - ry));
+    const y1 = Math.min(voxelAxis - 1, Math.floor(y + ry));
+    const z0 = Math.max(0, Math.ceil(z - rz));
+    const z1 = Math.min(voxelLevels - 2, Math.floor(z + rz));
+    for (let height = z0; height <= z1; height++) {
+      for (let row = y0; row <= y1; row++) {
+        let index = voxelIndex(x0, row, height);
+        for (let column = x0; column <= x1; column++, index++) {
+          if (inside(column - x, row - y, height - z)) {
+            volume[index] = material;
+          }
+        }
+      }
+    }
+    if (material) {
+      levels = Math.max(levels, z1 + 1);
+      halfWidth = Math.max(halfWidth, Math.abs(x0), Math.abs(x1));
+      halfDepth = Math.max(halfDepth, Math.abs(y0), Math.abs(y1));
+    }
+  }
+
+  function oval(x, y, z, rx, ry, rz, material) {
+    paint(x, y, z, rx, ry, rz, material, (dx, dy, dz) => (dx / rx) ** 2 + (dy / ry) ** 2 + (dz / rz) ** 2 <= 1);
+  }
+
+  function box(x, y, z, rx, ry, rz, round, material) {
+    paint(x, y, z, rx, ry, rz, material, (dx, dy, dz) => {
+      const ex = Math.max(0, Math.abs(dx) - rx + round);
+      const ey = Math.max(0, Math.abs(dy) - ry + round);
+      const ez = Math.max(0, Math.abs(dz) - rz + round);
+      return ex * ex + ey * ey + ez * ez <= round * round;
+    });
+  }
+
+  function taper(x, y, base, height, lower, upper, depth, material) {
+    const radius = Math.max(lower, upper);
+    paint(x, y, base, radius, radius * depth, height, material, (dx, dy, dz) => {
+      if (dz < 0) return false;
+      const rim = lower + (upper - lower) * dz / height;
+      return dx * dx + (dy / depth) ** 2 <= rim * rim;
+    });
+  }
+
+  function rod(x, y, z, ex, ey, ez, radius, material) {
+    const vx = ex - x;
+    const vy = ey - y;
+    const vz = ez - z;
+    const lengthSquared = vx * vx + vy * vy + vz * vz || 1;
+    paint((x + ex) / 2, (y + ey) / 2, (z + ez) / 2,
+      Math.abs(vx) / 2 + radius, Math.abs(vy) / 2 + radius, Math.abs(vz) / 2 + radius,
+      material, (dx, dy, dz) => {
+        const ratio = Math.max(-.5, Math.min(.5, (dx * vx + dy * vy + dz * vz) / lengthSquared));
+        return (dx - vx * ratio) ** 2 + (dy - vy * ratio) ** 2 + (dz - vz * ratio) ** 2 <= radius * radius;
+      });
+  }
+
+  function hoop(x, y, z, radius, tube, plane, material) {
+    const span = radius + tube;
+    paint(x, y, z, plane === "x" ? tube : span, plane === "y" ? tube : span, plane === "z" ? tube : span,
+      material, (dx, dy, dz) => {
+        const ring = plane === "x" ? Math.hypot(dy, dz) :
+          plane === "y" ? Math.hypot(dx, dz) : Math.hypot(dx, dy);
+        const offset = plane === "x" ? dx : plane === "y" ? dy : dz;
+        return (ring - radius) ** 2 + offset * offset <= tube * tube;
+      });
+  }
+
+  function jewel(x, y, z, rx, ry, rz, material) {
+    paint(x, y, z, rx, ry, rz, material, (dx, dy, dz) =>
+      Math.abs(dx / rx) + Math.abs(dy / ry) + Math.abs(dz / rz) <= 1);
+  }
+
+  function face(x, z, gap, expression) {
+    const dark = materials.ink;
+    function mark(cx, cz, rx, rz, color) {
+      for (let height = Math.max(0, Math.ceil(cz - rz)); height <= Math.floor(cz + rz); height++) {
+        for (let column = Math.ceil(cx - rx); column <= Math.floor(cx + rx); column++) {
+          if (((column - cx) / rx) ** 2 + ((height - cz) / rz) ** 2 > 1) continue;
+          for (let row = halfDepth; row >= -halfDepth; row--) {
+            const index = voxelIndex(column, row, height);
+            if (!volume[index]) continue;
+            volume[index] = color;
+            if (volume[index - voxelSize]) volume[index - voxelSize] = color;
+            break;
+          }
+        }
+      }
+    }
+    for (const side of [-1, 1]) {
+      const eye = x + side * gap;
+      if (expression === "doze" || (expression === "wink" && side > 0)) {
+        mark(eye, z + 2, 2, .7, dark);
+      } else {
+        mark(eye, z + 2, 1.35, expression === "wow" ? 2.6 : 2, dark);
+      }
+      if (expression === "stern") mark(eye - side, z + 4, 1.65, .7, dark);
+      if (expression !== "stern" && expression !== "low") mark(eye + 2 * side, z - 1, 1.45, .67, materials.apr);
+    }
+    if (expression === "grin") {
+      mark(x, z - 3, 3, 1.25, dark);
+      mark(x, z - 4, 1.65, .65, materials.pink);
+    } else if (expression === "wow") {
+      mark(x, z - 3, 1.6, 1.8, dark);
+    } else if (expression === "low") {
+      mark(x, z - 3, 2.2, .65, dark);
+    } else {
+      mark(x, z - 3, 1.55, .72, dark);
+    }
+  }
+
+  // b = 角丸箱、e = 楕円体、t = 円錐台、l = 棒、r = 輪、v = 菱形。
+  // k と a は左右対称の楕円体と棒、f は正面の表情。座標は x、奥行き、地面からの高さ。
+  for (const shape of recipe.split(";")) {
+    const [op, ...tokens] = shape.trim().split(/\s+/);
+    const style = tokens.pop();
+    if (op === "f") {
+      face(...tokens.map(Number), style);
+      continue;
+    }
+    const material = materials[style];
+    if (material === undefined) throw new Error("断面モデルの色が不明です " + style);
+    const plane = op === "r" ? tokens.pop() : null;
+    const args = tokens.map(Number);
+    switch (op) {
+      case "e": oval(...args, material); break;
+      case "b": box(...args, material); break;
+      case "t": taper(...args, material); break;
+      case "l": rod(...args, material); break;
+      case "r": hoop(...args, plane, material); break;
+      case "v": jewel(...args, material); break;
+      case "k": {
+        const [x, ...rest] = args;
+        oval(-x, ...rest, material);
+        oval(x, ...rest, material);
+        break;
+      }
+      case "a": {
+        const [x, y, z, ex, ey, ez, radius] = args;
+        rod(-x, y, z, -ex, ey, ez, radius, material);
+        rod(x, y, z, ex, ey, ez, radius, material);
+        break;
+      }
+      default: throw new Error("断面モデルの形が不明です " + op);
+    }
+  }
+
+  // 回転軸が常に中央になるよう、前後左右の余白を対称に取る。
+  const width = 2 * halfWidth + 1;
+  const depth = 2 * halfDepth + 1;
+  const area = width * depth;
+  const data = new Uint8Array(area * levels);
+  const radii = new Float32Array(levels);
+  let prow = 0;
+  let count = 0;
+  for (let z = 0; z < levels; z++) {
+    let radiusSquared = -1;
+    for (let y = -halfDepth; y <= halfDepth; y++) {
+      for (let x = -halfWidth; x <= halfWidth; x++) {
+        const voxel = voxelIndex(x, y, z);
+        const material = volume[voxel];
+        if (!material) continue;
+        const light = (!volume[voxel - 1] ? 3 : 0) - (!volume[voxel + 1] ? 3 : 0)
+          + (!volume[voxel + voxelSize] ? 2 : 0) - (!volume[voxel - voxelSize] ? 2 : 0)
+          + (!volume[voxel + voxelPlane] ? 5 : 0) - (z > 0 && !volume[voxel - voxelPlane] ? 4 : 0);
+        data[z * area + (y + halfDepth) * width + x + halfWidth] = pixelColor(material, light >= 4 ? 2 : light < 0 ? 0 : 1);
+        radiusSquared = Math.max(radiusSquared, x * x + y * y);
+        if (z >= 6) prow = Math.max(prow, y);
+        count = z + 1;
+      }
+    }
+    if (radiusSquared < 0) {
+      radii[z] = -1;
+      continue;
+    }
+    radii[z] = Math.sqrt(radiusSquared) + .8;
+  }
+  if (!count) throw new Error("空のスプライトです");
+  return {
+    width, depth, area, halfWidth, halfDepth, data, radii, count, prow, ...projection(radii),
+  };
+}
+
+const spriteCache = new Map();
+function spriteFor(unit) {
+  if (!spriteCache.has(unit.id)) {
+    // 一覧で描画済みのスプライトはCanvasに残るので、断面キャッシュは直近の分だけ使う。
+    if (spriteCache.size >= 36) spriteCache.delete(spriteCache.keys().next().value);
+    spriteCache.set(unit.id, sculpt(unit.recipe));
+  }
+  return spriteCache.get(unit.id);
+}
+
+function drawStack(canvas, sprite, angle) {
+  const {width, area, halfWidth, halfDepth, data, radii, count, frameHalf, frameHeight, floor} = sprite;
+  const frameWidth = frameHalf * 2 + 1;
+  if (canvas.width !== frameWidth) canvas.width = frameWidth;
+  if (canvas.height !== frameHeight) canvas.height = frameHeight;
+  const ctx = canvas.getContext("2d");
+  const image = ctx.createImageData(frameWidth, frameHeight);
+  const output = new Uint32Array(image.data.buffer);
+  const silhouette = new Uint32Array(output.length);
+  const radians = angle * Math.PI / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+
+  // 下の断面から順に、表示先のピクセルを逆回転して最近傍の色を拾う。
+  for (let z = 0; z < count; z++) {
+    const radius = radii[z];
+    if (radius < 0) continue;
+    const center = floor - z;
+    const reach = Math.ceil(radius);
+    const rise = Math.ceil(radius * pitch);
+    for (let sy = center - rise; sy <= center + rise; sy++) {
+      if (sy < 1 || sy >= frameHeight - 1) continue;
+      const flatY = (sy - center) / pitch;
+      const yToX = flatY * sin;
+      const yToY = flatY * cos;
+      for (let sx = -reach; sx <= reach; sx++) {
+        const x = Math.round(sx * cos + yToX);
+        const y = Math.round(yToY - sx * sin);
+        if (Math.abs(x) > halfWidth || Math.abs(y) > halfDepth) continue;
+        const color = data[z * area + (y + halfDepth) * width + x + halfWidth];
+        if (color) silhouette[sy * frameWidth + frameHalf + sx] = pixelColors[color];
+      }
+    }
+  }
+
+  const shadowWidth = Math.max(5, frameHalf * .57);
+  for (let y = 1; y < frameHeight - 1; y++) {
+    for (let x = 1; x < frameWidth - 1; x++) {
+      const i = y * frameWidth + x;
+      if (silhouette[i]) {
+        output[i] = silhouette[i];
+      } else if (silhouette[i - 1] || silhouette[i + 1] || silhouette[i - frameWidth] || silhouette[i + frameWidth]) {
+        output[i] = outerInk;
+      } else if (((x - frameHalf) / shadowWidth) ** 2 + ((y - floor - 1) / 4) ** 2 <= 1) {
+        output[i] = shadowInk;
+      }
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+function spriteSheet(frames) {
+  const {width, depth, area, count} = frames[0];
+  const strip = document.createElement("canvas");
+  strip.width = width * count;
+  strip.height = depth * frames.length;
+  const ctx = strip.getContext("2d");
+  const image = ctx.createImageData(strip.width, strip.height);
+  const pixels = new Uint32Array(image.data.buffer);
+  for (const [frame, sprite] of frames.entries()) {
+    for (let z = 0; z < count; z++) {
+      for (let y = 0; y < depth; y++) {
+        const offset = z * area + y * width;
+        const destination = (frame * depth + y) * strip.width + z * width;
+        for (let x = 0; x < width; x++) pixels[destination + x] = pixelColors[sprite.data[offset + x]];
+      }
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+  return strip;
+}
+
+function saveStrip(unit, kind, frames) {
+  const {width, depth, count} = frames[0];
+  const strip = spriteSheet(frames);
+  const size = [width, depth, count].join("x");
+  const fps = kind === "idle" ? "" : "-" + frames.length + "f-" + motionFps + "fps";
+  const link = document.createElement("a");
+  link.download = "daken-" + numberOf(unit).slice(1) + "_" + kind + "_" + size + fps + ".png";
+  link.href = strip.toDataURL("image/png");
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
+
+const motionFps = 6;
+const walkCycles = {
+  stride: [[0, -1, 0, 0, -1], [0, 1, 0, 3, -1], [0, 2, 0, 2, 1], [0, -1, 0, 0, 1], [0, 1, 0, -3, 1], [0, 2, 0, -2, -1]],
+  roll: [[-1, 1, 0, 0, 0], [0, 2, 0, 0, 0], [1, 1, 0, 0, 1], [1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [-1, 0, 0, 0, -1]],
+  glide: [[0, 1, 2, 0, 1, 0], [0, 2, 3, 0, 1, 4], [0, 1, 2, 0, 0, 2], [0, -1, 1, 0, -1, -2], [0, 0, 1, 0, -1, -4], [0, 1, 2, 0, 0, -1]],
+  hop: [[0, -1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 2, 5, 0, -1], [1, 1, 6, 0, 0], [0, 2, 3, 0, 1], [0, -1, 0, 0, 0]],
+  slide: [[-1, -1, 0, 0, -1], [0, 1, 0, 0, 0], [1, 2, 0, 0, 1], [1, 1, 0, 0, 2], [0, 0, 0, 0, 0], [-1, -1, 0, 0, -2]],
+};
+
+// キーフレームは前後の移動、上体の前傾、高さ、攻撃の段階、左右の傾き。
+// 攻撃の段階が負の値なら溜め、正ならヒットの余韻を描く。
+const attackCycles = {
+  m: ["jab", [[0, 0, 0, 0], [-2, -4, 0, 0], [3, 5, 1, 1], [2, 2, 0, 2], [0, 0, 0, 0]]],
+  w: ["brace", [[0, 0, 0, 0], [-1, -4, 0, 0], [1, -1, 0, 0], [3, 3, 0, 1], [2, 2, 0, 2], [0, 0, 0, 0]]],
+  r: ["dash", [[0, 0, 0, 0], [-3, -3, 0, 0], [4, 6, 3, 1], [5, 4, 1, 2], [1, 1, 0, 0]]],
+  s: ["jab", [[0, 0, 0, 0], [-1, -3, 0, 0, -2], [3, 5, 1, 1, -2], [0, 0, 0, 2, -1], [-1, -3, 0, 0, 2], [3, 5, 1, 1, 2], [0, 0, 0, 2, 1], [0, 0, 0, 0]]],
+  l: ["shot", [[0, 0, 0, 0], [-1, -2, 0, -1], [-1, -3, 0, -2], [-2, -4, 0, 1], [-1, -2, 0, 2], [0, 0, 0, 3], [0, 1, 0, 4], [0, 0, 0, 0]]],
+  a: ["fan", [[0, 0, 0, 0], [-1, -2, 0, 0, -3], [-1, -3, 0, -1, -4], [2, 4, 1, 1, 2], [2, 2, 0, 2, 3], [1, 1, 0, 3, 1], [0, 0, 0, 3], [0, 0, 0, 0], [0, 0, 0, 0]]],
+  b: ["stomp", [[0, 0, 0, 0], [-1, -2, 0, 0], [-2, -3, 1, 0], [-2, -4, 4, -1], [-1, -2, 5, -2], [2, 4, 1, 1], [3, 3, 0, 2], [2, 2, 0, 3], [1, 1, 0, 3], [0, -1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]],
+  h: ["charge", [
+    [0, 0, 0, 0], [-1, -1, 0, 0], [-1, -2, 0, -1], [-1, -2, 0, -1, 1],
+    [-2, -3, 1, -2, -1], [-2, -3, 1, -2, 1], [-2, -4, 1, -3, -1], [-3, -4, 1, -3, 1],
+    [-3, -5, 2, -4, -1], [-3, -5, 2, -4, 1], [-2, -6, 2, -5, -1], [-2, -6, 3, -5, 1],
+    [1, 5, 1, 1], [-2, -4, 1, 2, -2], [-1, -3, 0, 3, 1], [0, -2, 0, 4, -1],
+    [0, -2, 0, 5], [0, -1, 0, 5], [0, -1, 0, 6], [0, 0, 0, 6],
+    [0, 0, 0, 7], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
+  ]],
+  c: ["rings", [[0, 0, 0, 0], [-1, -2, 1, -1], [-1, -2, 2, -2], [1, 1, 2, 1], [1, 1, 1, 2], [1, 0, 1, 3], [0, 0, 0, 4], [0, 0, 0, 4], [0, 0, 0, 0], [0, 0, 0, 0]]],
+  u: ["sweep", [[0, 0, 0, 0], [-2, -3, 0, 0, -4], [0, 4, 0, 1, 1], [3, 4, 0, 2, 4], [1, 1, 0, 2, 2], [0, 0, 0, 0]]],
+};
+
+const attackPigments = {
+  N: ["sun", "iv"], G: ["moss", "lime"], F: ["red", "sun"], W: ["sea", "ice"],
+  E: ["sun", "gold"], B: ["moss", "gold"], V: ["lil", "foam"], R: ["tea", "ash"],
+  P: ["plum", "lime"], D: ["clay", "tan"], I: ["sky", "ice"], K: ["red", "ash"],
+  S: ["plum", "pink"], H: ["plum", "lil"], L: ["lil", "gold"], A: ["berry", "gum"],
+  M: ["steel", "iv"], Y: ["pink", "gold"],
+};
+
+function wheelsFor(unit) {
+  return unit.recipe.split(";").flatMap(shape => {
+    const [op, x, y, z, rx, ry, rz] = shape.trim().split(/\s+/);
+    if (!["e", "k"].includes(op) || Number(z) > 6 || Number(ry) < 4 || Number(rz) < 3) return [];
+    const positions = op === "k" ? [Number(x), -Number(x)] : [Number(x)];
+    return positions.map(position => [position, ...[y, z, rx, ry, rz].map(Number)]);
+  });
+}
+
+function bakeMotion(unit, kind) {
+  const base = spriteFor(unit);
+  const walking = kind === "walk";
+  const travel = walking ? unit.travel : "";
+  let effect = "";
+  let keys = [[0, 0, 0, 0]];
+  if (walking) keys = walkCycles[travel];
+  if (kind === "attack") [effect, keys] = attackCycles[unit.role];
+  // 同じユニットは静止、歩行、攻撃で同じ回転軸と断面寸法を使う。
+  const halfWidth = Math.max(base.halfWidth + 6, 19);
+  const halfDepth = base.halfDepth + 27;
+  const count = base.count + 9;
+  const width = 2 * halfWidth + 1;
+  const depth = 2 * halfDepth + 1;
+  const area = width * depth;
+  const dimensions = {width, depth, area, halfWidth, halfDepth, count};
+  const sharedRadii = new Float32Array(count).fill(-1);
+  const wheels = travel === "roll" ? wheelsFor(unit) : [];
+  const [accent, bright] = attackPigments[unit.type[0]];
+  const edgeColor = pixelColor(materials[accent], 1);
+  const glowColor = pixelColor(materials[bright], 2);
+  const footLine = Math.max(6, Math.min(11, base.count * .27));
+  const frames = keys.map((key, frameIndex) => {
+    const [drive, lean, lift, beat, sway = 0, flap = 0] = key;
+    const data = new Uint8Array(area * count);
+    const radii = new Float32Array(count).fill(-1);
+    function put(x, y, z, color) {
+      if (z < 0 || z >= count || Math.abs(x) > halfWidth || Math.abs(y) > halfDepth) return;
+      data[z * area + (y + halfDepth) * width + x + halfWidth] = color;
+      radii[z] = Math.max(radii[z], x * x + y * y);
+    }
+
+    for (let z = 0; z < base.count; z++) {
+      if (base.radii[z] < 0) continue;
+      const height = z / Math.max(1, base.count - 1);
+      const shiftX = Math.round(height * sway);
+      const shiftY = drive + Math.round(height * lean);
+      const leg = walking ? Math.max(0, 1 - z / footLine) * beat : 0;
+      for (let x = -base.halfWidth; x <= base.halfWidth; x++) {
+        const step = Math.round(Math.max(-1, Math.min(1, x / 3)) * leg);
+        const wing = Math.max(0, 1.45 * Math.abs(x) / Math.max(base.halfWidth, 1) - .45) * flap;
+        const raised = z + lift + Math.round(wing);
+        for (let y = -base.halfDepth; y <= base.halfDepth; y++) {
+          const color = base.data[z * base.area + (y + base.halfDepth) * base.width + x + base.halfWidth];
+          if (color) put(x + shiftX, y + shiftY + step, Math.max(0, raised), color);
+        }
+      }
+    }
+
+    function ball(cx, cy, cz, rx, ry, rz, color) {
+      cx = Math.round(cx);
+      cy = Math.round(cy);
+      cz = Math.round(cz);
+      for (let z = -rz; z <= rz; z++) {
+        for (let y = -ry; y <= ry; y++) {
+          for (let x = -rx; x <= rx; x++) {
+            if ((x / rx) ** 2 + (y / ry) ** 2 + (z / rz) ** 2 <= 1) {
+              put(x + cx, y + cy, z + cz, color);
+            }
+          }
+        }
+      }
+    }
+
+    for (const [x, y, z, rx, ry, rz] of wheels) {
+      const fullTurn = frameIndex * Math.PI / 3;
+      const rimX = x + Math.sign(x || 1) * Math.max(1, Math.round(rx * .75));
+      ball(rimX, y + drive + Math.cos(fullTurn) * ry * .64, z + Math.sin(fullTurn) * rz * .64,
+        1, 1, 1, pixelColor(materials.steel, 2));
+    }
+
+    if (!walking && beat !== 0) {
+      const nose = base.prow + Math.max(0, drive) + 3;
+      const height = Math.max(5, Math.round(base.count * .51) + lift);
+      const span = Math.max(5, Math.min(12, base.halfWidth - 2));
+      if (beat < 0) {
+        const phase = frameIndex * Math.PI / 4;
+        const radius = Math.max(4, 10 + beat);
+        for (let i = 0; i < 4; i++) {
+          const turn = phase + i * Math.PI / 2;
+          ball(Math.cos(turn) * radius, nose + 1, height + Math.sin(turn) * radius,
+            1 + (beat < -2 ? 1 : 0), 1, 1, i % 2 ? glowColor : edgeColor);
+        }
+      } else if (effect === "shot" || effect === "charge") {
+        const power = effect === "charge" ? 2 : 0;
+        const distance = Math.min(18, 4 + (beat - 1) * (power ? 3 : 4));
+        ball(sway, nose + distance, height + beat - 1, power + (beat < 5 ? 3 : 1), 4, 2, edgeColor);
+        ball(sway, nose + distance - 1, height + beat, power + 1, 4, 1, glowColor);
+        for (const side of [-1, 1]) {
+          ball(side * (3 + beat), nose + distance - 6, height - side * 2, 1, 3, 1, glowColor);
+        }
+        if (power && beat <= 3) {
+          for (const side of [-1, 1]) {
+            ball(side * (span + beat), nose + 6, height + beat * 2, 2, 3, 2, edgeColor);
+            ball(side * (span - 1), nose + 7, 3 + beat, 2, 2, 2, glowColor);
+          }
+        }
+      } else if (effect === "stomp" || effect === "rings") {
+        const radius = Math.min(17, span / 2 + beat * 3);
+        for (let i = 0; i < 11; i++) {
+          const turn = i * Math.PI * 2 / 11;
+          const up = effect === "rings" ? height + Math.sin(turn) * radius * .54 : 2 + (i % 2);
+          const ahead = effect === "rings" ? nose + beat * 2 : 5 + Math.sin(turn) * radius;
+          ball(Math.cos(turn) * radius, ahead, up, 1 + (i % 2), 2, 1, i % 2 ? glowColor : edgeColor);
+        }
+      } else if (effect === "fan" || effect === "sweep") {
+        const center = effect === "fan" ? 0 : beat === 1 ? -4 : 5;
+        for (let i = -3; i <= 3; i++) {
+          ball(center + i * beat * 1.7, nose + beat * 2 - Math.abs(i), height + (3 - Math.abs(i)) * 1.45,
+            2, 2, 1, i % 2 ? glowColor : edgeColor);
+        }
+      } else {
+        const reach = effect === "dash" ? 4 : effect === "brace" ? 2 : 3;
+        for (const side of [-1, 0, 1]) {
+          ball(sway + side * (4 + beat * 2), nose + reach + beat, height - Math.abs(side) * 3,
+            2, reach, 1, side ? edgeColor : glowColor);
+        }
+      }
+    }
+
+    for (let z = 0; z < count; z++) {
+      if (radii[z] >= 0) radii[z] = Math.sqrt(radii[z]) + .8;
+      sharedRadii[z] = Math.max(sharedRadii[z], radii[z]);
+    }
+    return {data, radii};
+  });
+  const view = projection(sharedRadii);
+  return frames.map(frame => ({...dimensions, ...frame, ...view}));
+}
+
+function bakeClips(unit) {
+  const clips = Object.fromEntries(["idle", "walk", "attack"].map(kind => [kind, bakeMotion(unit, kind)]));
+  const allFrames = Object.values(clips).flat();
+  const sharedRadii = new Float32Array(allFrames[0].count).fill(-1);
+  for (const {radii} of allFrames) {
+    for (let z = 0; z < radii.length; z++) sharedRadii[z] = Math.max(sharedRadii[z], radii[z]);
+  }
+  // プレビューでも構図を固定し、別のモーションへ切り替えたときに大きさを保つ。
+  const view = projection(sharedRadii);
+  for (const frame of allFrames) Object.assign(frame, view);
+  return clips;
+}
+const byId = id => document.getElementById(id);
+const units = districts.flatMap(([district, entries]) => entries.map(([name, typeCodes, role, look, flavor, recipe, travel = "stride"]) => ({
+  district, name, type: [...typeCodes], role, look, flavor, recipe, travel,
+}))).map((unit, index) => ({id: index + 1, ...unit}));
+const typeCodes = Object.keys(types);
+const numberOf = unit => "#" + String(unit.id).padStart(3, "0");
+
+function multiplier(attack, defenders) {
+  const [, , , strong, weak, immune] = types[attack];
+  return defenders.reduce((value, defense) => {
+    if (immune.includes(defense)) return 0;
+    if (strong.includes(defense)) return value * 2;
+    if (weak.includes(defense)) return value / 2;
+    return value;
+  }, 1);
+}
+
+function make(tag, className, content) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (content !== undefined) element.textContent = content;
+  return element;
+}
+
+function badge(code) {
+  const [name, ink, fill] = types[code];
+  const label = make("span", "type-badge", name);
+  label.style.setProperty("--type-ink", ink);
+  label.style.setProperty("--type-fill", fill);
+  return label;
+}
+
+function setTile(element, code) {
+  const [, ink, fill] = types[code];
+  element.style.setProperty("--tile", "color-mix(in srgb, " + fill + ", white 27%)");
+  element.style.setProperty("--dot", "color-mix(in srgb, " + ink + " 27%, " + fill + ")");
+}
+
+const cards = byId("cards");
+const previews = new IntersectionObserver(entries => {
+  for (const {target, isIntersecting} of entries) {
+    if (!isIntersecting) continue;
+    const unit = units[Number(target.dataset.unit) - 1];
+    drawStack(target.querySelector("canvas"), spriteFor(unit), 335);
+    previews.unobserve(target);
+  }
+}, {rootMargin: "160px"});
+
+function addCard(unit) {
+  const card = make("button", "card");
+  card.type = "button";
+  card.dataset.unit = unit.id;
+  card.setAttribute("aria-haspopup", "dialog");
+  const tile = make("span", "tile");
+  setTile(tile, unit.type[0]);
+  const canvas = make("canvas");
+  canvas.setAttribute("aria-hidden", "true");
+  const open = make("span", "tile-open", "↗");
+  open.setAttribute("aria-hidden", "true");
+  tile.append(canvas, make("span", "unit-no", numberOf(unit)), open);
+  const copy = make("span", "card-copy");
+  const info = make("span", "card-info");
+  info.append(...unit.type.map(badge), make("span", "role-chip", roles[unit.role][0]));
+  copy.append(make("span", "card-name", unit.name), info);
+  card.append(tile, copy);
+  return card;
+}
+
+function addOptions(select, options) {
+  for (const [value, label] of options) select.add(new Option(label, value));
+}
+
+function normalize(text) {
+  return text.normalize("NFKC").toLocaleLowerCase("ja").replace(/[ァ-ヶ]/g,
+    letter => String.fromCharCode(letter.charCodeAt(0) - 96));
+}
+
+const catalogCards = units.map(addCard);
+cards.append(...catalogCards);
+const searchText = units.map(unit => normalize([
+  numberOf(unit), unit.name, unit.look, unit.flavor, unit.district, roles[unit.role][0], ...unit.type.map(code => types[code][0]),
+].join(" ")));
+const options = Object.entries(types).map(([code, [label]]) => [code, label]);
+addOptions(byId("type-filter"), options);
+addOptions(byId("role-filter"), Object.entries(roles).map(([code, [name]]) => [code, name]));
+addOptions(byId("district-filter"), districts.map(([name]) => [name, name]));
+for (const id of ["attack-type", "defense-type", "defense-second"]) addOptions(byId(id), options);
+byId("unit-total").textContent = units.length;
+byId("type-total").textContent = typeCodes.length;
+byId("role-total").textContent = Object.keys(roles).length;
+
+let shown = units;
+function filter() {
+  const terms = normalize(byId("search").value).trim().split(/\s+/).filter(Boolean);
+  const type = byId("type-filter").value;
+  const role = byId("role-filter").value;
+  const district = byId("district-filter").value;
+  shown = units.filter((unit, index) => {
+    const visible = (!type || unit.type.includes(type)) && (!role || unit.role === role) &&
+      (!district || unit.district === district) && terms.every(term => searchText[index].includes(term));
+    const card = catalogCards[index];
+    card.hidden = !visible;
+    if (visible && card.querySelector("canvas").width === 300) previews.observe(card);
+    return visible;
+  });
+  byId("result-count").textContent = shown.length + " / " + units.length + " 体";
+  byId("empty").hidden = shown.length > 0;
+}
+const filterForm = byId("filters");
+filterForm.addEventListener("input", filter);
+filterForm.addEventListener("submit", event => event.preventDefault());
+filterForm.addEventListener("reset", () => requestAnimationFrame(filter));
+filter();
+
+const dialog = byId("detail");
+const stage = byId("turn-stage");
+const viewer = byId("turn-canvas");
+const angleInput = byId("angle");
+const degrees = byId("degrees");
+degrees.setAttribute("aria-live", "off");
+const spin = byId("spin");
+const motions = byId("motions");
+const motionSpec = byId("motion-spec");
+const previous = byId("prev-unit");
+const next = byId("next-unit");
+let selected;
+let browsing = [];
+let browsingIndex = 0;
+let angle = 0;
+let rotate = false;
+let mode = "idle";
+let clips;
+let frames = [];
+let motionFrame = 0;
+let motionStart = 0;
+let animation = null;
+let lastTick = 0;
+let lastDraw = null;
+let drag = null;
+
+function drawAngle(value) {
+  angle = (value % 360 + 360) % 360;
+  const degree = Math.round(angle) % 360;
+  const sprite = frames[motionFrame];
+  if (!dialog.open || !sprite || (lastDraw?.sprite === sprite && lastDraw.degree === degree)) return;
+  drawStack(viewer, sprite, degree);
+  lastDraw = {sprite, degree};
+  angleInput.value = degree;
+  degrees.textContent = degree + "°";
+}
+
+function playFrame(time) {
+  const elapsed = lastTick ? Math.min(time - lastTick, 50) : 0;
+  lastTick = time;
+  motionFrame = Math.floor(Math.max(0, time - motionStart) * motionFps / 1000) % frames.length;
+  drawAngle(angle + (rotate ? elapsed * .052 : 0));
+  animation = requestAnimationFrame(playFrame);
+}
+
+function updatePlayback() {
+  if (dialog.open && !document.hidden && (rotate || mode !== "idle")) {
+    if (animation === null) {
+      lastTick = 0;
+      animation = requestAnimationFrame(playFrame);
+    }
+  } else if (animation !== null) {
+    cancelAnimationFrame(animation);
+    animation = null;
+  }
+}
+
+function setSpin(active) {
+  rotate = active;
+  spin.setAttribute("aria-pressed", String(active));
+  updatePlayback();
+}
+
+function changeMotion(kind) {
+  mode = kind;
+  frames = clips[kind];
+  motionFrame = 0;
+  motionStart = performance.now();
+  for (const button of motions.querySelectorAll("button")) {
+    button.setAttribute("aria-pressed", String(button.dataset.motion === kind));
+  }
+  const duration = frameCount => Number((frameCount / motionFps).toFixed(2)) + "秒";
+  motionSpec.textContent = kind === "idle"
+    ? "6fps　歩行 " + duration(walkCycles[selected.travel].length) + " ／ 攻撃 " + duration(attackCycles[selected.role][1].length)
+    : motionFps + "fps　" + frames.length + "コマ・" + duration(frames.length) + "（ループ）";
+  drawAngle(angle);
+  updatePlayback();
+}
+
+function showUnit(index) {
+  setSpin(false);
+  browsingIndex = index;
+  selected = browsing[index];
+  clips = bakeClips(selected);
+  const [role, values, target, summary] = roles[selected.role];
+  byId("detail-id").textContent = numberOf(selected) + " / " + selected.district;
+  byId("detail-title").textContent = selected.name;
+  byId("unit-look").textContent = selected.look;
+  byId("unit-flavor").textContent = selected.flavor;
+  byId("unit-types").replaceChildren(...selected.type.map(badge), make("span", "role-chip", role));
+  byId("role-summary").textContent = target + "攻撃。 " + summary;
+  byId("unit-meters").replaceChildren(...metrics.map((metric, index) => {
+    const row = make("div");
+    const label = make("dt", "", metric);
+    const track = make("span", "meter");
+    const fill = make("i");
+    fill.style.width = values[index] * 20 + "%";
+    track.append(fill);
+    track.setAttribute("aria-hidden", "true");
+    const value = make("dd", "", values[index]);
+    value.prepend(track);
+    value.className = "meter-value";
+    row.append(label, value);
+    return row;
+  }));
+  const groups = new Map([4, 2, 1, .5, .25, 0].map(value => [value, []]));
+  for (const code of typeCodes) groups.get(multiplier(code, selected.type)).push(types[code][0]);
+  byId("unit-defense").replaceChildren(...Array.from(groups, ([value, names]) => {
+    if (!names.length) return null;
+    const row = make("div");
+    row.append(make("dt", "", "×" + value), make("dd", "", names.join("、")));
+    return row;
+  }).filter(Boolean));
+  previous.disabled = index === 0;
+  next.disabled = index === browsing.length - 1;
+  setTile(stage, selected.type[0]);
+  dialog.scrollTop = 0;
+  if (!dialog.open) dialog.showModal();
+  angle = 0;
+  changeMotion("idle");
+}
+
+function openUnit(unit) {
+  browsing = shown.includes(unit) ? shown : units;
+  showUnit(browsing.indexOf(unit));
+}
+
+cards.addEventListener("click", event => {
+  const card = event.target.closest("button[data-unit]");
+  if (card) openUnit(units[Number(card.dataset.unit) - 1]);
+});
+const hero = byId("hero-open");
+hero.addEventListener("click", () => openUnit(units[0]));
+for (const [index, unitIndex, turn] of [[0, 20, 28], [1, 0, 337], [2, 42, 15]]) {
+  drawStack(hero.querySelectorAll("canvas")[index], spriteFor(units[unitIndex]), turn);
+}
+
+previous.addEventListener("click", () => showUnit(browsingIndex - 1));
+next.addEventListener("click", () => showUnit(browsingIndex + 1));
+dialog.addEventListener("close", () => {
+  setSpin(false);
+  clips = null;
+  frames = [];
+  lastDraw = null;
+  drag = null;
+});
+motions.addEventListener("click", event => {
+  const button = event.target.closest("button[data-motion]");
+  if (button) changeMotion(button.dataset.motion);
+});
+spin.addEventListener("click", () => setSpin(!rotate));
+byId("face-front").addEventListener("click", () => {
+  setSpin(false);
+  drawAngle(0);
+});
+angleInput.addEventListener("input", () => {
+  setSpin(false);
+  drawAngle(Number(angleInput.value));
+});
+stage.addEventListener("keydown", event => {
+  if (!["ArrowLeft", "ArrowRight", "Home"].includes(event.key)) return;
+  event.preventDefault();
+  setSpin(false);
+  drawAngle(event.key === "Home" ? 0 : angle + (event.key === "ArrowLeft" ? -15 : 15));
+});
+stage.addEventListener("pointerdown", event => {
+  if (!event.isPrimary || event.button !== 0) return;
+  setSpin(false);
+  drag = {pointer: event.pointerId, start: event.clientX, angle};
+  stage.setPointerCapture(event.pointerId);
+});
+stage.addEventListener("pointermove", event => {
+  if (drag?.pointer === event.pointerId) drawAngle(drag.angle + (event.clientX - drag.start) * 1.25);
+});
+stage.addEventListener("lostpointercapture", () => { drag = null; });
+byId("download-strip").addEventListener("click", () => saveStrip(selected, mode, frames));
+document.addEventListener("visibilitychange", updatePlayback);
+
+function matchupClass(value) {
+  if (value === 0) return "immune";
+  if (value === 1) return "even";
+  return value > 1 ? "effective" : "reduced";
+}
+
+function calculate() {
+  const attack = byId("attack-type");
+  const defense = byId("defense-type");
+  const second = byId("defense-second");
+  if (defense.value === second.value) second.value = "";
+  for (const option of second.options) option.disabled = option.value === defense.value;
+  const defenders = [defense.value, second.value].filter(Boolean);
+  const value = multiplier(attack.value, defenders);
+  const factors = defenders.map(code => multiplier(attack.value, [code])).join(" × ");
+  byId("match-result").replaceChildren(make("strong", "", "×" + value),
+    make("span", "", defenders.length === 2 ? factors : "ダメージ倍率"));
+}
+byId("attack-type").value = "F";
+byId("defense-type").value = "G";
+byId("defense-second").value = "M";
+byId("match-form").addEventListener("change", calculate);
+byId("match-form").addEventListener("submit", event => event.preventDefault());
+calculate();
+
+function table(className, headers, rows, cellClass = () => "") {
+  const element = make("table", className);
+  const headings = element.createTHead().insertRow();
+  headings.append(...headers.map(label => {
+    const th = make("th", "", label);
+    th.scope = "col";
+    return th;
+  }));
+  const body = element.createTBody();
+  for (const [label, ...values] of rows) {
+    const row = body.insertRow();
+    const heading = make("th", "", label);
+    heading.scope = "row";
+    row.append(heading, ...values.map(value => make("td", cellClass(value), value)));
+  }
+  return element;
+}
+byId("matrix").append(table("matrix", ["攻撃＼防御", ...options.map(([, name]) => name)],
+  typeCodes.map(attack => [types[attack][0], ...typeCodes.map(defense => multiplier(attack, [defense]))]), matchupClass));
+byId("research-grid").append(table("research-table",
+  ["第1形態", "体力", "一撃", "KB", "速度", "射程", "攻撃間隔 (秒)", "発生 (秒)", "再出撃 (秒)", "出撃費", "対象", "能力の傾斜"],
+  research));
+byId("role-grid").append(table("role-table", ["役割", ...metrics, "対象", "使い方"],
+  Object.values(roles).map(([name, values, target, summary]) => [name, ...values, target, summary])));
+
+function route() {
+  const target = ["matchups", "design"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "roster";
+  for (const section of document.querySelectorAll(".page")) section.hidden = section.id !== target;
+  for (const link of document.querySelectorAll(".nav a")) {
+    if (link.hash === "#" + target) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

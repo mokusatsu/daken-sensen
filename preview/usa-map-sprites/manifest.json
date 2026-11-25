@@ -1,0 +1,238 @@
+{
+  "source": {
+    "format": "census-kml",
+    "file": "cb_2025_us_state_5m.zip",
+    "download": "https://www2.census.gov/geo/tiger/GENZ2025/kml/cb_2025_us_state_5m.zip",
+    "sha256": "076aabf7b7e3adaf170f8dc014a8936032a4c1e5cee3ec1f0a5aa2bab538d856",
+    "name": "U.S. Census Bureau Cartographic Boundary Files 2025（州境・1:5,000,000）",
+    "url": "https://www.census.gov/geographies/mapping-files/2025/geo/carto-boundary-file.html",
+    "license": "Public domain",
+    "changes": "州の主要な陸地を簡略化し、アラスカとハワイを別縮尺で配置。"
+  },
+  "elevationSource": {
+    "format": "usgs",
+    "name": "USGS 3DEP Bare Earth DEM",
+    "url": "https://www.usgs.gov/3d-elevation-program/about-3dep-products-services",
+    "service": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage",
+    "changes": "低解像度の標高ラスタに変換し、350m刻みの水平断面に加工。",
+    "tiles": [
+      {
+        "id": "conus",
+        "bbox": [
+          -126,
+          23.5,
+          -65,
+          50.4
+        ],
+        "size": [
+          1290,
+          730
+        ]
+      },
+      {
+        "id": "alaska-west",
+        "bbox": [
+          -180,
+          50.1,
+          -129,
+          72
+        ],
+        "size": [
+          840,
+          670
+        ]
+      },
+      {
+        "id": "alaska-east",
+        "bbox": [
+          172,
+          50,
+          180,
+          56
+        ],
+        "size": [
+          435,
+          340
+        ]
+      },
+      {
+        "id": "hawaii",
+        "bbox": [
+          -161.3,
+          18.4,
+          -154,
+          23
+        ],
+        "size": [
+          640,
+          480
+        ]
+      }
+    ],
+    "sha256": {
+      "conus.tiff": "d640841cad4269ed96146f612c6b6c44aa9ce254ce7cb5f466e301335724d1ae",
+      "alaska-west.tiff": "2969ed9f29559482460923e89d1bb922ff7e7701f6a5467a954e14b714e77a0b",
+      "alaska-east.tiff": "cfd76de33bc0eb16cb0abf9db3d437cf3353d1462eaec1fd68d2d27e013cf676",
+      "hawaii.tiff": "ff187c8d11dc72c7ec2951287001f6c491d5aae939ada755df9f090895f1b242"
+    }
+  },
+  "projection": {
+    "yawDegrees": 0,
+    "pitch": 0.85,
+    "spacing": 2.5,
+    "layers": 24,
+    "baseLand": 4,
+    "elevationStepMetres": 350
+  },
+  "packing": "PNGは足元から上面へ左から順に並ぶ。sliceSizeごとに切り出し、地方ごとのworldOriginで重ねる。",
+  "regions": [
+    {
+      "name": "北東部",
+      "file": "northeast.png",
+      "areaCodes": [
+        23,
+        33,
+        50,
+        25,
+        36,
+        44,
+        9,
+        34,
+        42
+      ],
+      "worldOrigin": [
+        243,
+        -214
+      ],
+      "sliceSize": [
+        225,
+        180
+      ]
+    },
+    {
+      "name": "中西部",
+      "file": "midwest.png",
+      "areaCodes": [
+        39,
+        18,
+        26,
+        17,
+        55,
+        27,
+        19,
+        29,
+        20,
+        31,
+        46,
+        38
+      ],
+      "worldOrigin": [
+        -133,
+        -252
+      ],
+      "sliceSize": [
+        385,
+        276
+      ]
+    },
+    {
+      "name": "南部",
+      "file": "south.png",
+      "areaCodes": [
+        10,
+        24,
+        54,
+        51,
+        37,
+        45,
+        13,
+        12,
+        1,
+        47,
+        21,
+        28,
+        22,
+        5,
+        40,
+        48
+      ],
+      "worldOrigin": [
+        -174,
+        -77
+      ],
+      "sliceSize": [
+        513,
+        331
+      ]
+    },
+    {
+      "name": "西部",
+      "file": "west.png",
+      "areaCodes": [
+        35,
+        8,
+        56,
+        30,
+        16,
+        49,
+        4,
+        32,
+        6,
+        41,
+        53
+      ],
+      "worldOrigin": [
+        -463,
+        -244
+      ],
+      "sliceSize": [
+        371,
+        362
+      ]
+    },
+    {
+      "name": "アラスカ",
+      "file": "alaska.png",
+      "areaCodes": [
+        2
+      ],
+      "worldOrigin": [
+        -518,
+        205
+      ],
+      "sliceSize": [
+        293,
+        209
+      ],
+      "inset": true,
+      "viewBounds": [
+        -513.5,
+        209.5,
+        -229.25,
+        409.5
+      ]
+    },
+    {
+      "name": "ハワイ",
+      "file": "hawaii.png",
+      "areaCodes": [
+        15
+      ],
+      "worldOrigin": [
+        -153,
+        290
+      ],
+      "sliceSize": [
+        115,
+        78
+      ],
+      "inset": true,
+      "viewBounds": [
+        -148.75,
+        294,
+        -42,
+        363.5
+      ]
+    }
+  ]
+}

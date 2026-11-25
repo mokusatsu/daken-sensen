@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f6f1">
+<title>部隊編成 | 打鍵戦線</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #f7f6f1;
+    --sheet: #fffefa;
+    --ink: #272139;
+    --muted: #655d70;
+    --line: #ded7e5;
+    --purple: #4a36ba;
+    --plum: #2b253f;
+    --gold: #ffda9a;
+    --mono: "Cascadia Mono", "Consolas", monospace;
+    font-family: "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  * { box-sizing: border-box; }
+  body, h1, h2, h3, p, ul, ol, dl, dd { margin: 0; }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: inherit; touch-action: manipulation; }
+  button:not(:disabled) { cursor: pointer; }
+  :focus-visible { outline: 3px solid #795bd9; outline-offset: 3px; }
+  .wrap {
+    width: 100%; max-width: 1350px; margin-inline: auto;
+    padding-left: max(clamp(14px, 3vw, 42px), env(safe-area-inset-left));
+    padding-right: max(clamp(14px, 3vw, 42px), env(safe-area-inset-right));
+  }
+  .bar { flex: none; padding-top: env(safe-area-inset-top); background: var(--sheet); border-bottom: 1px solid var(--line); }
+  .bar .wrap { min-height: 50px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; white-space: nowrap; }
+  .key { display: grid; place-items: center; width: 32px; height: 30px; border-radius: 8px; box-shadow: 0 3px #2a235b; background: var(--purple); color: white; font-size: 16px; }
+  .nav { display: flex; justify-content: end; flex-wrap: wrap; gap: 3px; }
+  .nav a { color: var(--muted); border-radius: 7px; padding: 7px 9px; text-decoration: none; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .nav a:hover, .nav a[aria-current] { color: var(--purple); background: #ece6ff; }
+  main.wrap { display: grid; gap: 12px; padding-block: 12px max(12px, calc(env(safe-area-inset-bottom) + 6px)); }
+  .intro { display: flex; gap: 10px 16px; align-items: center; justify-content: space-between; }
+  h1 { font-size: clamp(27px, 4vw, 42px); font-weight: 800; line-height: 1.1; letter-spacing: -.05em; }
+  h2 { font-size: 17px; font-weight: 800; }
+  .wallet { display: flex; gap: 8px; align-items: center; padding: 5px 11px; border: 1px solid #e9d5af; border-radius: 10px; background: #fff4dc; color: #5d3d29; }
+  .xp-mark { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid #cd9e59; border-radius: 8px; background: #f5d99f; font: 800 13px/1 var(--mono); }
+  .wallet-label { display: block; font-size: 11px; font-weight: 700; }
+  .wallet strong { font: 800 24px/1.2 var(--mono); letter-spacing: -.03em; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 7px; }
+  .count { font: 700 14px/1.2 var(--mono); white-space: nowrap; }
+  .team { display: grid; gap: 8px; padding: 10px 12px 12px; border: 1px solid #45405d; border-radius: 14px; background: var(--plum); color: #fff7ef; }
+  .team .count { color: var(--gold); }
+  .team-actions { display: flex; gap: 8px; align-items: center; }
+  .team-actions a {
+    display: inline-grid; align-items: center; min-height: 44px; border-radius: 7px; background: var(--gold);
+    color: #382940; padding: 4px 12px; font-size: 13px; font-weight: 800; text-decoration: none; white-space: nowrap;
+  }
+  .team-actions a[aria-disabled="true"] { background: #4b405c; color: #ddd0e8; }
+  .team-actions a:focus-visible { outline-color: var(--gold); }
+  .slots, .cards { list-style: none; padding: 0; display: grid; }
+  .slots { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .slots li, .cards li { min-width: 0; min-height: 0; }
+  .slot, .card { width: 100%; height: 100%; border-radius: 9px; border: 1px solid; text-align: start; }
+  .slot {
+    display: grid; grid-template-columns: 27px minmax(0, 1fr); gap: 7px 6px; align-items: start;
+    padding: 7px; background: #3a324f; color: inherit; border-color: #5d5373;
+  }
+  .slot:hover { background: #463a5d; border-color: #9b89b7; }
+  .slot[aria-pressed="true"] { border-color: #f4c982; box-shadow: inset 0 0 0 1px #f4c982; }
+  .slot:focus-visible { outline-color: var(--gold); }
+  .position { padding: 4px 0; text-align: center; border: 1px solid #726585; border-radius: 5px; color: #ebe0f6; font: 700 12px/1 var(--mono); }
+  .slot[aria-pressed="true"] .position { background: var(--gold); border-color: var(--gold); color: #34283c; }
+  .art {
+    position: relative; display: grid; place-items: center; min-width: 0; overflow: hidden; border-radius: 6px;
+    background: radial-gradient(circle, #55436b30 1px, transparent 1.2px) 2px 2px / 11px 11px, var(--tint, #eee8f4);
+  }
+  .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 4px; pointer-events: none; image-rendering: pixelated; }
+  .slot-art { height: clamp(48px, 10vh, 86px); height: clamp(48px, 10dvh, 86px); }
+  .slot.empty .slot-art { background: #342c47; border: 1px dashed #7a6e90; }
+  .plus { color: #d8c9e4; font-size: 27px; line-height: 1; }
+  .slot-text { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 3px 6px; flex-wrap: wrap; }
+  .slot-name, .card-name { overflow-wrap: anywhere; }
+  .slot-name { font-size: 13px; font-weight: 700; }
+  .slot-lv, .card-lv { font: 700 12px/1.25 var(--mono); white-space: nowrap; }
+  .slot-lv { color: #ebd4fa; }
+  .slot.empty .slot-name { color: #e1d6ea; }
+  .roster { display: grid; gap: 10px; min-width: 0; padding: 11px 12px 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--sheet); }
+  .roster-title, .pagination { display: flex; align-items: center; gap: 10px; }
+  .roster .count { color: var(--muted); }
+  .pagination .button { min-width: 52px; }
+  .cards { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .card {
+    display: grid; grid-template-rows: auto 1fr; align-items: start; gap: 8px;
+    padding: 7px; background: #fcfafa; border-color: #e3dce9;
+  }
+  .card:hover { background: #f5f1fb; border-color: #b39cd2; }
+  .card[aria-pressed="true"] { background: #f2edfb; border-color: #7956c5; box-shadow: inset 0 0 0 1px #7956c5; }
+  .card-art { height: clamp(71px, 15vh, 148px); }
+  .card-art img { padding: clamp(5px, 1.8vh, 16px); }
+  .card-meta { display: flex; flex-direction: column; align-items: start; gap: 5px; min-width: 0; padding: 0 2px 3px; }
+  .card-name { font-size: clamp(12px, 1.4vw, 16px); font-weight: 800; line-height: 1.22; }
+  .card-tags { display: flex; align-items: baseline; gap: 3px 5px; flex-wrap: wrap; }
+  .card-lv { color: #55458c; }
+  .occupied { color: #5a465e; font-size: 10px; font-weight: 700; }
+  .types { display: flex; gap: 3px; flex-wrap: wrap; }
+  .type { padding: 3px 5px; border-radius: 4px; background: var(--type-paper); color: var(--type-ink); font-weight: 700; font-size: 11px; line-height: 1.2; white-space: nowrap; }
+  .selection {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px 14px;
+    min-width: 0; padding: 8px 10px; border: 1px solid #e6daef; border-radius: 9px; background: #f5effa;
+  }
+  .selection strong { display: block; font-size: 15px; overflow-wrap: anywhere; }
+  .selection p { margin-top: 3px; font-size: 12px; color: var(--muted); line-height: 1.35; overflow-wrap: anywhere; }
+  .selection-actions { display: flex; flex: none; gap: 6px; }
+  .detail {
+    width: min(990px, calc(100% - 32px)); max-height: calc(100vh - 28px); max-height: calc(100dvh - 28px);
+    margin: auto; padding: clamp(10px, 2vw, 19px); border: 1px solid #d9cfe7; border-top: 3px solid #6c54bc; border-radius: 14px;
+    background: var(--sheet); color: var(--ink);
+  }
+  .detail::backdrop { background: #211a38a8; }
+  .detail .section-head { margin-bottom: 13px; }
+  .dialog-xp { font-size: 13px; color: var(--muted); font-weight: 700; }
+  .detail-body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(255px, 2fr); gap: 16px; }
+  .detail-art {
+    height: clamp(210px, 59vh, 480px); height: clamp(210px, 59dvh, 480px);
+    border: 1px solid #e0d5e8; border-radius: 10px; touch-action: none; cursor: grab;
+  }
+  .detail-art.dragging { cursor: grabbing; }
+  .detail-art canvas {
+    display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain;
+    padding: clamp(10px, 2.5vh, 22px); image-rendering: pixelated; pointer-events: none;
+  }
+  .rotation-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 7px; }
+  .rotation-tools p { color: var(--muted); font-size: 12px; }
+  .rotation-tools button[aria-pressed="true"] { border-color: #ad96d8; background: #eee5fb; color: var(--purple); }
+  .detail-info { min-width: 0; padding: 5px 2px; }
+  .detail-title { font-size: clamp(20px, 3vw, 31px); line-height: 1.18; overflow-wrap: anywhere; }
+  .detail-role { color: var(--muted); margin-top: 6px; font-size: 13px; font-weight: 700; }
+  .detail-info .types { margin-top: 8px; }
+  .detail-info .type { font-size: 12px; padding: 4px 7px; }
+  .flavor { color: var(--muted); line-height: 1.55; font-size: 13px; margin-top: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 11px 0; }
+  .stats div { min-width: 0; padding: 7px 6px; border: 1px solid #e9e0ef; border-radius: 7px; background: #f8f5fa; }
+  .stats dt { color: var(--muted); font-weight: 700; font-size: 11px; margin-bottom: 3px; }
+  .stats dd { display: flex; align-items: baseline; flex-wrap: wrap; gap: 1px 4px; font: 800 15px/1.25 var(--mono); }
+  .next { color: #574093; font-weight: 700; font-size: 12px; white-space: nowrap; }
+  .upgrade { display: flex; align-items: center; justify-content: space-between; gap: 5px 9px; flex-wrap: wrap; padding: 8px; border: 1px solid #e6daf1; border-radius: 9px; background: #f3edf9; }
+  .level-path { font: 800 15px/1.25 var(--mono); white-space: nowrap; }
+  .cost-note { margin-top: 4px; color: var(--muted); font-weight: 700; font-size: 11px; }
+  .cost-note.short { color: #8b4629; }
+  .button {
+    border: 1px solid #d9cfe6; border-radius: 7px; background: var(--sheet); min-height: 44px;
+    padding: 6px 12px; font-size: 13px; font-weight: 800; white-space: nowrap;
+  }
+  .button:not(:disabled):hover { border-color: #9a82c2; color: var(--purple); }
+  .button.primary { color: #fff; background: var(--purple); border-color: var(--purple); }
+  .button.primary:not(:disabled):hover { color: #fff; background: #3b2a9d; }
+  .button:disabled { color: #675c75; background: #eae4ef; border-color: #ddd4e8; }
+  .status { margin-top: 7px; min-height: 1.4em; color: #58436d; font-size: 12px; font-weight: 700; line-height: 1.4; }
+  @media (min-width: 840px) and (min-height: 550px) and (orientation: landscape) {
+    body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+    main.wrap { flex: 1; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); }
+    .roster { max-height: 450px; min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto; }
+    .cards { grid-template-rows: minmax(0, 1fr); }
+    .card { min-height: 0; grid-template-rows: minmax(0, 1fr) auto; }
+    .card-art { height: 100%; }
+  }
+  @media (max-width: 649.99px) {
+    .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 675px) {
+    .detail { width: calc(100% - 24px); }
+    .detail-body { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+    .detail-art { height: clamp(150px, 31vh, 260px); height: clamp(150px, 31dvh, 260px); }
+  }
+  @media (max-width: 555px) {
+    main.wrap { gap: 8px; padding-top: 10px; }
+    .bar .wrap { gap: 5px; flex-wrap: wrap; min-height: 48px; padding-block: 5px; }
+    .brand { font-size: 15px; gap: 6px; }
+    .key { width: 25px; height: 24px; font-size: 13px; }
+    .nav { gap: 2px; }
+    .nav a { font-size: 10px; padding: 6px 5px; }
+    .wallet { min-width: 0; padding: 5px 7px; gap: 5px; }
+    .xp-mark { width: 25px; height: 25px; font-size: 10px; }
+    .wallet strong { font-size: 19px; }
+    .team, .roster { padding: 8px; }
+    .slots { gap: 4px; }
+    .slot { padding: 4px; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .position { justify-self: start; min-width: 18px; padding: 2px 0; font-size: 10px; }
+    .slot-art { height: 44px; }
+    .slot-art img { padding: 1px; }
+    .slot-text { display: grid; gap: 3px; }
+    .slot-name, .slot-lv { font-size: 10px; }
+    .cards { gap: 4px; }
+    .card { gap: 4px; padding: 4px; align-content: start; }
+    .card-art { height: 59px; }
+    .card-name { font-size: 12px; }
+    .card-lv { font-size: 11px; }
+    .type { padding: 2px 3px; font-size: 10px; }
+    .roster-title, .pagination { gap: 5px; }
+    .pagination .button { min-width: 44px; padding-inline: 5px; }
+    .selection { flex-wrap: wrap; }
+    .selection-actions { flex: 1 1 auto; }
+    .selection-actions .button { flex: 1; padding-inline: 6px; }
+  }
+</style>
+</head>
+<body>
+<header class="bar"><div class="wrap">
+  <div class="brand"><span class="key" aria-hidden="true">打</span>打鍵戦線</div>
+  <nav class="nav" aria-label="ページ">
+    <a href="japan-stage-map.html">日本マップ</a>
+    <a href="character-roster.html">キャラクター図鑑</a>
+    <a href="formation-demo.html" aria-current="page">編成</a>
+  </nav>
+</div></header>
+<main class="wrap">
+  <header class="intro">
+    <h1>部隊編成</h1>
+    <div class="wallet">
+      <span class="xp-mark" aria-hidden="true">XP</span>
+      <div><span class="wallet-label">所持経験値</span><strong id="experience"></strong></div>
+    </div>
+  </header>
+  <section class="team" aria-labelledby="team-title">
+    <div class="section-head">
+      <h2 id="team-title">出撃枠</h2>
+      <div class="team-actions"><output class="count" id="team-count" aria-label="編成数"></output><a id="try-battle">この編成で試す</a></div>
+    </div>
+    <ol class="slots" id="slots"></ol>
+  </section>
+  <section class="roster" aria-labelledby="roster-title">
+    <div class="section-head">
+      <div class="roster-title"><h2 id="roster-title">手持ちキャラ</h2><span class="count" id="roster-count"></span></div>
+      <div class="pagination" role="group" aria-label="手持ちキャラのページ切り替え">
+        <button id="previous-page" class="button" type="button" aria-controls="cards" aria-label="前のページ">前へ</button>
+        <output id="roster-page" class="count" aria-label="ページ番号"></output>
+        <button id="next-page" class="button" type="button" aria-controls="cards" aria-label="次のページ">次へ</button>
+      </div>
+    </div>
+    <ul class="cards" id="cards"></ul>
+    <div class="selection">
+      <div>
+        <strong id="selected-character"></strong>
+        <p id="status" role="status"></p>
+      </div>
+      <div class="selection-actions">
+        <button class="button" id="open-training" type="button" aria-haspopup="dialog">情報/育成</button>
+        <button class="button" id="unassign" type="button" aria-label="選んだ出撃枠から外す">枠から外す</button>
+        <button class="button primary" id="assign" type="button">編成する</button>
+      </div>
+    </div>
+  </section>
+</main>
+<dialog class="detail" id="character-detail" aria-labelledby="detail-title">
+  <div class="section-head">
+    <h2 id="detail-title">情報/育成</h2>
+    <span class="dialog-xp" id="training-xp"></span>
+    <form method="dialog"><button class="button" type="submit" autofocus>閉じる</button></form>
+  </div>
+  <div class="detail-body">
+    <div>
+      <div class="art detail-art" id="portrait" tabindex="0" role="group" aria-label="キャラの回転プレビュー" aria-describedby="rotation-hint">
+        <canvas id="detail-canvas" width="1" height="1" aria-hidden="true"></canvas>
+      </div>
+      <div class="rotation-tools">
+        <p id="rotation-hint">ドラッグ・← →で回転</p>
+        <button class="button" id="auto-rotate" type="button" aria-pressed="true">自動回転</button>
+      </div>
+    </div>
+    <div class="detail-info">
+      <h3 class="detail-title" id="character-name"></h3>
+      <p class="detail-role" id="character-role"></p>
+      <div class="types" id="character-types"></div>
+      <p class="flavor" id="flavor"></p>
+      <dl class="stats">
+        <div><dt>体力</dt><dd><span id="hp"></span><span class="next" id="next-hp"></span></dd></div>
+        <div><dt>一撃の威力</dt><dd><span id="power"></span><span class="next" id="next-power"></span></dd></div>
+        <div><dt>出撃コスト</dt><dd id="deploy-cost"></dd></div>
+      </dl>
+      <div class="upgrade">
+        <div><p class="level-path" id="level-path"></p><p class="cost-note" id="cost-note"></p></div>
+        <button class="button primary" id="upgrade" type="button" aria-describedby="cost-note">レベルアップ</button>
+      </div>
+      <p class="status" id="training-status" role="status"></p>
+    </div>
+  </div>
+</dialog>
+<noscript><p class="wrap">部隊編成の操作にはJavaScriptが必要です。</p></noscript>
+<script id="formation-data" type="application/json">%%FORMATION_DATA%%</script>
+<script>
+"use strict";
+
+const get = id => document.getElementById(id);
+const data = JSON.parse(get("formation-data").textContent);
+const {pitch, pixelColors, outerInk, shadowInk} = data.stackRender;
+%%STACK_RENDERER%%
+
+const owned = new Map(data.cards.map(card => [card.id, card]));
+const storageKey = "typing-war.formation-demo.v1";
+const number = new Intl.NumberFormat("ja-JP");
+const wideRoster = matchMedia("(min-width: 650px)");
+const training = get("character-detail");
+const turntable = get("portrait");
+const detailCanvas = get("detail-canvas");
+const spinButton = get("auto-rotate");
+let autoRotate = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+let model = null;
+let heading = 334;
+let paintedHeading = -1;
+let animation = 0;
+let lastTick = 0;
+let resumeAt = 0;
+let drag = null;
+
+function levelUpCost(level) {
+  return 120 + (level - 1) * 60;
+}
+
+function statAtLevel(base, level) {
+  return Math.round(base * (level + 9) / 10);
+}
+
+function restore() {
+  const initial = {
+    slots: [...data.starters],
+    levels: Object.fromEntries(data.cards.map(card => [card.id, 1])),
+    experience: data.experience,
+  };
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey));
+    if (!saved) return initial;
+    if (Number.isSafeInteger(saved.experience) && saved.experience >= 0) initial.experience = saved.experience;
+    if (Array.isArray(saved.slots)) {
+      const used = new Set();
+      initial.slots = initial.slots.map((_, index) => {
+        const id = saved.slots[index];
+        if (!owned.has(id) || used.has(id)) return null;
+        used.add(id);
+        return id;
+      });
+    }
+    for (const id of owned.keys()) {
+      const level = saved.levels?.[id];
+      if (Number.isSafeInteger(level) && level >= 1) initial.levels[id] = level;
+    }
+  } catch {
+    // 保存領域を使用できない場合も初期編成で開く。
+  }
+  return initial;
+}
+
+let state = restore();
+let activeSlot = 0;
+let selectedId = state.slots[0] ?? data.starters[0];
+let pageSize = wideRoster.matches ? 5 : 3;
+let rosterPage = Math.floor(data.cards.findIndex(card => card.id === selectedId) / pageSize);
+
+function element(tag, className, content) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (content !== undefined) node.textContent = content;
+  return node;
+}
+
+function typePills(card) {
+  return card.types.map(([label, ink, paper]) => {
+    const pill = element("span", "type", label);
+    pill.style.setProperty("--type-ink", ink);
+    pill.style.setProperty("--type-paper", paper);
+    return pill;
+  });
+}
+
+function artBox(className) {
+  const box = element("span", "art " + className);
+  const image = element("img");
+  image.alt = "";
+  box.append(image);
+  return box;
+}
+
+function showPortrait(box, card) {
+  const image = box.firstElementChild;
+  image.hidden = !card;
+  if (card && image.getAttribute("src") !== card.portrait) {
+    image.src = card.portrait;
+    box.style.setProperty("--tint", card.types[0][2]);
+  }
+}
+
+function drawHeading(value) {
+  heading = (value % 360 + 360) % 360;
+  const degree = Math.round(heading) % 360;
+  if (model && paintedHeading !== degree) {
+    drawStack(detailCanvas, model, degree);
+    paintedHeading = degree;
+  }
+}
+
+function spinFrame(now) {
+  if (lastTick && now >= resumeAt) drawHeading(heading + Math.min(now - lastTick, 50) * .028);
+  lastTick = now;
+  animation = requestAnimationFrame(spinFrame);
+}
+
+function syncSpin() {
+  if (training.open && autoRotate && !drag && !document.hidden) {
+    if (!animation) {
+      lastTick = 0;
+      animation = requestAnimationFrame(spinFrame);
+    }
+  } else if (animation) {
+    cancelAnimationFrame(animation);
+    animation = 0;
+  }
+}
+
+const slotNodes = state.slots.map((_, index) => {
+  const item = element("li");
+  const button = element("button", "slot");
+  const art = artBox("slot-art");
+  const plus = element("span", "plus", "+");
+  const text = element("span", "slot-text");
+  const name = element("span", "slot-name");
+  const level = element("span", "slot-lv");
+  button.type = "button";
+  button.dataset.slot = String(index + 1);
+  plus.setAttribute("aria-hidden", "true");
+  art.append(plus);
+  text.append(name, level);
+  button.append(element("span", "position", index + 1), art, text);
+  item.append(button);
+  get("slots").append(item);
+  button.addEventListener("click", () => {
+    activeSlot = index;
+    render();
+  });
+  return {button, art, plus, name, level};
+});
+
+const cardNodes = data.cards.map(card => {
+  const item = element("li");
+  const button = element("button", "card");
+  const art = artBox("card-art");
+  const meta = element("span", "card-meta");
+  const tags = element("span", "card-tags");
+  const level = element("span", "card-lv");
+  const status = element("span", "occupied");
+  const types = element("span", "types");
+  button.type = "button";
+  button.dataset.character = String(card.id);
+  showPortrait(art, card);
+  tags.append(level, status);
+  types.append(...typePills(card));
+  meta.append(element("span", "card-name", card.name), tags, types);
+  button.append(art, meta);
+  item.append(button);
+  get("cards").append(item);
+  button.addEventListener("click", () => {
+    selectedId = card.id;
+    render();
+  });
+  return {item, card, button, level, status};
+});
+
+function render() {
+  const chosen = owned.get(selectedId);
+  const level = state.levels[selectedId];
+  const price = levelUpCost(level);
+  const remaining = price - state.experience;
+  const occupant = state.slots[activeSlot];
+  const pageCount = Math.ceil(cardNodes.length / pageSize);
+  const first = rosterPage * pageSize;
+
+  get("experience").textContent = number.format(state.experience);
+  get("training-xp").textContent = "所持 " + number.format(state.experience) + " XP";
+  const ids = state.slots.filter(id => id !== null);
+  get("team-count").value = ids.length + " / " + slotNodes.length;
+  const tryBattle = get("try-battle");
+  if (ids.length) {
+    const levels = Object.fromEntries(ids.map(id => [id, state.levels[id]]));
+    const params = new URLSearchParams({formation: JSON.stringify({ids, levels})});
+    tryBattle.href = "battle-demo.html#" + params;
+    tryBattle.removeAttribute("aria-disabled");
+  } else {
+    tryBattle.removeAttribute("href");
+    tryBattle.setAttribute("aria-disabled", "true");
+  }
+  get("roster-count").textContent = data.cards.length + "体";
+  get("roster-page").value = (rosterPage + 1) + " / " + pageCount;
+  get("previous-page").disabled = rosterPage === 0;
+  get("next-page").disabled = rosterPage + 1 === pageCount;
+  for (const [index, slot] of slotNodes.entries()) {
+    const card = owned.get(state.slots[index]);
+    const name = card?.name ?? "空き枠";
+    slot.button.setAttribute("aria-pressed", String(index === activeSlot));
+    slot.button.classList.toggle("empty", !card);
+    slot.plus.hidden = !!card;
+    slot.name.textContent = name;
+    slot.level.textContent = card ? "Lv." + state.levels[card.id] : "";
+    showPortrait(slot.art, card);
+  }
+  for (const [position, entry] of cardNodes.entries()) {
+    const index = state.slots.indexOf(entry.card.id);
+    entry.item.hidden = position < first || position >= first + pageSize;
+    entry.button.setAttribute("aria-pressed", String(entry.card.id === selectedId));
+    entry.level.textContent = "Lv." + state.levels[entry.card.id];
+    entry.status.textContent = index >= 0 ? "編成 " + (index + 1) : "";
+  }
+
+  turntable.style.setProperty("--tint", chosen.types[0][2]);
+  get("character-name").textContent = chosen.name;
+  get("character-role").textContent = chosen.role + (chosen.source ? " ／ " + chosen.source + "で加入" : " ／ 初期メンバー");
+  get("character-types").replaceChildren(...typePills(chosen));
+  get("flavor").textContent = chosen.flavor;
+  for (const key of ["hp", "power"]) {
+    get(key).textContent = number.format(statAtLevel(chosen[key], level));
+    get("next-" + key).textContent = "→ " + number.format(statAtLevel(chosen[key], level + 1));
+  }
+  get("deploy-cost").textContent = number.format(chosen.cost);
+  get("level-path").textContent = "Lv." + level + " → Lv." + (level + 1);
+  get("cost-note").textContent = remaining > 0 ? "あと " + number.format(remaining) + " XP 必要" : "必要経験値 " + number.format(price) + " XP";
+  get("cost-note").classList.toggle("short", remaining > 0);
+  get("upgrade").disabled = remaining > 0;
+  get("selected-character").textContent = chosen.name + "　Lv." + level;
+  get("status").textContent = "編成先　枠 " + (activeSlot + 1) + " ／ " + (owned.get(occupant)?.name ?? "空き枠");
+  get("assign").textContent = occupant === selectedId ? "編成済み" : occupant ? "入れ替える" : "編成する";
+  get("assign").disabled = occupant === selectedId;
+  get("unassign").disabled = occupant === null;
+}
+
+function commit(message, statusId = "status") {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  } catch {
+    message += " このブラウザーに保存できませんでした。";
+  }
+  render();
+  get(statusId).textContent = message;
+}
+
+get("previous-page").addEventListener("click", () => {
+  rosterPage--;
+  render();
+});
+
+get("next-page").addEventListener("click", () => {
+  rosterPage++;
+  render();
+});
+
+wideRoster.addEventListener("change", () => {
+  const first = rosterPage * pageSize;
+  pageSize = wideRoster.matches ? 5 : 3;
+  rosterPage = Math.floor(first / pageSize);
+  render();
+});
+
+get("open-training").addEventListener("click", () => {
+  get("training-status").textContent = "";
+  model = owned.get(selectedId).stack;
+  if (typeof model.data === "string") model.data = Uint8Array.from(atob(model.data), cell => cell.charCodeAt(0));
+  paintedHeading = -1;
+  resumeAt = 0;
+  training.showModal();
+  drawHeading(334);
+  syncSpin();
+});
+
+spinButton.setAttribute("aria-pressed", String(autoRotate));
+spinButton.addEventListener("click", () => {
+  autoRotate = !autoRotate;
+  spinButton.setAttribute("aria-pressed", String(autoRotate));
+  resumeAt = 0;
+  syncSpin();
+});
+
+turntable.addEventListener("pointerdown", event => {
+  if (!event.isPrimary || event.button !== 0) return;
+  drag = {pointer: event.pointerId, x: event.clientX, heading};
+  turntable.setPointerCapture(event.pointerId);
+  turntable.classList.add("dragging");
+  syncSpin();
+});
+
+turntable.addEventListener("pointermove", event => {
+  if (drag?.pointer === event.pointerId) drawHeading(drag.heading + (event.clientX - drag.x) * 1.05);
+});
+
+for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+  turntable.addEventListener(type, event => {
+    if (drag?.pointer !== event.pointerId) return;
+    drag = null;
+    turntable.classList.remove("dragging");
+    resumeAt = performance.now() + 1200;
+    syncSpin();
+  });
+}
+
+turntable.addEventListener("keydown", event => {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  event.preventDefault();
+  resumeAt = performance.now() + 1200;
+  drawHeading(heading + (event.key === "ArrowLeft" ? -15 : 15));
+});
+
+training.addEventListener("close", () => {
+  if (training.open) return;
+  drag = null;
+  model = null;
+  turntable.classList.remove("dragging");
+  syncSpin();
+});
+document.addEventListener("visibilitychange", syncSpin);
+
+get("assign").addEventListener("click", () => {
+  if (state.slots[activeSlot] === selectedId) return;
+  const previous = state.slots.indexOf(selectedId);
+  if (previous !== -1) state.slots[previous] = state.slots[activeSlot];
+  state.slots[activeSlot] = selectedId;
+  commit(owned.get(selectedId).name + "を枠 " + (activeSlot + 1) + " に編成しました。");
+});
+
+get("unassign").addEventListener("click", () => {
+  const id = state.slots[activeSlot];
+  if (id === null) return;
+  state.slots[activeSlot] = null;
+  commit(owned.get(id).name + "を枠 " + (activeSlot + 1) + " から外しました。");
+});
+
+get("upgrade").addEventListener("click", () => {
+  const level = state.levels[selectedId];
+  const cost = levelUpCost(level);
+  if (state.experience < cost) return;
+  state.experience -= cost;
+  state.levels[selectedId]++;
+  commit(owned.get(selectedId).name + "が Lv." + state.levels[selectedId] + " になりました。", "training-status");
+});
+
+window.addEventListener("storage", event => {
+  if (event.key !== storageKey) return;
+  state = restore();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
