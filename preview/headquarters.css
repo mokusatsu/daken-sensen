@@ -73,6 +73,7 @@ h1 { font-size: clamp(61px,7.1vw,112px); font-weight: 950; letter-spacing: -.065
 .target-tab { position: absolute; right: 18px; bottom: 17px; display: flex; align-items: center; gap: 11px; border: 1px solid #abcac34f; border-radius: 6px; background: #14242de8; padding: 9px 15px; }
 .target-tab small { display: block; font: 700 10px/1.4 var(--mono); letter-spacing: .07em; color: var(--mint); }
 .target-tab strong { font-size: 18px; }
+#target-enemy-level { margin-inline-start: 9px; color: #ffd0a6; font-size: 12px; font-weight: 700; white-space: nowrap; }
 #target-landmark { display: block; color: #e0e7df; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
 .target-mark { width: 18px; height: 18px; border: 1px solid var(--mint); transform: rotate(45deg); display: grid; place-items: center; }
 .target-mark::after { content: ""; width: 6px; height: 6px; background: var(--mint); }

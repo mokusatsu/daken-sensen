@@ -189,7 +189,7 @@
     .intro h1 { font-size: clamp(28px, 3vw, 42px); }
     .intro p { margin-top: 3px; font-size: 12px; }
     .progress { padding: 7px 10px; }
-    .workbench { grid-template-columns: minmax(0, 1fr) minmax(265px, 32%); align-items: stretch; gap: 11px; min-height: 0; }
+    .workbench { grid-template-columns: minmax(0, 1fr) minmax(425px, 32%); align-items: stretch; gap: 11px; min-height: 0; }
     .map-card { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
     .water { height: auto; min-height: 0; }
     .region-bar { overflow: visible; flex-wrap: wrap; gap: 3px; padding: 4px 7px; }
@@ -331,8 +331,8 @@
   <header class="play-dialog-head"><h2 id="sources-title">地形データ</h2><form method="dialog"><button class="play-button" type="submit" autofocus>閉じる</button></form></header>
   <div class="play-dialog-body"><p>%%MAP_DESCRIPTION%%</p><div class="source-list">%%CREDITS%%</div></div>
 </dialog>
-<script src="campaign.js?v=325a1bde"></script>
-<script src="command-data.js"></script>
+<script src="campaign.js?v=0936d174"></script>
+<script src="command-data.js?v=dcd591ac"></script>
 <script id="map-assets" type="application/json">%%MAP_ASSETS%%</script>
 <template id="campaign-screen" data-players="map"><script>
 "use strict";
@@ -355,6 +355,7 @@ for (const region of regions) {
   for (const stage of region.stages) {
     stage.region = region;
     stage.number = ++order;
+    stage.selectionLabel = stage.name + "　" + enemyLevelLabel(stageData.get(stage.id).averageEnemyLevel);
     stage.guard = guards.get(stage.id);
     stage.boss = stage.id === region.ids.at(-1);
   }
@@ -368,6 +369,7 @@ const selector = get("stage-select");
 const regionBar = get("region-bar");
 const map = get("map");
 const water = get("water");
+const mapTools = water.querySelector(".map-tools");
 const ctx = map.getContext("2d");
 const camera = {x: 0, y: 0, scale: 1, fit: 1};
 const returnView = new URLSearchParams(location.search).get("view")?.split(",");
@@ -638,11 +640,15 @@ function drawMarker(pin) {
 
 function drawLabel(pin) {
   if (!pin) return;
-  const label = pin.stage.name;
+  const label = pin.stage.selectionLabel;
   ctx.font = '700 12px "Yu Gothic UI", "Meiryo", sans-serif';
   const width = Math.ceil(ctx.measureText(label).width) + 15;
   const x = Math.max(3, Math.min(previewWidth - width - 3, pin.x - width / 2));
-  const y = Math.max(7, Math.min(previewHeight - 24, pin.y - pin.size - 25));
+  let y = Math.max(7, Math.min(previewHeight - 24, pin.y - pin.size - 25));
+  const toolsBottom = mapTools.offsetTop + mapTools.offsetHeight;
+  if (x + width > mapTools.offsetLeft - 4 && y < toolsBottom + 4) {
+    y = Math.min(previewHeight - 24, Math.max(pin.y + 7, toolsBottom + 4));
+  }
   ctx.fillStyle = "#28233fed";
   ctx.strokeStyle = "#e5cae1";
   ctx.lineWidth = 1;
@@ -855,8 +861,7 @@ function showDispatch(stage) {
   get("map-xp").textContent = session.state.experience.toLocaleString("ja-JP") + " XP";
   get("reward-xp").textContent = details.xp.toLocaleString("ja-JP") + " XP";
   get("guard-label").textContent = released ? "加入済み" : "初回攻略で加入";
-  const average = details.enemies.reduce((sum, enemy) => sum + enemy.level, 0) / details.enemies.length;
-  get("enemy-average").textContent = "平均 Lv." + average.toLocaleString("ja-JP", {maximumFractionDigits: 1});
+  get("enemy-average").textContent = enemyLevelLabel(details.averageEnemyLevel);
   get("enemy-lineup").replaceChildren(...details.enemies.map(({id, level}) => {
     const unit = unitsById.get(id);
     const line = element("li", undefined, "enemy-line");
@@ -903,7 +908,7 @@ for (const id of assets.regionOrder) {
   regionBar.append(button);
   const choices = document.createElement("optgroup");
   choices.label = region.name;
-  for (const stage of region.stages) choices.append(new Option(stage.name, stage.id));
+  for (const stage of region.stages) choices.append(new Option(stage.selectionLabel, stage.id));
   selector.append(choices);
 }
 regionBar.addEventListener("click", event => {

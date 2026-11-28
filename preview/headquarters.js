@@ -72,6 +72,8 @@ if (americaOpen) {
 }
 node("target-index").textContent = (conquered ? "最終拠点" : "攻略目標") + "　" + String(nextBase.frontNumber).padStart(2, "0") + " / " + stages.length;
 node("target-place").textContent = nextBase.name;
+const targetLevel = node("target-enemy-level");
+if (targetLevel && Number.isFinite(nextBase.averageEnemyLevel)) targetLevel.textContent = enemyLevelLabel(nextBase.averageEnemyLevel);
 node("target-landmark").textContent = nextBase.landmark;
 node("target-scenery").src = "preview/media/" + nextBase.image;
 if (conquered) {

@@ -7,11 +7,11 @@ const scenery = require("./scenery.json");
 
 async function build() {
   const maps = await readCampaignMaps();
-  const stages = maps.flatMap(map => map.stages.map(({id, name, number, region, boss, country, frontNumber}) => {
+  const stages = maps.flatMap(map => map.stages.map(({id, name, number, region, boss, country, frontNumber, averageEnemyLevel}) => {
     const location = scenery[country][id];
     if (!location) throw new Error(name + "の背景が登録されていません");
     const [landmark, image = "scenery/" + country + "/" + id + ".webp"] = location;
-    return {id, name, number, region, boss, country, frontNumber, landmark, image};
+    return {id, name, number, region, boss, country, frontNumber, averageEnemyLevel, landmark, image};
   }));
   await Promise.all(stages.map(stage => access(join(preview, "media", stage.image))));
   const roster = maps.flatMap(({country, assets}) => {

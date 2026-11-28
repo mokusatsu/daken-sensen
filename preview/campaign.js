@@ -20,6 +20,10 @@ function allyLevel(trainedLevel, cap) {
   return Number.isSafeInteger(trainedLevel) && trainedLevel > 0 ? Math.min(trainedLevel, cap) : 1;
 }
 
+function enemyLevelLabel(average) {
+  return "敵平均 Lv." + average.toLocaleString("ja-JP", {maximumFractionDigits: 1});
+}
+
 function campaignCountry() {
   const selected = document.body.dataset.country ?? new URLSearchParams(location.search).get("country");
   return selected === "usa" ? "usa" : "japan";
@@ -50,7 +54,8 @@ function campaignStages({prefectures, areas = prefectures, regions, gates, start
     const base = Math.floor(total / ids.length);
     const extra = total % ids.length;
     return {
-      ...stage, country, number, frontNumber: index + 1, xp: 120 + (number - 1) * 15 + (stage.boss ? 80 : 0),
+      ...stage, country, number, frontNumber: index + 1, averageEnemyLevel: total / ids.length,
+      xp: 220 + (number - 1) * 30 + (stage.boss ? 90 : 0),
       enemies: ids.map((id, slot) => ({id, level: base + (slot < extra ? 1 : 0)})),
     };
   });
