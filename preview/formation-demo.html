@@ -132,7 +132,6 @@
     padding: clamp(10px, 2.5vh, 22px); image-rendering: pixelated; pointer-events: none;
   }
   .rotation-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 7px; }
-  .rotation-tools p { color: var(--muted); font-size: 12px; }
   .rotation-tools button[aria-pressed="true"] { border-color: #ad96d8; background: #eee5fb; color: var(--purple); }
   .detail-info { min-width: 0; padding: 5px 2px; }
   .detail-title { font-size: clamp(20px, 3vw, 31px); line-height: 1.18; overflow-wrap: anywhere; }
@@ -212,8 +211,8 @@
 <header class="bar"><div class="wrap">
   <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span>打鍵戦線</a>
   <nav class="nav" aria-label="ページ">
-    <a id="formation-map" data-key-back href="japan-stage-map.html">戦区マップ</a>
-    <a id="formation-catalog" href="character-roster.html">キャラクター図鑑</a>
+    <a id="formation-map" aria-keyshortcuts="F" data-key-back href="japan-stage-map.html">戦区マップ</a>
+    <a id="formation-catalog" aria-keyshortcuts="L" href="character-roster.html">キャラクター図鑑</a>
     <a id="formation-matchups" href="character-roster.html#matchups">相性表</a>
     <span aria-current="page">編成</span>
   </nav>
@@ -229,7 +228,7 @@
   <section class="team" aria-labelledby="team-title">
     <div class="section-head">
       <h2 id="team-title">出撃枠</h2>
-      <div class="team-actions"><output class="count" id="team-count" aria-label="編成数"></output><a id="try-battle">この編成で試す</a></div>
+      <div class="team-actions"><output class="count" id="team-count" aria-label="編成数"></output><a id="try-battle" aria-keyshortcuts=";">この編成で試す</a></div>
     </div>
     <ol class="slots" id="slots" data-key-start></ol>
   </section>
@@ -237,9 +236,9 @@
     <div class="section-head">
       <div class="roster-title"><h2 id="roster-title">手持ちキャラ</h2><span class="count" id="roster-count"></span></div>
       <div class="pagination" role="group" aria-label="手持ちキャラのページ切り替え">
-        <button id="previous-page" class="button" type="button" aria-controls="cards" aria-label="前のページ">前へ</button>
+        <button id="previous-page" aria-keyshortcuts="A" class="button" type="button" aria-controls="cards" aria-label="前のページ">前へ</button>
         <output id="roster-page" class="count" aria-label="ページ番号"></output>
-        <button id="next-page" class="button" type="button" aria-controls="cards" aria-label="次のページ">次へ</button>
+        <button id="next-page" aria-keyshortcuts="D" class="button" type="button" aria-controls="cards" aria-label="次のページ">次へ</button>
       </div>
     </div>
     <ul class="cards" id="cards"></ul>
@@ -249,9 +248,9 @@
         <p id="status" role="status"></p>
       </div>
       <div class="selection-actions">
-        <button class="button" id="open-training" type="button" aria-haspopup="dialog">情報/育成</button>
-        <button class="button" id="unassign" type="button" aria-label="選んだ出撃枠から外す">枠から外す</button>
-        <button class="button primary" id="assign" type="button">編成する</button>
+        <button class="button" id="open-training" aria-keyshortcuts="H" type="button" aria-haspopup="dialog">情報/育成</button>
+        <button class="button" id="unassign" aria-keyshortcuts="G" type="button" aria-label="選んだ出撃枠から外す">枠から外す</button>
+        <button class="button primary" id="assign" aria-keyshortcuts="S" type="button">編成する</button>
       </div>
     </div>
   </section>
@@ -264,12 +263,13 @@
   </div>
   <div class="detail-body">
     <div>
-      <div class="art detail-art" id="portrait" tabindex="0" data-key-arrows role="group" aria-label="キャラの回転プレビュー" aria-describedby="rotation-hint">
+      <div class="art detail-art" id="portrait" tabindex="0" data-key-arrows role="group" aria-label="キャラの回転プレビュー">
         <canvas id="detail-canvas" width="1" height="1" aria-hidden="true"></canvas>
       </div>
-      <div class="rotation-tools">
-        <p id="rotation-hint">ドラッグ・A/D・← →で回転</p>
-        <button class="button" id="auto-rotate" type="button" aria-pressed="true">自動回転</button>
+      <div class="rotation-tools" role="group" aria-label="キャラの回転">
+        <button class="button" id="rotate-left" aria-keyshortcuts="A" type="button">左回転</button>
+        <button class="button" id="auto-rotate" aria-keyshortcuts="G" type="button" aria-pressed="true">自動回転</button>
+        <button class="button" id="rotate-right" aria-keyshortcuts="D" type="button">右回転</button>
       </div>
     </div>
     <div class="detail-info">
@@ -284,7 +284,7 @@
       </dl>
       <div class="upgrade">
         <div><p class="level-path" id="level-path"></p><p class="cost-note" id="cost-note"></p></div>
-        <button class="button primary" id="upgrade" type="button" aria-describedby="cost-note">レベルアップ</button>
+        <button class="button primary" id="upgrade" aria-keyshortcuts="S" type="button" aria-describedby="cost-note">レベルアップ</button>
       </div>
       <p class="status" id="training-status" role="status"></p>
     </div>
@@ -668,11 +668,16 @@ for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
   });
 }
 
+function turnBy(degrees) {
+  resumeAt = performance.now() + 1200;
+  drawHeading(heading + degrees);
+}
+get("rotate-left").addEventListener("click", () => turnBy(-15));
+get("rotate-right").addEventListener("click", () => turnBy(15));
 turntable.addEventListener("keydown", event => {
   if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
   event.preventDefault();
-  resumeAt = performance.now() + 1200;
-  drawHeading(heading + (event.key === "ArrowLeft" ? -15 : 15));
+  turnBy(event.key === "ArrowLeft" ? -15 : 15);
 });
 
 training.addEventListener("close", () => {

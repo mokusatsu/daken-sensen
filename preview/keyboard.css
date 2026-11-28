@@ -1,24 +1,48 @@
-.key-guide {
-  display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 5px 16px;
-  padding: 4px 12px; background: #1c2932; color: #dce7e3;
-  font: 600 12px/1.45 "Barlow", "Yu Gothic UI", Meiryo, sans-serif;
+:where(a, button)[aria-keyshortcuts]:not(:has(.summon-key, .order-key))::after,
+.home-keys :where(a[href], button, summary):focus:not([aria-keyshortcuts])::after,
+.player-form:has(#player-name:focus:not([data-key-field])) button[type="submit"]::after {
+  display: inline-block; flex: none; box-sizing: border-box; margin-inline-start: .4em;
+  min-width: 1.55em; padding: 2px 4px; vertical-align: middle; text-align: center; white-space: nowrap;
+  border: 1px solid currentColor; border-bottom-width: 2px; border-radius: 4px;
+  font: 700 11px/1.05 Consolas, "Courier New", monospace; letter-spacing: 0;
 }
-.key-guide .key-menu, .key-guide .key-combat, .key-guide .key-editing { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px 14px; }
-.key-guide span > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
-.key-guide kbd {
-  min-width: 1.5em; padding: 0 3px; border: 1px solid #718286; border-bottom-width: 2px; border-radius: 4px;
-  background: #2b3a44; color: #fff6e2; text-align: center; font: 700 11px/1.35 Consolas, monospace;
-}
-.key-guide .key-editing, .key-guide .key-combat, [data-key-typing] > header .key-menu { display: none; }
-[data-key-typing] > header .key-combat { display: flex; }
-#player-picker:has(input:focus:not([data-key-field])) .key-menu, body:has(input[type="search"]:focus:not([data-key-field])) > header .key-menu { display: none; }
-#player-picker:has(input:focus:not([data-key-field])) .key-editing, body:has(input[type="search"]:focus:not([data-key-field])) > header .key-editing { display: flex; }
-#player-picker .key-adjust, #player-picker:has(.player-close[hidden]) .key-back { display: none; }
-.key-context { font-size: 12px; color: var(--muted, #505c68); }
-.join-frame .key-guide { margin-top: 12px; background: transparent; }
+:where(a, button)[aria-keyshortcuts]:not(:has(.summon-key, .order-key))::after { content: attr(aria-keyshortcuts); content: attr(aria-keyshortcuts) / ""; }
+.home-keys :where(a[href], button, summary):focus:not([aria-keyshortcuts])::after,
+.player-form:has(#player-name:focus:not([data-key-field])) button[type="submit"]::after { content: "Enter"; content: "Enter" / ""; }
+.player-form:has(#player-name[data-key-field]:focus) button[type="submit"]::after { visibility: hidden; }
 .home-keys :is(a,button,input,select,textarea,summary,[tabindex="0"]):focus {
   outline: 3px solid #ffbd71; outline-offset: -2px; box-shadow: 0 0 0 2px #293943;
 }
-@media (hover: none) and (pointer: coarse) {
-  html:not(.home-keys) :is(.key-guide,.key-context) { display: none; }
+.mast nav a[aria-keyshortcuts] { display: inline-flex; align-items: center; }
+.hero-actions .launch { gap: 10px; }
+.hero-actions .launch > span, .drill-action > span, .text-button[aria-keyshortcuts] > span { display: none; }
+.player-switch[aria-keyshortcuts] { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.player-switch[aria-keyshortcuts] > :is(strong,small) { grid-column: 1; }
+.player-switch[aria-keyshortcuts]::after, .player-list button::after { grid-area: 1 / 2 / 3 / 3; }
+.player-list button[aria-keyshortcuts] > span, .home-keys .player-list button:focus > span { visibility: hidden; }
+:is(.close,.player-close,.icon-button,.sound-button) { position: relative; }
+:is(.close,.player-close,.icon-button,.sound-button)[aria-keyshortcuts]::after,
+.home-keys :is(.close,.icon-button,.sound-button):focus:not([aria-keyshortcuts])::after {
+  position: absolute; right: 1px; bottom: 1px; padding: 0 2px; margin: 0; font-size: 9px;
+}
+.stage-card .stage-picker { display: grid; grid-template-columns: auto auto minmax(0,1fr) auto; gap: 4px; align-items: center; }
+.stage-picker select { min-width: 0; width: 100%; }
+.stage-step {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 42px; min-height: 44px; padding: 0 4px;
+  border: 1px solid var(--rule,#d1cbdc); border-radius: 7px; background: var(--sheet,#fffefa); color: var(--ink,#292139);
+  font: 700 21px/1 sans-serif; cursor: pointer;
+}
+.stage-step:disabled { opacity: .45; cursor: default; }
+.key-reference kbd { display: inline-block; margin-inline-start: 3px; font: 700 12px/1.4 Consolas, monospace; padding: 1px 5px; border: 1px solid currentColor; border-radius: 4px; }
+.live-front .card-foot kbd.summon-key, .live-front .deploy-head .summon-key, .live-front .order-buttons kbd.order-key { display: inline-block; }
+#roster:has(select:focus) .pager button::after,
+body:has(#search:focus:not([data-key-field])) :is(.masthead, .pager) [aria-keyshortcuts]::after,
+#player-picker:has(#player-name:focus:not([data-key-field])) :is(.player-list button, .player-close)::after,
+#detail:has(:is([data-key-arrows],input[type="range"]):focus) .detail-nav :is([aria-keyshortcuts="A"],[aria-keyshortcuts="D"])::after { visibility: hidden; }
+[data-key-typing] > :is(header,main) [aria-keyshortcuts]:not(#pause):not(:has(.summon-key,.order-key))::after,
+[data-key-typing] > :is(header,main) :focus:not([aria-keyshortcuts])::after { display: none; }
+@media (max-width: 540px) {
+  .stage-step { min-width: 38px; }
+  .hero .hero-actions { gap: 12px; }
+  .mast nav { gap: 8px; }
 }

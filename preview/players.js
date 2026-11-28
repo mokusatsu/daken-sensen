@@ -138,7 +138,7 @@ const GamePlayers = (() => {
       <section class="player-roster" aria-label="登録済みのユーザー"><div class="player-list"></div></section>
       <form class="player-form" novalidate><h3>新しいユーザー</h3>
       <label for="player-name">ユーザー名</label><div class="player-fields"><input id="player-name" type="text" maxlength="24" autocomplete="off" required aria-describedby="player-feedback">
-      <button type="submit">作成して始める</button></div>
+      <button type="submit" aria-keyshortcuts="G">作成して始める</button></div>
       <p id="player-feedback" role="status"></p></form></div>`;
     if (typeof GameKeys !== "undefined") GameKeys.addGuide(dialog);
     document.body.append(dialog);
@@ -146,11 +146,20 @@ const GamePlayers = (() => {
     const feedback = dialog.querySelector("#player-feedback");
     dialog.querySelector(".player-close").onclick = () => dialog.close();
     dialog.addEventListener("cancel", event => { if (!active) event.preventDefault(); });
-    input.addEventListener("focus", () => previewFront(null));
+    const submit = dialog.querySelector('button[type="submit"]');
+    input.addEventListener("focus", () => {
+      previewFront(null);
+      submit.setAttribute("aria-keyshortcuts", "Enter");
+    });
+    input.addEventListener("blur", () => submit.setAttribute("aria-keyshortcuts", "G"));
     input.addEventListener("input", () => { input.removeAttribute("aria-invalid"); feedback.textContent = ""; });
     dialog.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       const name = input.value.trim();
+      if (!name && document.activeElement !== input) {
+        input.focus();
+        return;
+      }
       const fold = value => value.normalize("NFKC").toLocaleLowerCase("ja");
       let error = "";
       if (!name) error = "ユーザー名を入力してください。";
@@ -174,10 +183,12 @@ const GamePlayers = (() => {
     const rows = entries().sort((a, b) => Number(b.id === previous) - Number(a.id === previous));
     roster.hidden = !rows.length;
     const focused = document.activeElement?.dataset.player;
-    list.replaceChildren(...rows.map(({id, record}) => {
+    const shortcuts = ["A", "S", "D", "H", "L", ";"];
+    list.replaceChildren(...rows.map(({id, record}, index) => {
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.player = id;
+      if (shortcuts[index]) button.setAttribute("aria-keyshortcuts", shortcuts[index]);
       const title = document.createElement("strong");
       title.textContent = record.name;
       const detail = document.createElement("small");

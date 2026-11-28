@@ -224,8 +224,8 @@
 <header class="bar"><div class="wrap">
   <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span>打鍵戦線</a>
   <nav class="nav" aria-label="ページ">
-    <a id="battle-map" data-key-back href="japan-stage-map.html">戦区マップ</a>
-    <a id="battle-formation" href="formation-demo.html">編成</a>
+    <a id="battle-map" aria-keyshortcuts="G" data-key-back href="japan-stage-map.html">戦区マップ</a>
+    <a id="battle-formation" aria-keyshortcuts="L" href="formation-demo.html">編成</a>
     <span aria-current="page">拠点戦</span>
   </nav>
 </div></header>
@@ -233,12 +233,12 @@
   <header class="intro">
     <div class="battle-heading"><p id="battle-subtitle">模擬戦 ／ 10レーン</p><h1 id="battle-title">草丘の関所</h1></div>
     <div class="tools" role="group" aria-label="バトルの操作">
-      <button class="button primary" id="pause" data-key-start type="button" disabled>一時停止</button>
+      <button class="button primary" id="pause" aria-keyshortcuts="Space" data-key-start type="button" disabled>一時停止</button>
       <label id="speed-label">速度 <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
       <button class="button" id="reset" type="button" disabled>最初から</button>
-      <button class="button" id="show-battle-details" type="button" aria-haspopup="dialog">戦況・設定</button>
-      <button class="button" id="show-battle-guide" type="button" aria-haspopup="dialog" hidden>操作</button>
-      <button class="button primary" id="show-outcome" data-key-start type="button" aria-haspopup="dialog" hidden>結果を見る</button>
+      <button class="button" id="show-battle-details" aria-keyshortcuts="S" type="button" aria-haspopup="dialog">戦況・設定</button>
+      <button class="button" id="show-battle-guide" aria-keyshortcuts="H" type="button" aria-haspopup="dialog" hidden>操作</button>
+      <button class="button primary" id="show-outcome" aria-keyshortcuts=";" data-key-start type="button" aria-haspopup="dialog" hidden>結果を見る</button>
     </div>
   </header>
   <section class="stage" aria-label="戦場">
@@ -264,12 +264,12 @@
       <div class="prompt-block">
         <span id="typing-reading"></span><h2 id="typing-word"></h2>
         <code aria-label="ローマ字入力ガイド"><b id="typed"></b><span id="to-type"><em id="next-key"></em><span id="type-tail"></span></span></code>
-        <p id="type-feedback">英字キーで入力</p>
+        <p id="type-feedback"></p>
       </div></div>
       <div class="command-block">
         <div class="command-head"><strong>指揮ゲージ</strong><span id="charge-text">0 / 6</span></div>
         <div class="charge-meter" id="charge-meter" role="meter" aria-label="指揮ゲージ" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="order-buttons"><button id="assault" type="button" disabled><strong><kbd>1</kbd> 総攻撃</strong><small>6秒間 威力×1.5</small></button><button id="supply" type="button" disabled><strong><kbd>2</kbd> 補給</strong><small>HP＋120・コスト＋90</small></button></div>
+        <div class="order-buttons"><button id="assault" aria-keyshortcuts="1" type="button" disabled><strong><kbd class="order-key" aria-hidden="true">1</kbd> 総攻撃</strong><small>6秒間 威力×1.5</small></button><button id="supply" aria-keyshortcuts="2" type="button" disabled><strong><kbd class="order-key" aria-hidden="true">2</kbd> 補給</strong><small>HP＋120・コスト＋90</small></button></div>
       </div>
     </section>
   </section>
@@ -299,7 +299,7 @@
         <div class="join-sparks" id="join-sparks"></div>
       </div>
       <div class="join-identity"><div id="join-tags"></div><p id="join-name"></p><p id="join-description"></p></div>
-      <footer class="join-actions"><a id="join-team">この仲間を編成</a><form method="dialog"><button type="submit" autofocus>戦果を見る <span aria-hidden="true">→</span></button></form></footer>
+      <footer class="join-actions"><a id="join-team" aria-keyshortcuts="D">この仲間を編成</a><form method="dialog"><button type="submit" aria-keyshortcuts="S" autofocus>戦果を見る</button></form></footer>
     </div>
   </div>
 </dialog>
@@ -323,10 +323,10 @@
     </div>
   </div>
   <footer class="play-dialog-actions">
-    <a class="play-button" id="result-map" href="japan-stage-map.html">地図へ</a>
-    <a class="play-button" id="result-team" href="formation-demo.html">編成を見直す</a>
-    <button class="play-button" id="again" type="button">再挑戦</button>
-    <a class="play-button primary" id="result-next" hidden>次の県へ</a>
+    <a class="play-button" id="result-map" aria-keyshortcuts="A" href="japan-stage-map.html">地図へ</a>
+    <a class="play-button" id="result-team" aria-keyshortcuts="D" href="formation-demo.html">編成を見直す</a>
+    <button class="play-button" id="again" aria-keyshortcuts="H" type="button">再挑戦</button>
+    <a class="play-button primary" id="result-next" aria-keyshortcuts="S" hidden>次の県へ</a>
   </footer>
 </dialog>
 <dialog class="play-dialog" id="battle-guide" aria-labelledby="battle-guide-title">
@@ -334,13 +334,13 @@
   <div class="play-dialog-body">
     <ol class="guide-notes">
       <li><strong>文字を打って出撃</strong><p>お題のローマ字を入力。正しい1打でコストが18増え、オート召喚で味方が出撃します。敵拠点のHPを0にすると勝利です。</p></li>
-      <li><strong>正確に打って号令を出す</strong><p>1語で指揮ゲージが1つ、ノーミスなら2つたまります。満タンで <kbd>1</kbd> 総攻撃か <kbd>2</kbd> 補給を選べます。</p></li>
-      <li><strong>送り出す部隊を選ぶ</strong><p>Spaceで一時停止。J・Kで号令や出撃カードを選び、Enterで実行して再開します。Fでも戦闘に戻れます。Shift＋A・S・D・F・Gで即時召喚、Shift＋Jでオート切替。</p></li>
+      <li><strong>正確に打って号令を出す</strong><p>指揮ゲージは1語で＋1、ノーミスで＋2。満タンで総攻撃か補給を発令できます。</p></li>
+      <li><strong>送り出す部隊を選ぶ</strong><p>オート召喚はコストがたまると味方を送り出します。手動召喚では出撃させる仲間を選べます。</p></li>
     </ol>
   </div>
   <footer class="play-dialog-actions">
-    <button class="play-button" id="guide-auto" type="button">画面キーで始める</button>
-    <button class="play-button primary" id="guide-type" type="button" autofocus>タイピングで始める</button>
+    <button class="play-button" id="guide-auto" aria-keyshortcuts="A" type="button">画面キーで始める</button>
+    <button class="play-button primary" id="guide-type" aria-keyshortcuts="S" type="button" autofocus>タイピングで始める</button>
   </footer>
 </dialog>
 <dialog class="play-dialog" id="battle-details" aria-labelledby="battle-details-title">
@@ -360,7 +360,7 @@
         <label>効果音 <input id="battle-volume" type="range" min="0" max="100" value="60"></label>
         <label id="guide-position-label" hidden>指令の位置 <select id="guide-position"><option value="field">戦場の左下</option><option value="side">サイドパネル</option></select></label>
       </div>
-      <button class="play-button" type="button" data-player-switch aria-haspopup="dialog" hidden>ユーザー切替</button>
+      <button class="play-button" type="button" data-player-switch aria-keyshortcuts="G" aria-haspopup="dialog" hidden>ユーザー切替</button>
       <details class="custom" id="sandbox-custom">
         <summary>味方の編成をカスタマイズ</summary>
         <div class="custom-fields" id="custom-fields"></div>

@@ -568,7 +568,7 @@ function fillDeck(team) {
     panel.append(wrap, copy);
     if (button) {
       const shortcut = summonKeys[allySlots.indexOf(card.id)];
-      const keycap = make("kbd", shortcut, "summon-key");
+      const keycap = make("kbd", "Shift+" + shortcut, "summon-key");
       keycap.setAttribute("aria-hidden", "true");
       foot.append(keycap);
       button.type = "button";
@@ -730,6 +730,17 @@ function updateHud() {
   get("pause").textContent = paused ? "再開" : "一時停止";
   get("pause").disabled = finished || loading;
   get("pause").setAttribute("aria-pressed", String(paused));
+  const pauseKey = stage && !paused ? "Space" : "F";
+  if (get("pause").getAttribute("aria-keyshortcuts") !== pauseKey) {
+    get("pause").setAttribute("aria-keyshortcuts", pauseKey);
+  }
+  for (const [id, key] of [["assault", paused ? "A" : "1"], ["supply", paused ? "D" : "2"], ["auto-summon", paused ? ";" : "Shift+J"]]) {
+    const button = get(id);
+    if (button.getAttribute("aria-keyshortcuts") !== key) {
+      button.setAttribute("aria-keyshortcuts", key);
+      button.querySelector("kbd").textContent = key;
+    }
+  }
   document.body.toggleAttribute("data-key-typing", Boolean(stage && !finished && !paused));
   if (stage) get("reset").hidden = !(paused && !finished);
   if (score) {
@@ -999,7 +1010,7 @@ function receiveLetter(letter) {
     cue = "word";
     if (score.charge > previousCharge) message += "　指揮 ＋" + (score.charge - previousCharge);
     if (score.charge === FieldOrders.fullCharge && previousCharge < score.charge) {
-      message = "号令準備完了　総攻撃か補給を選択";
+      message = "指揮ゲージ満タン";
       cue = "ready";
     }
   }
@@ -1080,7 +1091,7 @@ document.addEventListener("keydown", event => {
     get("pause").click();
     return;
   }
-  if (paused || !canSummon()) return;
+  if (!canSummon()) return;
   if (event.shiftKey) {
     const key = event.code.startsWith("Key") ? event.code.slice(3) : event.key.toUpperCase();
     const slot = summonKeys.indexOf(key);
@@ -1091,7 +1102,7 @@ document.addEventListener("keydown", event => {
       return;
     }
   }
-  if (!typingEngine) return;
+  if (paused || !typingEngine) return;
   if (event.key === "1" || event.key === "2") {
     event.preventDefault();
     issueOrder(event.key === "1" ? "assault" : "supply");
@@ -1225,7 +1236,7 @@ async function restart(opening = false) {
   if (typing) {
     promptDeck = FieldOrders.deck(stage, cardsById.get(enemy.ids[0]).role, battleSeed);
     setPrompt(promptDeck.first);
-    showPrompt("ガイドに合わせて入力");
+    showPrompt("");
     showTouchKeys();
   }
   get("income").textContent = typing ? "タイピングで増加" : "+" + rules.income + " / 秒";

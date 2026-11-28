@@ -1,33 +1,24 @@
 "use strict";
 
 const GameKeys = (() => {
-  const controls = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [tabindex="0"]';
+  const controls = 'a[href], a[aria-keyshortcuts], button, input:not([type="hidden"]), select, textarea, summary, [tabindex="0"]';
   const textField = 'input:not([type]), input[type="text"], input[type="search"], textarea, [contenteditable="true"]';
   const directions = new Map([["j", 1], ["k", -1], ["a", -1], ["d", 1], ["h", -1], ["l", 1]]);
   let pendingField;
 
-  function addGuide(host) {
-    const guide = document.createElement("div");
-    guide.className = "key-guide";
-    guide.setAttribute("role", "group");
-    guide.setAttribute("aria-label", "キーボード操作");
-    guide.innerHTML = '<span class="key-menu"><span><kbd>J</kbd> 次</span><span><kbd>K</kbd> 前</span>' +
-      '<span class="key-adjust"><kbd>A</kbd><kbd>D</kbd> 変更</span><span><kbd>Enter</kbd> / <kbd>Space</kbd> 決定</span>' +
-      '<span class="key-back"><kbd>F</kbd> 戻る</span></span>';
-    if (host.id === "player-picker" || host.matches("body > header") && document.querySelector('input[type="search"]')) {
-      const end = host.id === "player-picker" ? "ユーザー作成" : "検索を確定";
-      guide.insertAdjacentHTML("beforeend", '<span class="key-editing">文字を入力 <span><kbd>Enter</kbd> ' + end + '</span></span>');
-    }
-    if (host.matches("body > header") && document.getElementById("pause")) {
-      guide.insertAdjacentHTML("beforeend", '<span class="key-combat">英字で打鍵 <span><kbd>Space</kbd> 一時停止・操作選択</span></span>');
-    }
-    host.append(guide);
+  function markClose(dialog) {
+    const close = dialog.querySelector('.player-close, form[method="dialog"] button');
+    if (close && !close.hasAttribute("aria-keyshortcuts")) close.setAttribute("aria-keyshortcuts", "F");
   }
 
-  function selectable(el) {
-    return el && !el.matches(":disabled") && !el.closest('[hidden], [inert], [aria-disabled="true"]') &&
+  function visible(el) {
+    return el && !el.closest("[hidden], [inert]") &&
       (el.matches("summary") || !el.closest("details:not([open])")) &&
       el.getClientRects().length > 0 && getComputedStyle(el).visibility === "visible";
+  }
+
+  function enabled(el) {
+    return !el.matches(':disabled, a:not([href])') && !el.closest('[aria-disabled="true"]');
   }
 
   function clearField() {
@@ -81,13 +72,13 @@ const GameKeys = (() => {
       event.preventDefault();
       if (!event.repeat) {
         document.documentElement.classList.add("home-keys");
-        select(active);
-        if (active.form?.matches(".player-form")) active.form.requestSubmit();
+        if (active.form?.matches(".player-form") && !active.hasAttribute("aria-invalid")) active.form.requestSubmit();
+        else select(active);
       }
       return;
     }
     const step = directions.get(key);
-    if (!step && key !== "f" && key !== " " && key !== "enter") {
+    if (!step && !["s", "f", "g", ";", " ", "enter"].includes(key)) {
       if (pendingField && (key.length === 1 || key === "backspace" || key === "delete")) clearField();
       return;
     }
@@ -96,7 +87,7 @@ const GameKeys = (() => {
     if (!dialog && document.body.hasAttribute("data-key-typing")) {
       if (key === " ") {
         event.preventDefault();
-        if (!event.repeat && selectable(pause)) {
+        if (!event.repeat && visible(pause) && enabled(pause)) {
           document.documentElement.classList.add("home-keys");
           pause.click();
           select(pause);
@@ -105,37 +96,48 @@ const GameKeys = (() => {
       return;
     }
     const scope = dialog ?? document;
-    const items = Array.from(scope.querySelectorAll(controls)).filter(el => !el.hasAttribute("data-letter") && selectable(el));
+    const shown = Array.from(scope.querySelectorAll(controls)).filter(el => !el.hasAttribute("data-letter") && visible(el));
+    const items = shown.filter(enabled);
     if (!items.length) return;
     const first = items.find(el => el.closest("[data-key-start]")) ?? items[0];
     const index = items.indexOf(active);
     const target = index < 0 ? first : active;
     document.documentElement.classList.add("home-keys");
     event.preventDefault();
-    if (step) {
-      if (key !== "j" && key !== "k" && adjust(target, step)) {
-        if (index < 0) select(target);
-      } else {
-        select(index < 0 ? first : items[(index + step + items.length) % items.length]);
+    if (step && key !== "j" && key !== "k" && adjust(target, step)) {
+      if (index < 0) select(target);
+      return;
+    }
+    const shortcut = key.length === 1 && key !== " " && shown.find(el => el.getAttribute("aria-keyshortcuts")?.toLowerCase() === key);
+    if (shortcut) {
+      if (enabled(shortcut) && (!event.repeat || shortcut.hasAttribute("data-stage-step"))) {
+        shortcut.focus({preventScroll: true});
+        shortcut.click();
       }
+      return;
+    }
+    if (step) {
+      select(index < 0 ? first : items[(index + step + items.length) % items.length]);
       return;
     }
     if (event.repeat) return;
     if (key === "f") {
       if (dialog) {
         if (dialog.dispatchEvent(new Event("cancel", {cancelable: true}))) dialog.close();
-      } else if (pause?.getAttribute("aria-pressed") === "true" && selectable(pause)) {
+      } else if (pause?.getAttribute("aria-pressed") === "true" && visible(pause) && enabled(pause)) {
         pause.click();
       } else {
         const back = items.find(el => el.hasAttribute("data-key-back"));
         back?.click();
       }
+    } else if (key !== " " && key !== "enter") {
+      return;
     } else if (target.matches(textField)) {
       target.focus();
       clearField();
     } else if (target.hasAttribute("data-key-submit")) {
       const action = document.getElementById(target.dataset.keySubmit);
-      if (selectable(action)) action.click();
+      if (visible(action) && enabled(action)) action.click();
     } else if (target.matches("select, input[type=range]") || target.hasAttribute("data-key-arrows")) {
       select(items[(items.indexOf(target) + 1) % items.length]);
     } else {
@@ -143,7 +145,6 @@ const GameKeys = (() => {
     }
   }, true);
 
-  addGuide(document.querySelector("body > header"));
-  for (const dialog of document.querySelectorAll("dialog")) addGuide(dialog.querySelector(".join-frame") ?? dialog);
-  return {addGuide};
+  for (const dialog of document.querySelectorAll("dialog")) markClose(dialog);
+  return {addGuide: markClose};
 })();

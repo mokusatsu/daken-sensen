@@ -110,7 +110,6 @@
   .legend .free { background: var(--cleared); border: 1px solid #427966; }
   .legend .locked { background: #9a9cb8; border: 1px solid #5b5874; }
   .legend .boss { width: 9px; height: 9px; background: #eac277; border: 1px solid #8e592b; border-radius: 0; transform: rotate(45deg); }
-  .tip { line-height: 1.5; }
   .stage-card { padding: 15px; }
   .selector { display: grid; gap: 5px; font-size: 11px; font-weight: 700; color: var(--muted); }
   .selector select {
@@ -156,7 +155,7 @@
   .starter-list canvas { grid-row: span 2; width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
   .starter-list strong { font-size: 12px; }
   .small-action { min-height: 44px; padding: 4px 8px; border: 0; background: transparent; color: var(--accent); font-size: 12px; font-weight: 700; }
-  .nav .small-action { white-space: nowrap; }
+  .nav .small-action { color: inherit; white-space: nowrap; }
   .wallet { font: 700 14px/1.2 var(--mono); color: #5a3970; white-space: nowrap; }
   .stage-deck { margin-top: 9px; }
   .stage-deck h3 { font-size: 13px; }
@@ -195,7 +194,6 @@
     .region-bar { overflow: visible; flex-wrap: wrap; gap: 3px; padding: 4px 7px; }
     .region-bar button { padding-inline: clamp(5px, .7vw, 10px); min-height: 39px; }
     .map-bottom { min-height: 42px; padding: 3px 9px; gap: 4px 8px; }
-    .map-bottom .tip { display: none; }
     .stage-card { display: block; padding: 10px 12px; }
     .stage-card .selector { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
     .stage-card .selector select { flex: 1; min-width: 0; min-height: 44px; }
@@ -249,19 +247,19 @@
 </head>
 <body class="play-page" data-country="%%COUNTRY%%">
 <header class="masthead"><div class="wrap">
-  <a class="brand" data-command-home data-key-back href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></a>
-  <nav class="nav" aria-label="ページ">%%MAP_NAV%%<a id="map-formation" href="formation-demo.html">編成</a><a id="map-roster" href="character-roster.html">図鑑</a><a id="map-matchups" hidden>相性表</a><button class="small-action" id="open-guide" type="button" aria-haspopup="dialog">初回ガイド</button></nav>
+  <a class="brand" data-command-home data-key-back aria-keyshortcuts="F" href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></a>
+  <nav class="nav" aria-label="ページ">%%MAP_NAV%%<a id="map-formation" aria-keyshortcuts="G" href="formation-demo.html">編成</a><a id="map-roster" aria-keyshortcuts=";" href="character-roster.html">図鑑</a><a id="map-matchups" hidden>相性表</a><button class="small-action" id="open-guide" type="button" aria-haspopup="dialog">初回ガイド</button></nav>
 </div></header>
 <main class="wrap landscape-main">
   <header class="intro">
-    <div><h1>%%TITLE%%</h1><p>%%AREA%%を選ぶと、ステージの門番と解放状況を確認できます。</p></div>
+    <div><h1>%%TITLE%%</h1></div>
     <div class="progress"><span>攻略済み</span><strong id="released-count" aria-live="polite"></strong><progress id="progress" max="%%COUNT%%" value="0" aria-label="攻略済みの%%AREA%%"></progress></div>
   </header>
   <div class="workbench">
     <section class="sheet map-card" aria-label="ステージマップ">
       <div class="region-bar" id="region-bar" role="group" aria-label="表示する地方"></div>
       <div class="water" id="water">
-        <canvas id="map" tabindex="0" data-key-arrows aria-label="%%AREA%%の地図" aria-describedby="map-tip">%%AREA%%は選択欄から選べます。</canvas>
+        <canvas id="map" tabindex="0" aria-label="%%AREA%%の地図" title="ドラッグで移動、ピンチで拡大・縮小">%%AREA%%の地図</canvas>
         <div class="map-tools" role="group" aria-label="地図の拡大と移動">
           <button id="zoom-out" type="button" aria-label="縮小" title="縮小">−</button>
           <output id="zoom" aria-label="表示倍率" aria-live="off">100%</output>
@@ -277,13 +275,15 @@
           <span id="locked-legend" hidden><i class="locked" aria-hidden="true"></i>未解放</span>
           <span><i class="boss" aria-hidden="true"></i>地方ボス</span>
         </div>
-        <p class="tip" id="map-tip">ドラッグで移動。ホイール・ピンチで拡大縮小。矢印キーでも移動できます。</p>
         <button class="small-action" id="open-sources" type="button" aria-haspopup="dialog">地形データ</button>
       </div>
     </section>
     <aside class="sheet stage-card" aria-labelledby="stage-name">
-      <label class="selector">%%AREA%%<select id="stage-select" data-key-start data-key-submit="launch-stage" aria-describedby="stage-key-tip"></select></label>
-      <small class="key-context" id="stage-key-tip">A・Dで拠点を選び、Enterで出撃</small>
+      <div class="selector stage-picker"><label for="stage-select">%%AREA%%</label>
+        <button class="stage-step" type="button" data-stage-step="-1" aria-label="前の拠点" aria-keyshortcuts="A">‹</button>
+        <select id="stage-select" data-key-start data-key-submit="launch-stage"></select>
+        <button class="stage-step" type="button" data-stage-step="1" aria-label="次の拠点" aria-keyshortcuts="D">›</button>
+      </div>
       <div class="stage-heading">
         <div class="stage-meta"><span id="stage-region"></span><span class="number" id="stage-number"></span></div>
         <h2 id="stage-name"></h2>
@@ -308,7 +308,7 @@
         <h3 id="stage-deck-title">敵の編成</h3><ol id="enemy-lineup"></ol>
       </section>
       <div class="stage-actions" id="stage-actions" hidden>
-        <a class="play-button" id="edit-stage-team">編成を変更</a><a class="play-button primary" id="launch-stage">出撃</a>
+        <a class="play-button" id="edit-stage-team" aria-keyshortcuts="G">編成を変更</a><a class="play-button primary" id="launch-stage" aria-keyshortcuts="S">出撃</a>
       </div>
     </aside>
   </div>
@@ -320,11 +320,11 @@
     <section id="guide-starters" aria-label="初期の手持ち"><p>この5体から攻略を始めます。</p><ul id="starter-list" class="starter-list"></ul></section>
     <div class="guide-steps">
       <article><h3>拠点を選ぶ</h3><p id="guide-front-intro">最初は沖縄県。拠点を選ぶと、敵のタイプや攻略報酬を確認できます。</p></article>
-      <article><h3>部隊を決める</h3><p>最大5体で出撃します。「編成を変更」から入れ替えられます。</p></article>
-      <article><h3>敵拠点を制圧</h3><p>文字を打つとコストが増え、味方が出撃します。画面キーでも入力できます。</p></article>
+      <article><h3>部隊を決める</h3><p>出撃部隊は最大5体。前衛と後衛を組み合わせられます。</p></article>
+      <article><h3>敵拠点を制圧</h3><p>文字を打つとコストが増え、味方が出撃します。</p></article>
     </div>
   </div>
-  <footer class="play-dialog-actions"><button class="play-button primary" id="guide-first-stage" type="button" autofocus>最初の拠点を見る</button></footer>
+  <footer class="play-dialog-actions"><button class="play-button primary" id="guide-first-stage" aria-keyshortcuts="S" type="button" autofocus>最初の拠点を見る</button></footer>
 </dialog>
 <dialog class="play-dialog" id="map-sources" aria-labelledby="sources-title">
   <header class="play-dialog-head"><h2 id="sources-title">地形データ</h2><form method="dialog"><button class="play-button" type="submit" autofocus>閉じる</button></form></header>
@@ -812,6 +812,9 @@ function showStage(stage) {
   const {guard} = stage;
   const released = cleared.has(stage.id);
   selector.value = stage.id;
+  for (const button of stageSteps) {
+    button.disabled = !selector.options[selector.selectedIndex + Number(button.dataset.stageStep)];
+  }
   get("stage-region").textContent = stage.region.name;
   get("stage-number").textContent = "第" + stage.number + "ステージ";
   get("stage-name").textContent = stage.name;
@@ -885,6 +888,7 @@ function showRegion(region) {
 }
 
 const national = element("button", "全国");
+const stageSteps = document.querySelectorAll("[data-stage-step]");
 national.value = "";
 national.setAttribute("aria-pressed", "true");
 regionBar.append(national);
@@ -902,6 +906,11 @@ for (const id of assets.regionOrder) {
 regionBar.addEventListener("click", event => {
   const button = event.target.closest("button");
   if (button) showRegion(regions.find(region => region.id === button.value) || null);
+});
+for (const button of stageSteps) button.addEventListener("click", () => {
+  selector.selectedIndex += Number(button.dataset.stageStep);
+  selector.dispatchEvent(new Event("change", {bubbles: true}));
+  selector.focus({preventScroll: true});
 });
 selector.addEventListener("change", () => {
   const stage = areas.get(Number(selector.value));

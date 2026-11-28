@@ -173,7 +173,6 @@
   .turn-stage { overflow: hidden; min-height: 300px; height: clamp(300px, 43vh, 411px); border-radius: 12px; touch-action: pan-y; cursor: grab; }
   .turn-stage:active { cursor: grabbing; }
   .turn-stage canvas { position: absolute; inset: 5% 7%; width: 86%; height: 90%; object-fit: contain; pointer-events: none; }
-  .turn-hint { position: absolute; inset: auto 10px 10px auto; font-size: 11px; padding: 3px 6px; border-radius: 4px; color: #514462; background: #fffefaed; pointer-events: none; }
   .motions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 9px; }
   .motions button { min-height: 36px; font-size: 12px; }
   .motions button[aria-pressed="true"] { border-color: #c3b1f1; color: var(--accent); background: var(--accent-soft); }
@@ -282,7 +281,7 @@
   <div class="wrap">
     <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="brand-key" aria-hidden="true">打</span><span class="brand-name">打鍵戦線</span></a>
     <nav class="nav" aria-label="図鑑のメニュー">
-      <a id="roster-map" data-key-back href="japan-stage-map.html">戦区マップ</a>
+      <a id="roster-map" aria-keyshortcuts="F" data-key-back href="japan-stage-map.html">戦区マップ</a>
       <a href="#roster" aria-current="page">キャラクター</a>
       <a href="#matchups">タイプ相性</a>
       <a href="#design">能力設計</a>
@@ -303,9 +302,9 @@
     <div class="cards" id="cards" data-key-start></div>
     <p class="empty" id="empty" hidden>条件に合うキャラクターがいません。</p>
     <div class="pager" aria-label="図鑑のページ切り替え">
-      <button class="plain-button" id="roster-prev" type="button" aria-controls="cards">前へ</button>
+      <button class="plain-button" id="roster-prev" aria-keyshortcuts="A" type="button" aria-controls="cards">前へ</button>
       <output class="count" id="roster-page" aria-label="ページ番号"></output>
-      <button class="plain-button" id="roster-next" type="button" aria-controls="cards">次へ</button>
+      <button class="plain-button" id="roster-next" aria-keyshortcuts="D" type="button" aria-controls="cards">次へ</button>
     </div>
     <noscript><p class="empty">キャラクターの表示にはJavaScriptが必要です。</p></noscript>
   </section>
@@ -384,16 +383,15 @@
   <header class="detail-header">
     <p id="detail-id"></p>
     <div class="detail-nav">
-      <button class="plain-button icon-button" id="prev-unit" type="button" aria-label="前のキャラクター">←</button>
-      <button class="plain-button icon-button" id="next-unit" type="button" aria-label="次のキャラクター">→</button>
+      <button class="plain-button icon-button" id="prev-unit" aria-keyshortcuts="A" type="button" aria-label="前のキャラクター">←</button>
+      <button class="plain-button icon-button" id="next-unit" aria-keyshortcuts="D" type="button" aria-label="次のキャラクター">→</button>
       <form method="dialog"><button class="plain-button icon-button" type="submit" aria-label="詳細を閉じる" autofocus>×</button></form>
     </div>
   </header>
   <div class="detail-content">
     <div>
-      <figure class="turn-stage" id="turn-stage" data-key-arrows aria-label="回転プレビュー。A・Dまたは左右の矢印キーで回転" tabindex="0">
+      <figure class="turn-stage" id="turn-stage" data-key-arrows aria-label="回転プレビュー。A・Dまたは左右の矢印キーで回転" title="ドラッグで回転" tabindex="0">
         <canvas id="turn-canvas" aria-hidden="true"></canvas>
-        <figcaption class="turn-hint">ドラッグで回転</figcaption>
       </figure>
       <div class="motions" id="motions" role="group" aria-label="モーション">
         <button type="button" class="plain-button" data-motion="idle" aria-pressed="true">静止</button>
@@ -405,7 +403,7 @@
         <label for="angle">回転角</label><input id="angle" type="range" min="0" max="359" step="1" value="0"><output id="degrees" for="angle">0°</output>
       </div>
       <div class="view-buttons">
-        <button type="button" class="plain-button" id="spin" aria-pressed="false">自動回転</button>
+        <button type="button" class="plain-button" id="spin" aria-keyshortcuts="S" aria-pressed="false">自動回転</button>
         <button type="button" class="plain-button" id="face-front">正面</button>
         <button type="button" class="plain-button" id="download-strip">断面PNG</button>
       </div>
