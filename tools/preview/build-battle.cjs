@@ -1,12 +1,12 @@
 const assert = require("node:assert/strict");
 const {readFile, writeFile} = require("node:fs/promises");
 const {resolve} = require("node:path");
-const {root, preview, readJapanRoster, withPreviewPage, renderTemplate, inlineJson} = require("./browser.cjs");
+const {root, preview, readCampaignRoster, withPreviewPage, renderTemplate, inlineJson} = require("./browser.cjs");
 const camera = {pitch: .44, heading: 309};
 
 async function main() {
   const [{starters, stages}, rosterHtml, template, engine, typingEngine, typingRules, view] = await Promise.all([
-    readJapanRoster(),
+    readCampaignRoster(),
     readFile(resolve(preview, "character-roster.html"), "utf8"),
     readFile(resolve(__dirname, "battle.template.html"), "utf8"),
     readFile(resolve(root, "tools/battle-engine.cjs"), "utf8"),

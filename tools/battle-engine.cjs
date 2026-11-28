@@ -31,15 +31,15 @@ const balance = {
   closeShot: .58,
 };
 const traits = {
-  m: {description: "低コストと短い再出撃で前線に増援を送る"},
+  m: {description: "低コストと短い再出撃で前線に増援を送る", hp: 116, cost: 56},
   w: {description: "高い体力とのけぞり耐性で前線を支える"},
   r: {description: "移動が速く、会敵やのけぞり後の復帰に強い"},
-  s: {description: "短い攻撃間隔で2回打撃し、小さく押し戻す", push: .46},
+  s: {description: "短い攻撃間隔で2回打撃し、小さく押し戻す", power: 38, push: .46},
   l: {description: "長射程から単体を狙う。距離が近すぎると威力が落ちる", comfort: 75},
-  a: {description: "着弾点の周りにいる敵にも打撃を広げる", spread: 3, splash: .72},
+  a: {description: "主標的の周囲にいる最大3体へ90%の威力で巻き込む", power: 34, spread: 3, extra: 3, splash: .90},
   b: {description: "高い体力と重い近接攻撃で前列を押し戻す", spread: 1, splash: .33, push: 1.23, steady: true},
   h: {description: "長い溜めから大威力の範囲攻撃を撃つ", spread: 2, extra: 3, splash: .49, push: 1.25, steady: true},
-  c: {description: "周囲の敵にも命中し、前進と復帰を遅らせる", spread: 1, splash: .28, slow: 2.6},
+  c: {description: "左右2レーンを巻き込み、主標的の移動と復帰を2.8秒遅らせる", cost: 85, range: 124, spread: 2, splash: .28, slow: 2.8},
   u: {description: "体力と威力を備え、前線の後ろからも攻撃する"},
 };
 const reactions = {
@@ -55,14 +55,15 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 function makeCard(card, level = 1, tuning = balance) {
   const [stamina, power, range, speed, speedOfAttack, price, speedOfDeploy] = card.ratings.map(rank => rank - 1);
   const growth = 9 + level;
+  const role = traits[card.role];
   return {
     ...card, level,
-    hp: Math.round(tuning.hp[stamina] * growth / 10),
-    power: Math.round(tuning.power[power] * growth / 10),
-    range: tuning.range[range],
+    hp: Math.round((role?.hp ?? tuning.hp[stamina]) * growth / 10),
+    power: Math.round((role?.power ?? tuning.power[power]) * growth / 10),
+    range: role?.range ?? tuning.range[range],
     speed: tuning.speed[speed],
     recovery: tuning.recovery[speedOfAttack],
-    cost: tuning.cost[price],
+    cost: role?.cost ?? tuning.cost[price],
     redeploy: tuning.redeploy[speedOfDeploy],
   };
 }
@@ -80,7 +81,7 @@ function createBattle(data, seed, options = {}) {
       return {
         cards, seed: (seed ^ (team ? 0x9e3779b9 : 0xc2b2ae35)) >>> 0,
         auto: options.auto?.[team] ?? true,
-        health: settings.baseHealth, cost: settings.initialCost, nextBuy: 0, nextCard: null,
+        health: settings.baseHealth, cost: settings.initialCost, nextBuy: 0, nextCard: null, assaultUntil: 0,
         ready: new Map(cards.map(card => [card.id, 0])),
         purchases: new Map(cards.map(card => [card.id, 0])),
         stats: {hits: 0, damage: 0, splash: 0, slowed: 0, rear: 0},
@@ -275,7 +276,8 @@ function bestTarget(battle, attacker) {
 function hitTarget(battle, attacker, target, ratio = 1) {
   const {unit, baseTeam, factor, type} = target;
   const card = attacker.card;
-  const damage = factor ? Math.max(1, Math.round(card.power * ratio * (target.strength ?? 1) * factor / card.impactFrames.length)) : 0;
+  const strength = battle.time < battle.teams[attacker.team].assaultUntil ? 1.5 : 1;
+  const damage = factor ? Math.max(1, Math.round(card.power * strength * ratio * (target.strength ?? 1) * factor / card.impactFrames.length)) : 0;
   const role = traits[card.role];
   const stats = battle.teams[attacker.team].stats;
   const splash = ratio !== 1;

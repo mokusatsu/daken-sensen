@@ -151,13 +151,6 @@
   .guard-tags { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
   .type::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: currentColor; }
   .role { color: var(--muted); font-size: 11px; font-weight: 700; }
-  .unlock { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.55; }
-  .toggle {
-    width: 100%; min-height: 42px; margin-top: 9px; padding-inline: 8px; border: 1px solid #cdbcf1;
-    border-radius: 8px; background: var(--accent-soft); color: var(--accent);
-    font-size: 13px; font-weight: 800;
-  }
-  .toggle:hover { background: #ddd0fa; }
   .starter-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
   .starter-list li { display: grid; grid-template-columns: auto 1fr; gap: 3px 7px; align-items: center; padding: 6px 9px; border-radius: 7px; background: #f4f0fa; font-size: 11px; }
   .starter-list canvas { grid-row: span 2; width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
@@ -230,7 +223,6 @@
     .stage-card { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
     .stage-card > .selector { grid-column: 1 / -1; }
     .stage-card .guard { grid-column: 2; grid-row: 2 / 4; }
-    .stage-card .unlock-actions { grid-column: 1; grid-row: 3; }
     .water { height: clamp(380px, 58vh, 575px); }
   }
   @media (max-width: 520px) {
@@ -252,10 +244,11 @@
     .campaign-map .stage-card { display: block; }
   }
 </style>
+<link rel="stylesheet" href="players.css">
 </head>
 <body class="play-page" data-country="%%COUNTRY%%">
 <header class="masthead"><div class="wrap">
-  <div class="brand"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></div>
+  <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></a>
   <nav class="nav" aria-label="ページ">%%MAP_NAV%%<a id="map-formation" href="formation-demo.html">編成</a><a id="map-roster" href="character-roster.html">図鑑</a><a id="map-matchups" hidden>相性表</a><button class="small-action" id="open-guide" type="button" aria-haspopup="dialog">初回ガイド</button></nav>
 </div></header>
 <main class="wrap landscape-main">
@@ -295,6 +288,7 @@
         <div class="stage-tags">
           <span class="status" id="stage-status"></span>
           <span class="flag" id="stage-boss" hidden>◆ 地方ボス</span>
+          <span id="stage-medals" hidden></span>
         </div>
         <dl class="enemy-slots">
           <div class="map-demo-only"><dt>敵の編成枠</dt><dd id="enemy-slots"></dd></div>
@@ -311,10 +305,6 @@
       <section class="stage-deck" id="stage-deck" aria-labelledby="stage-deck-title" hidden>
         <h3 id="stage-deck-title">敵の編成</h3><ol id="enemy-lineup"></ol>
       </section>
-      <div class="unlock-actions map-demo-only">
-        <p class="unlock" id="unlock"></p>
-        <button class="toggle" type="button" id="toggle-status"></button>
-      </div>
       <div class="stage-actions" id="stage-actions" hidden>
         <a class="play-button" id="edit-stage-team">編成を変更</a><a class="play-button primary" id="launch-stage">出撃</a>
       </div>
@@ -325,29 +315,30 @@
 <dialog class="play-dialog" id="map-guide" aria-labelledby="guide-title">
   <header class="play-dialog-head"><h2 id="guide-title">初回ガイド</h2><form method="dialog"><button class="play-button" type="submit">閉じる</button></form></header>
   <div class="play-dialog-body">
-    <section aria-label="初期の手持ち"><p>この5体から攻略を始めます。</p><ul id="starter-list" class="starter-list"></ul></section>
+    <section id="guide-starters" aria-label="初期の手持ち"><p>この5体から攻略を始めます。</p><ul id="starter-list" class="starter-list"></ul></section>
     <div class="guide-steps">
-      <article><h3>県を選ぶ</h3><p>最初は沖縄県。県を選ぶと、敵のタイプや攻略報酬を確認できます。</p></article>
+      <article><h3>拠点を選ぶ</h3><p id="guide-front-intro">最初は沖縄県。拠点を選ぶと、敵のタイプや攻略報酬を確認できます。</p></article>
       <article><h3>部隊を決める</h3><p>最大5体で出撃します。「編成を変更」から入れ替えられます。</p></article>
-      <article><h3>戦場で出撃</h3><p>表示された文字を打ってコストを貯め、出撃枠を押します。タッチだけなら自動出撃で試せます。</p></article>
+      <article><h3>敵拠点を制圧</h3><p>文字を打つとコストが増え、味方が出撃します。画面キーでも入力できます。</p></article>
     </div>
   </div>
-  <footer class="play-dialog-actions"><button class="play-button primary" id="guide-first-stage" type="button" autofocus>最初の県を見る</button></footer>
+  <footer class="play-dialog-actions"><button class="play-button primary" id="guide-first-stage" type="button" autofocus>最初の拠点を見る</button></footer>
 </dialog>
 <dialog class="play-dialog" id="map-sources" aria-labelledby="sources-title">
   <header class="play-dialog-head"><h2 id="sources-title">地形データ</h2><form method="dialog"><button class="play-button" type="submit" autofocus>閉じる</button></form></header>
   <div class="play-dialog-body"><p>%%MAP_DESCRIPTION%%</p><div class="source-list">%%CREDITS%%</div></div>
 </dialog>
 <script src="campaign.js"></script>
+<script src="command-data.js"></script>
 <script id="map-assets" type="application/json">%%MAP_ASSETS%%</script>
-<script>
+<template id="campaign-screen" data-players="map"><script>
 "use strict";
 const assets = JSON.parse(document.getElementById("map-assets").textContent);
 const {pitch, spacing, layers, baseLand, elevationStepMetres, yawDegrees} = assets.projection;
 const baseLift = baseLand * spacing;
 const get = id => document.getElementById(id);
-const session = document.body.dataset.country === "japan" ? openCampaign(assets.starters.map(guard => guard.id)) : null;
-const journey = session ? campaignStages(assets) : [];
+const session = openCampaign(assets.starters.map(guard => guard.id));
+const journey = campaignStages(assets, session.country);
 const stageData = new Map(journey.map(stage => [stage.id, stage]));
 const areas = new Map(assets.areas.map(data => [data.id, {...data, band: 0}]));
 const guards = new Map(assets.gates.map(({id, guard}) => [id, guard]));
@@ -365,7 +356,7 @@ for (const region of regions) {
     stage.boss = stage.id === region.ids.at(-1);
   }
 }
-const cleared = new Set(session?.state.cleared ?? regions[0].ids.slice(0, 4));
+const cleared = new Set(session.front.cleared);
 const playable = new Set(journey.filter(stage => stageAvailable(journey, stage.id, [...cleared])).map(stage => stage.id));
 const openColors = [[123, 209, 175], [140, 215, 172], [117, 200, 171], [128, 204, 188]];
 const heldColors = [[244, 161, 141], [236, 151, 133], [245, 168, 147], [235, 150, 145]];
@@ -385,8 +376,8 @@ const dispatchLinks = [
   [get("launch-stage"), "battle-demo.html", ""],
 ];
 let activeRegion = null;
-let selected = areas.get(session ? (stageData.has(session.stageId) ? session.stageId :
-  journey.find(stage => !cleared.has(stage.id))?.id ?? journey[0].id) : assets.initialStage);
+let selected = areas.get(stageData.has(session.stageId) ? session.stageId :
+  (journey.find(stage => !cleared.has(stage.id)) ?? journey.at(-1)).id);
 let hovered = null;
 let previewWidth = 0;
 let previewHeight = 0;
@@ -436,7 +427,7 @@ function buildSurface(region) {
   const pixels = context.createImageData(stride, height);
   const {data} = pixels;
   const tones = new Map(region.ids.map(id => {
-    const palette = cleared.has(id) ? openColors : session && !playable.has(id) ? lockedColors : heldColors;
+    const palette = cleared.has(id) ? openColors : !playable.has(id) ? lockedColors : heldColors;
     return [id, palette[id % palette.length]];
   }));
   // 上面までの高さを1セルずつ保ち、表面と斜面に%%AREA%%の色を付ける。
@@ -825,6 +816,7 @@ function showStage(stage) {
   get("stage-status").textContent = released ? "解放済み" : "占領中";
   get("stage-status").classList.toggle("released", released);
   get("stage-boss").hidden = !stage.boss;
+  if (stage.boss) get("stage-boss").textContent = "◆ 地方ボス・半壊で増援";
   get("enemy-slots").textContent = stage.number < 5 ? stage.number + "体" : "最大5体";
   const elevation = stage.band * elevationStepMetres;
   get("stage-height").textContent = loaded ? elevation.toLocaleString("ja") + "〜" +
@@ -836,9 +828,7 @@ function showStage(stage) {
     type.style.backgroundColor = fill;
     return type;
   }), element("span", guard.role, "role"));
-  get("unlock").textContent = released ? "門番は編成に加わっています。" : "クリアすると門番が仲間に加わります。";
-  get("toggle-status").textContent = released ? "占領中に戻す" : "解放済みにする";
-  if (session) showDispatch(stage);
+  showDispatch(stage);
   if (gateAtlas) portrait(get("guard-canvas"), guard);
   hovered = null;
   schedule();
@@ -851,6 +841,11 @@ function showDispatch(stage) {
   const status = get("stage-status");
   status.textContent = released ? "攻略済み" : available ? "挑戦可能" : "未解放";
   status.classList.toggle("locked", !available);
+  const medals = get("stage-medals");
+  const record = session.front.records[stage.id];
+  medals.hidden = !released;
+  medals.textContent = ["◆ 制圧", record?.precision ? "◆ 精密" : "◇ 精密", record?.command ? "◆ 指揮" : "◇ 指揮"].join("　");
+  medals.title = "精密は3語以上・正確率95%以上、指揮は号令を使って勝利";
   get("map-xp").textContent = session.state.experience.toLocaleString("ja-JP") + " XP";
   get("reward-xp").textContent = details.xp.toLocaleString("ja-JP") + " XP";
   get("guard-label").textContent = released ? "加入済み" : "初回攻略で加入";
@@ -870,7 +865,7 @@ function showDispatch(stage) {
   }));
   const launch = get("launch-stage");
   const ready = available && session.state.slots.some(Boolean);
-  launch.textContent = !available ? "ひとつ前の県を攻略" : !ready ? "編成が必要" : released ? "再挑戦" : "出撃";
+  launch.textContent = !available ? "ひとつ前の拠点を攻略" : !ready ? "編成が必要" : released ? "再挑戦" : "出撃";
   launch.setAttribute("aria-disabled", String(!ready));
   for (const [link, path, hash] of dispatchLinks) {
     if (link !== launch || ready) link.href = session.href(path, stage.id, {}, hash);
@@ -921,17 +916,24 @@ function updateProgress() {
   get("released-count").textContent = cleared.size + " / " + areas.size;
   get("progress").value = cleared.size;
 }
-get("toggle-status").addEventListener("click", () => {
-  if (!loaded) return;
-  if (cleared.has(selected.id)) cleared.delete(selected.id);
-  else cleared.add(selected.id);
-  updateProgress();
-  buildSurface(selected.region);
-  showStage(selected);
-});
-
 const guide = get("map-guide");
-get("open-guide").hidden = !session;
+if (session.country === "usa") {
+  get("guide-starters").hidden = true;
+  get("open-guide").textContent = "攻略ガイド";
+  get("guide-title").textContent = "アメリカ戦線の攻略";
+  get("guide-front-intro").textContent = "メイン州から全50州を攻略します。日本で育てた部隊で出撃でき、各州の初回制圧で門番が仲間になります。";
+}
+for (const link of document.querySelectorAll("[data-map-country]")) {
+  const destination = link.dataset.mapCountry;
+  if (destination === "usa" && !usaUnlocked(session.state)) {
+    link.removeAttribute("href");
+    link.setAttribute("aria-disabled", "true");
+    link.textContent = "アメリカ（未解放）";
+    link.title = "日本の全47拠点を制圧すると解放";
+  } else {
+    link.href = session.href(destination + "-stage-map.html", destination === session.country ? selected.id : 0, {country: destination});
+  }
+}
 get("open-guide").addEventListener("click", () => guide.showModal());
 get("guide-first-stage").addEventListener("click", () => {
   const first = areas.get(journey[0].id);
@@ -941,22 +943,22 @@ get("guide-first-stage").addEventListener("click", () => {
   selector.focus({preventScroll: true});
 });
 guide.addEventListener("close", () => {
+  session.sync();
   if (session.state.mapGuide) return;
   session.state.mapGuide = true;
   session.save();
   showDispatch(selected);
 });
 get("open-sources").addEventListener("click", () => get("map-sources").showModal());
-if (session) {
-  document.body.classList.add("campaign-map");
-  for (const id of ["stage-deck", "stage-reward", "stage-actions", "locked-legend", "map-matchups"]) get(id).hidden = false;
-  get("occupied-legend").textContent = "挑戦可能";
-  for (const [link, path, hash] of dispatchLinks) link.addEventListener("click", () => {
-    if (!link.hasAttribute("href")) return;
-    const view = [activeRegion?.id ?? "", camera.x.toFixed(2), camera.y.toFixed(2), (camera.scale / camera.fit).toFixed(3)].join(",");
-    link.href = session.href(path, selected.id, {view}, hash);
-  });
-}
+document.body.classList.add("campaign-map");
+for (const id of ["stage-deck", "stage-reward", "stage-actions", "locked-legend", "map-matchups"]) get(id).hidden = false;
+get("occupied-legend").textContent = "挑戦可能";
+for (const [link, path, hash] of dispatchLinks) link.addEventListener("click", () => {
+  if (!link.hasAttribute("href")) return;
+  const view = [activeRegion?.id ?? "", camera.x.toFixed(2), camera.y.toFixed(2), (camera.scale / camera.fit).toFixed(3)].join(",");
+  link.href = session.href(path, selected.id, {view}, hash);
+});
+window.addEventListener("focus", () => { if (session.sync()) GamePlayers.refresh(); });
 updateProgress();
 
 const center = () => [previewWidth / 2, previewHeight / 2];
@@ -1076,7 +1078,7 @@ Promise.all([imageFor(assets.guardAtlas), ...regions.map(region => Promise.all([
     loaded = true;
     showStage(selected);
     resize();
-    if (session && returnView?.length === 4) {
+    if (returnView?.length === 4) {
       const [name, ...position] = returnView;
       const [x, y, zoom] = position.map(Number);
       if ((!name || name === selected.region.id) && Math.abs(x) < 20000 && Math.abs(y) < 20000 && zoom >= .5 && zoom <= 25) {
@@ -1087,8 +1089,9 @@ Promise.all([imageFor(assets.guardAtlas), ...regions.map(region => Promise.all([
         schedule();
       }
     }
-    if (session && !session.state.mapGuide) guide.showModal();
+    if (session.country === "japan" && !session.state.mapGuide && !cleared.size) guide.showModal();
   });
-</script>
+</script></template>
+<script src="players.js"></script>
 </body>
 </html>

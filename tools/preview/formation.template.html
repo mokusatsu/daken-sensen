@@ -205,15 +205,16 @@
     .selection-actions .button { flex: 1; padding-inline: 6px; }
   }
 </style>
+<link rel="stylesheet" href="players.css">
 </head>
 <body class="play-page">
 <header class="bar"><div class="wrap">
-  <div class="brand"><span class="key" aria-hidden="true">打</span>打鍵戦線</div>
+  <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span>打鍵戦線</a>
   <nav class="nav" aria-label="ページ">
-    <a id="formation-map" href="japan-stage-map.html">日本マップ</a>
+    <a id="formation-map" href="japan-stage-map.html">戦区マップ</a>
     <a id="formation-catalog" href="character-roster.html">キャラクター図鑑</a>
     <a id="formation-matchups" href="character-roster.html#matchups">相性表</a>
-    <a href="formation-demo.html" aria-current="page">編成</a>
+    <span aria-current="page">編成</span>
   </nav>
 </div></header>
 <main class="wrap landscape-main">
@@ -277,7 +278,7 @@
       <p class="flavor" id="flavor"></p>
       <dl class="stats">
         <div><dt>体力</dt><dd><span id="hp"></span><span class="next" id="next-hp"></span></dd></div>
-        <div><dt>一撃の威力</dt><dd><span id="power"></span><span class="next" id="next-power"></span></dd></div>
+        <div><dt>基礎威力</dt><dd><span id="power"></span><span class="next" id="next-power"></span></dd></div>
         <div><dt>出撃コスト</dt><dd id="deploy-cost"></dd></div>
       </dl>
       <div class="upgrade">
@@ -290,8 +291,9 @@
 </dialog>
 <noscript><p class="wrap">部隊編成の操作にはJavaScriptが必要です。</p></noscript>
 <script src="campaign.js"></script>
+<script src="command-data.js"></script>
 <script id="formation-data" type="application/json">%%FORMATION_DATA%%</script>
-<script>
+<template id="campaign-screen" data-players="stage"><script>
 "use strict";
 
 const get = id => document.getElementById(id);
@@ -357,7 +359,8 @@ function restore() {
 
 let state = restore();
 let activeSlot = 0;
-let selectedId = state.slots[0] ?? data.starters[0];
+const inspectId = Number(new URLSearchParams(location.search).get("unit"));
+let selectedId = session && owned.has(inspectId) ? inspectId : state.slots[0] ?? data.starters[0];
 let pageSize = wideRoster.matches ? 5 : 3;
 let rosterPage = Math.floor(availableCards.findIndex(card => card.id === selectedId) / pageSize);
 
@@ -472,6 +475,7 @@ const cardNodes = availableCards.map(card => {
 function render() {
   const chosen = owned.get(selectedId);
   const level = state.levels[selectedId];
+  const atLimit = level >= 999;
   const price = levelUpCost(level);
   const remaining = price - state.experience;
   const occupant = state.slots[activeSlot];
@@ -485,7 +489,8 @@ function render() {
   const tryBattle = get("try-battle");
   if (session) {
     tryBattle.textContent = "ステージに戻る";
-    tryBattle.href = get("formation-map").href = session.href("japan-stage-map.html");
+    tryBattle.href = get("formation-map").href = session.href(session.mapFile);
+    get("formation-map").textContent = session.country === "usa" ? "アメリカマップ" : "日本マップ";
     get("formation-catalog").href = session.href("character-roster.html");
     get("formation-matchups").href = session.href("character-roster.html", session.stageId, {}, "#matchups");
   } else if (ids.length) {
@@ -526,13 +531,13 @@ function render() {
   get("flavor").textContent = chosen.flavor;
   for (const key of ["hp", "power"]) {
     get(key).textContent = number.format(statAtLevel(chosen[key], level));
-    get("next-" + key).textContent = "→ " + number.format(statAtLevel(chosen[key], level + 1));
+    get("next-" + key).textContent = atLimit ? "" : "→ " + number.format(statAtLevel(chosen[key], level + 1));
   }
   get("deploy-cost").textContent = number.format(chosen.cost);
-  get("level-path").textContent = "Lv." + level + " → Lv." + (level + 1);
-  get("cost-note").textContent = remaining > 0 ? "あと " + number.format(remaining) + " XP 必要" : "必要経験値 " + number.format(price) + " XP";
-  get("cost-note").classList.toggle("short", remaining > 0);
-  get("upgrade").disabled = remaining > 0;
+  get("level-path").textContent = atLimit ? "Lv.999" : "Lv." + level + " → Lv." + (level + 1);
+  get("cost-note").textContent = atLimit ? "最大レベル" : remaining > 0 ? "あと " + number.format(remaining) + " XP 必要" : "必要経験値 " + number.format(price) + " XP";
+  get("cost-note").classList.toggle("short", !atLimit && remaining > 0);
+  get("upgrade").disabled = atLimit || remaining > 0;
   get("selected-character").textContent = chosen.name + "　Lv." + level;
   get("status").textContent = "編成先　枠 " + (activeSlot + 1) + " ／ " + (owned.get(occupant)?.name ?? "空き枠");
   get("assign").textContent = occupant === selectedId ? "編成済み" : occupant ? "入れ替える" : "編成する";
@@ -629,7 +634,19 @@ training.addEventListener("close", () => {
 });
 document.addEventListener("visibilitychange", syncSpin);
 
+function syncFormation() {
+  if (session?.sync()) {
+    if (session.state.members.some(id => !owned.has(id))) {
+      GamePlayers.refresh();
+      return false;
+    }
+    state = restore();
+    render();
+  }
+  return true;
+}
 get("assign").addEventListener("click", () => {
+  if (!syncFormation()) return;
   if (state.slots[activeSlot] === selectedId) return;
   const previous = state.slots.indexOf(selectedId);
   if (previous !== -1) state.slots[previous] = state.slots[activeSlot];
@@ -638,6 +655,7 @@ get("assign").addEventListener("click", () => {
 });
 
 get("unassign").addEventListener("click", () => {
+  if (!syncFormation()) return;
   const id = state.slots[activeSlot];
   if (id === null) return;
   state.slots[activeSlot] = null;
@@ -645,9 +663,10 @@ get("unassign").addEventListener("click", () => {
 });
 
 get("upgrade").addEventListener("click", () => {
+  if (!syncFormation()) return;
   const level = state.levels[selectedId];
   const cost = levelUpCost(level);
-  if (state.experience < cost) return;
+  if (level >= 999 || state.experience < cost) return;
   state.experience -= cost;
   state.levels[selectedId]++;
   commit(owned.get(selectedId).name + "が Lv." + state.levels[selectedId] + " になりました。", "training-status");
@@ -660,6 +679,7 @@ window.addEventListener("storage", event => {
 });
 
 render();
-</script>
+</script></template>
+<script src="players.js"></script>
 </body>
 </html>

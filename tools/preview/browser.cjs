@@ -7,14 +7,21 @@ const {campaignStages} = require("../../preview/campaign.js");
 const root = resolve(__dirname, "../..");
 const preview = resolve(root, "preview");
 
-async function readJapanRoster() {
-  const html = await readFile(resolve(preview, "japan-stage-map.html"), "utf8");
-  const embedded = html.match(/<script id="map-assets" type="application\/json">([\s\S]*?)<\/script>/);
-  assert(embedded, "日本マップの編成データが見つかりません");
-  const map = JSON.parse(embedded[1]);
-  const stages = campaignStages(map);
+async function readCampaignMaps() {
+  return Promise.all(["japan", "usa"].map(async country => {
+    const html = await readFile(resolve(preview, country + "-stage-map.html"), "utf8");
+    const embedded = html.match(/<script id="map-assets" type="application\/json">([\s\S]*?)<\/script>/);
+    assert(embedded, country + " の編成データが見つかりません");
+    const assets = JSON.parse(embedded[1]);
+    return {country, assets, stages: campaignStages(assets, country)};
+  }));
+}
+
+async function readCampaignRoster() {
+  const maps = await readCampaignMaps();
+  const stages = maps.flatMap(map => map.stages);
   return {
-    starters: map.starters.map(guard => guard.id),
+    starters: maps[0].assets.starters.map(guard => guard.id),
     stages,
     rewards: stages.map(({recruit: id, name: place}) => ({id, place})),
   };
@@ -48,4 +55,4 @@ function renderTemplate(template, fields) {
 }
 
 const inlineJson = value => JSON.stringify(value).replace(/</g, "\\u003c");
-module.exports = {root, preview, readJapanRoster, withPreviewPage, renderTemplate, inlineJson};
+module.exports = {root, preview, readCampaignMaps, readCampaignRoster, withPreviewPage, renderTemplate, inlineJson};

@@ -39,6 +39,14 @@
 .play-dialog-body p { color: var(--muted, #615a71); line-height: 1.6; }
 .play-dialog-actions { justify-content: flex-end; border-top: 1px solid var(--rule, #e1dce7); }
 .landscape-main { min-width: 0; }
+.play-page > header:first-of-type { background: #19242c; color: #f4f1e7; border-bottom: 1px solid #39474e; }
+.play-page header a[data-command-home] { color: #f4f1e7; text-decoration: none; }
+.play-page header [data-command-home] :is(.key,.brand-key) { background: #ff985d; color: #23282b; box-shadow: 0 3px #a15e40; }
+.play-page > header .nav a { color: #cdd6d6; }
+.play-page > header .nav :is(a:hover,[aria-current]) { background: #30414a; color: #ffd0a6; border-radius: 6px; }
+.play-page > header .nav span[aria-current] { padding: 8px 10px; font-size: 12px; font-weight: 700; }
+.campaign-map > header .nav a[aria-disabled="true"] { color: #b5c0c4; cursor: default; background: transparent; }
+#stage-medals { color: #435a49; font-size: 11px; font-weight: 800; }
 
 @media (min-width: 900px) and (min-height: 550px) and (orientation: landscape) {
   body.play-page {

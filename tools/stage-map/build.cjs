@@ -18,7 +18,7 @@ const mapFile = id => id + "-stage-map.html";
 function markup(country, config, template, assets) {
   const mapNav = Object.entries(configs).map(([id, definition]) => {
     const current = country === id ? ' aria-current="page"' : "";
-    return '<a href="' + mapFile(id) + '"' + current + ">" + escapeHtml(definition.navTitle) + "</a>";
+    return '<a data-map-country="' + id + '" href="' + mapFile(id) + '"' + current + ">" + escapeHtml(definition.navTitle) + "</a>";
   }).join("");
   const credits = [
     ["境界の原典　" + config.boundary.name, config.boundary.url],

@@ -1,0 +1,157 @@
+"use strict";
+
+const hq = openCampaign(commandData.starters);
+const profile = hq.state;
+const radio = fieldRadio(profile.volume);
+const node = id => document.getElementById(id);
+const {country, stages, nextBase} = campaignFront(profile);
+const americaOpen = country === "usa";
+const front = americaOpen ? profile.usa : profile;
+const dialog = node("hq-dialog");
+const squadCards = Array.from({length: 5}, (_, i) => commandData.roster.find(card => card.id === profile.slots[i]));
+const portraits = new Map();
+for (const card of squadCards) {
+  if (!card || portraits.has(card.country)) continue;
+  const sheet = new Image();
+  sheet.src = card.country === "usa" ? "preview/media/units-usa.png" : "preview/media/units.png";
+  portraits.set(card.country, sheet);
+}
+
+function element(tag, text) {
+  const item = document.createElement(tag);
+  if (text !== undefined) item.textContent = text;
+  return item;
+}
+function linkTo(path, extra = {}) {
+  return hq.href("preview/" + path, nextBase.id, {country, ...extra});
+}
+function syncLinks() {
+  node("launch").href = profile.slots.some(Boolean) ? linkTo("battle-demo.html") : linkTo("formation-demo.html");
+  node("team-link").href = linkTo("formation-demo.html");
+  node("nav-map").href = linkTo(country + "-stage-map.html");
+  node("front-japan").href = hq.href("preview/japan-stage-map.html", 0, {country: "japan"});
+  if (americaOpen) node("front-usa").href = linkTo("usa-stage-map.html");
+  node("nav-roster").href = linkTo("character-roster.html");
+  node("drill-link").href = linkTo("battle-demo.html", {exercise: "daily"});
+  node("sound-settings").dataset.muted = String(!profile.volume);
+}
+
+function paintSquad() {
+  node("squad").replaceChildren(...squadCards.map(card => {
+    const li = element("li");
+    const img = element("canvas");
+    img.width = 85; img.height = 62;
+    img.setAttribute("aria-hidden", "true");
+    if (card) {
+      const [x, y, w, h] = card.frame;
+      const scale = Math.min(82 / w, 60 / h);
+      const ctx = img.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(portraits.get(card.country), x, y, w, h, (85 - w * scale) / 2, 62 - h * scale, w * scale, h * scale);
+    }
+    li.append(img, element("strong", card?.name ?? "空き枠"), element("small", card ? card.role + " Lv." + (profile.levels[card.id] ?? 1) : "未編成"));
+    return li;
+  }));
+}
+Promise.all([...portraits.values()].map(sheet => sheet.decode())).then(paintSquad).catch(() => {});
+const records = [...Object.values(profile.records), ...Object.values(profile.usa.records)];
+const medals = profile.cleared.length + profile.usa.cleared.length + records.filter(r => r.precision).length + records.filter(r => r.command).length;
+const conquered = americaOpen && front.cleared.length === stages.length;
+node("front-" + country).setAttribute("aria-current", "true");
+node("japan-progress").textContent = profile.cleared.length + " / 47";
+if (americaOpen) {
+  document.body.classList.add("usa-front");
+  node("front-usa").removeAttribute("aria-disabled");
+  node("usa-progress").textContent = front.cleared.length + " / 50";
+  node("front-name").textContent = nextBase.region;
+  node("title").textContent = "アメリカ戦線";
+  document.querySelector(".objective").textContent = front.cleared.length
+    ? "各州の守備隊を突破し、アメリカ全50州を制圧せよ。" : "日本全47拠点を制圧。育てた部隊でメイン州に出撃せよ。";
+  node("clear-label").textContent = "制圧した州";
+}
+node("target-index").textContent = (conquered ? "最終拠点" : "攻略目標") + "　" + String(nextBase.frontNumber).padStart(2, "0") + " / " + stages.length;
+node("target-place").textContent = nextBase.name;
+node("target-landmark").textContent = nextBase.landmark;
+node("target-scenery").src = "preview/media/" + nextBase.image;
+if (conquered) {
+  node("title").textContent = "全戦線制圧";
+  document.querySelector(".objective").textContent = "日米全97拠点を制圧。両戦線に再出撃して、残る勲章を獲得できます。";
+  node("launch").firstChild.data = "最終拠点に再戦 ";
+}
+if (!profile.slots.some(Boolean)) node("launch").firstChild.data = "出撃部隊を編成 ";
+node("hq-xp").textContent = profile.experience.toLocaleString("ja-JP");
+node("clear-stat").replaceChildren(document.createTextNode(front.cleared.length + " "), element("small", "/ " + stages.length));
+node("clear-meter").max = stages.length;
+node("clear-meter").value = front.cleared.length;
+node("medal-stat").textContent = medals;
+node("unit-stat").textContent = profile.members.length;
+let midnightTimer;
+function showDaily() {
+  const now = new Date();
+  const day = FieldOrders.dayKey(now);
+  node("drill-date").dateTime = day;
+  node("drill-date").textContent = day.slice(5).replace("-", ".");
+  node("drill-title").textContent = FieldOrders.daily(day).name;
+  node("drill-brief").textContent = profile.exercise?.day === day
+    ? "本日の自己ベスト　" + profile.exercise.best.toLocaleString("ja-JP") + " 点" : "貸与部隊で挑む、90秒の拠点戦。";
+  clearTimeout(midnightTimer);
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  midnightTimer = setTimeout(showDaily, tomorrow - now + 50);
+}
+syncLinks();
+showDaily();
+window.addEventListener("focus", () => {
+  if (hq.sync()) GamePlayers.refresh();
+  else showDaily();
+});
+function openPanel(title, ...contents) {
+  radio.play("deploy");
+  node("dialog-title").textContent = title;
+  node("dialog-body").replaceChildren(...contents);
+  dialog.showModal();
+}
+function note(heading, body) {
+  const item = element("div");
+  item.append(element("strong", heading), element("p", body));
+  return item;
+}
+node("open-help").addEventListener("click", () => openPanel("遊び方",
+  note("敵拠点を制圧する", "お題をローマ字で打つと出撃コストが増えます。オート召喚で味方が進軍し、敵拠点のHPを0にすると勝利です。"),
+  note("号令を選ぶ", "お題を打ち切ると指揮ゲージが1つ、ノーミスなら2つたまります。6つで「総攻撃」か「補給」を発令できます。"),
+  note("部隊を育てる", "勝つと経験値を獲得し、初回制圧で門番が仲間になります。部隊編成で出撃枠と育成する仲間を選べます。")));
+node("open-records").addEventListener("click", () => {
+  const list = element("dl");
+  list.className = "records";
+  for (const [label, value] of [["日本の制圧拠点", profile.cleared.length + " / 47"], ["アメリカの制圧拠点", americaOpen ? front.cleared.length + " / 50" : "日本制圧で解放"],
+    ["獲得勲章", medals + " / " + commandData.stages.length * 3], ["加入した仲間", profile.members.length + " / " + commandData.roster.length],
+    ["勝利時の最高打鍵速度", Math.max(0, ...records.map(r => r.kpm)) + " 打/分"]]) {
+    list.append(element("dt", label), element("dd", value));
+  }
+  openPanel("戦績", list, note("拠点ごとの勲章", "「制圧」は勝利、「精密」は3語以上を打ち切り正確率95%以上で勝利、「指揮」は号令を使って勝利すると獲得できます。"));
+});
+node("sound-settings").addEventListener("click", () => {
+  const row = element("label");
+  const slider = element("input");
+  slider.type = "range"; slider.min = "0"; slider.max = "100"; slider.value = String(Math.round(profile.volume * 100));
+  const caption = element("span", "効果音　" + slider.value + "%");
+  row.append(caption, slider);
+  slider.addEventListener("input", () => {
+    caption.textContent = "効果音　" + slider.value + "%";
+    profile.volume = Number(slider.value) / 100;
+    radio.setVolume(profile.volume);
+  });
+  slider.addEventListener("change", () => {
+    hq.sync();
+    profile.volume = Number(slider.value) / 100;
+    hq.save();
+    syncLinks();
+    radio.play("word");
+  });
+  openPanel("サウンド設定", row);
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.repeat && !event.isComposing && !dialog.open && document.activeElement === document.body) {
+    event.preventDefault();
+    node("launch").click();
+  }
+});

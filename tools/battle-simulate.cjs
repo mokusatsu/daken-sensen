@@ -119,8 +119,20 @@ function main() {
   const args = process.argv.slice(2);
   const validation = args.includes("--validation");
   const sample = validation ? validationSeeds : seeds;
-  const data = readData(args.find(arg => arg !== "--validation"));
+  const data = readData(args.find(arg => !arg.startsWith("--")));
   const neutral = neutralData(data);
+  if (args.includes("--counters")) {
+    const rows = [];
+    for (const [opponent, roles] of [["量産3枠", "mmmsr"], ["重前衛・大技", "mwbhc"]]) {
+      for (const [label, fifth] of [["範囲", "a"], ["中衛", "u"]]) {
+        const result = paired(neutral, deckFor(data, "mbrs" + fifth), deckFor(data, roles), {sample});
+        const {win, loss, undecided, score} = compact(result);
+        rows.push({相手: opponent, 第5枠: label, 勝: win, 敗: loss, 未決着: undecided, 得点率: score});
+      }
+    }
+    console.table(rows);
+    return;
+  }
   const entries = formations.map(([label, roles]) => [label, deckFor(data, roles)]);
   console.log("等倍での編成比較");
   const equal = tournament(neutral, entries, {sample});

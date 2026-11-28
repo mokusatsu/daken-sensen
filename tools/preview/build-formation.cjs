@@ -3,14 +3,15 @@ const {readFile, writeFile} = require("node:fs/promises");
 const {resolve} = require("node:path");
 const {pathToFileURL} = require("node:url");
 const {makeCard} = require("../battle-engine.cjs");
-const {preview, readJapanRoster, withPreviewPage, renderTemplate, inlineJson} = require("./browser.cjs");
+const {preview, readCampaignRoster, withPreviewPage, renderTemplate, inlineJson} = require("./browser.cjs");
 
 async function build() {
   const [{starters, rewards}, template] = await Promise.all([
-    readJapanRoster(),
+    readCampaignRoster(),
     readFile(resolve(__dirname, "formation.template.html"), "utf8"),
   ]);
-  assert.equal(new Set([...starters, ...rewards.map(reward => reward.id)]).size, 52);
+  assert.equal(rewards.length, 97);
+  assert.equal(new Set([...starters, ...rewards.map(reward => reward.id)]).size, starters.length + rewards.length);
 
   const {data, renderer} = await withPreviewPage("formation", async page => {
     await page.goto(pathToFileURL(resolve(preview, "character-roster.html")).href);
@@ -22,7 +23,7 @@ async function build() {
         const {depth, prow, radii, data: voxels, ...stack} = spriteFor(unit);
         drawStack(sprites, {...stack, radii, data: voxels}, 334);
         return {
-          id, name: unit.name, role, flavor: unit.flavor,
+          id, name: unit.name, role, roleCode: unit.role, flavor: unit.flavor,
           types: unit.type.map(type => types[type].slice(0, 3)),
           ratings,
           portrait: sprites.toDataURL("image/png"),
@@ -37,8 +38,8 @@ async function build() {
     }, {starters, rewards});
   });
   assert(data.cards.every(card => card.portrait.startsWith("data:image/png;base64,") && card.stack.data));
-  data.cards = data.cards.map(({ratings, ...card}) => {
-    const {hp, power, cost} = makeCard({ratings});
+  data.cards = data.cards.map(({ratings, roleCode, ...card}) => {
+    const {hp, power, cost} = makeCard({ratings, role: roleCode});
     return {...card, hp, power, cost};
   });
   const output = renderTemplate(template, {FORMATION_DATA: inlineJson(data), STACK_RENDERER: renderer});

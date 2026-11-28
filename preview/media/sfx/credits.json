@@ -1,0 +1,125 @@
+{
+  "library": "Lumina SFX",
+  "files": [
+    {
+      "cue": "key",
+      "sha256": "66561338fc3248a000759faae4aa1824e22395254fa2a4f327cb768b4e703336",
+      "credits": [
+        {
+          "title": "Keyboard Typing 001.wav",
+          "author": "ristooooo1",
+          "url": "https://freesound.org/people/ristooooo1/sounds/539146/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        }
+      ]
+    },
+    {
+      "cue": "miss",
+      "sha256": "ed4e05cc4768a364fe269d6fae9fee41cd3c02016ea9eb89c83ba4d53d0f50db",
+      "credits": []
+    },
+    {
+      "cue": "word",
+      "sha256": "a1e564032bd84ec46144f3a144a09dd2fa3ba340f9d224756fb95ca5955abb68",
+      "credits": []
+    },
+    {
+      "cue": "ready",
+      "sha256": "a35d0ad1f85dfc53bac1cee566a12c757b92a5737ca909142231961f091f8c04",
+      "credits": []
+    },
+    {
+      "cue": "assault",
+      "sha256": "781bbd6c0364d96c296fdaebcfe6d4cb2b84c98efdc0332bcde62f36aa89938d",
+      "credits": []
+    },
+    {
+      "cue": "breach",
+      "sha256": "b33e20173e1410026808a6265280ccfd40430b4a44d1da41c96046e7df6e4887",
+      "credits": [
+        {
+          "title": "Light Switch ON / OFF",
+          "author": "FillSoko",
+          "url": "https://freesound.org/people/FillSoko/sounds/257958/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        },
+        {
+          "title": "door lock slide chain rattle.flac",
+          "author": "kyles",
+          "url": "https://freesound.org/people/kyles/sounds/453961/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        },
+        {
+          "title": "buchklapp",
+          "author": "opriema",
+          "url": "https://freesound.org/people/opriema/sounds/749741/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        }
+      ]
+    },
+    {
+      "cue": "supply",
+      "sha256": "723d575bc6a61eb449242feeb7d6f4e17d10079fe4a023dcc4152179a53c33c2",
+      "credits": [
+        {
+          "title": "Car peels off",
+          "author": "therisingorder",
+          "url": "https://freesound.org/people/therisingorder/sounds/271337/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        },
+        {
+          "title": "Wooden Chest Lid Latches Open.wav",
+          "author": "The_Frisbee_of_Peace",
+          "url": "https://freesound.org/people/The_Frisbee_of_Peace/sounds/573653/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        }
+      ]
+    },
+    {
+      "cue": "deploy",
+      "sha256": "a6da2974a939d4990024803412252ba3b4249862b40b1148b2bf5d1a48803cb3",
+      "credits": []
+    },
+    {
+      "cue": "start",
+      "sha256": "fdd1da91af2da3ccda177aba39461108900fe1762d4ac3871456871b7ab03e30",
+      "credits": []
+    },
+    {
+      "cue": "defeat",
+      "sha256": "c5975dfc47415210e2831cd4d4ed933d7a916518342cf407abd6b6397091c891",
+      "credits": []
+    },
+    {
+      "cue": "victory",
+      "sha256": "46462fcd157863f33a8377650fd52d4e486f4dfbde10c6c649ac855b1ce2fc59",
+      "credits": []
+    },
+    {
+      "cue": "recruit",
+      "sha256": "a8ae18396b843f9219face57b34dfa9fe2d99beca33b97fe52c1013adfd9b5e3",
+      "credits": [
+        {
+          "title": "Light Switch ON / OFF",
+          "author": "FillSoko",
+          "url": "https://freesound.org/people/FillSoko/sounds/257958/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        },
+        {
+          "title": "SWITCH BUTTON PRESSING.wav",
+          "author": "EricsSoundschmiede",
+          "url": "https://freesound.org/people/EricsSoundschmiede/sounds/457411/",
+          "license": "CC0-1.0",
+          "verifiedOn": "2026-11-21"
+        }
+      ]
+    }
+  ]
+}

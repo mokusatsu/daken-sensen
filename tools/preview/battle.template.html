@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f6f1">
-<title>バトルデモ | 打鍵戦線</title>
+<title>拠点戦 | 打鍵戦線</title>
 <link rel="stylesheet" href="play-layout.css">
 <style>
   :root {
@@ -215,25 +215,28 @@
     .deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
+<link rel="stylesheet" href="front.css">
+<link rel="stylesheet" href="recruit.css">
+<link rel="stylesheet" href="players.css">
 </head>
 <body class="play-page">
 <header class="bar"><div class="wrap">
-  <div class="brand"><span class="key" aria-hidden="true">打</span>打鍵戦線</div>
+  <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span>打鍵戦線</a>
   <nav class="nav" aria-label="ページ">
-    <a id="battle-map" href="japan-stage-map.html">日本マップ</a>
+    <a id="battle-map" href="japan-stage-map.html">戦区マップ</a>
     <a id="battle-formation" href="formation-demo.html">編成</a>
-    <a href="battle-demo.html" aria-current="page">バトル</a>
+    <span aria-current="page">拠点戦</span>
   </nav>
 </div></header>
 <main class="wrap landscape-main">
   <header class="intro">
-    <div class="battle-heading"><h1 id="battle-title">バトルデモ</h1><p id="battle-subtitle">草丘の関所 / 10レーン</p></div>
+    <div class="battle-heading"><p id="battle-subtitle">模擬戦 ／ 10レーン</p><h1 id="battle-title">草丘の関所</h1></div>
     <div class="tools" role="group" aria-label="バトルの操作">
       <button class="button primary" id="pause" type="button" disabled>一時停止</button>
-      <label>速度 <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+      <label id="speed-label">速度 <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
       <button class="button" id="reset" type="button" disabled>最初から</button>
       <button class="button" id="show-battle-details" type="button" aria-haspopup="dialog">戦況・設定</button>
-      <button class="button" id="show-battle-guide" type="button" aria-haspopup="dialog" hidden>初回ガイド</button>
+      <button class="button" id="show-battle-guide" type="button" aria-haspopup="dialog" hidden>操作</button>
       <button class="button primary" id="show-outcome" type="button" aria-haspopup="dialog" hidden>結果を見る</button>
     </div>
   </header>
@@ -251,20 +254,30 @@
     </div>
     <figure class="arena">
       <canvas id="field" width="1280" height="535" aria-label="クオータービューの戦場"></canvas>
-      <div class="type-console" id="type-console" hidden>
-        <div class="prompt-word"><strong id="typing-word"></strong><span id="typing-reading"></span></div>
-        <code aria-label="ローマ字入力ガイド"><b id="typed"></b><span id="to-type"></span></code>
-        <p id="type-feedback" role="status">英字キーで入力</p>
-      </div>
+      <div class="field-message" id="field-message" role="status" hidden></div>
       <div class="countdown" id="countdown" hidden><output id="count-number" aria-label="出撃までの秒数"></output></div>
     </figure>
     <div class="caption"><span id="line-caption">会敵すると全レーンの前線が固定</span><span id="army-count">敵 0体 ／ 味方 0体</span></div>
+    <section class="type-console" id="type-console" aria-label="タイピングと号令" hidden>
+      <div class="input-module"><div class="transmit-head"><strong><i aria-hidden="true"></i> 指令入力</strong><span id="chain">0 連続</span></div>
+      <div class="prompt-block">
+        <span id="typing-reading"></span><h2 id="typing-word"></h2>
+        <code aria-label="ローマ字入力ガイド"><b id="typed"></b><span id="to-type"><em id="next-key"></em><span id="type-tail"></span></span></code>
+        <p id="type-feedback">英字キーで入力</p>
+      </div></div>
+      <div class="command-block">
+        <div class="command-head"><strong>指揮ゲージ</strong><span id="charge-text">0 / 6</span></div>
+        <div class="charge-meter" id="charge-meter" role="meter" aria-label="指揮ゲージ" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="order-buttons"><button id="assault" type="button" disabled><strong><kbd>1</kbd> 総攻撃</strong><small>6秒間 威力×1.5</small></button><button id="supply" type="button" disabled><strong><kbd>2</kbd> 補給</strong><small>HP＋120・コスト＋90</small></button></div>
+      </div>
+    </section>
   </section>
+  <section id="touch-board" hidden aria-label="タッチキーボード"></section>
   <div class="below">
     <section class="panel" aria-labelledby="deploy-title">
       <div class="deploy-head">
         <h2 id="deploy-title">味方の出撃</h2>
-        <span class="summon-hint">Shift＋枠のキー</span>
+        <button class="button" id="toggle-keys" aria-pressed="false" type="button" hidden>画面キー</button>
         <button class="button auto-toggle" id="auto-summon" type="button" aria-pressed="true" aria-keyshortcuts="Shift+J" disabled>オート召喚 <strong id="auto-state">ON</strong><kbd class="summon-key" aria-hidden="true">Shift+J</kbd></button>
         <p class="bank"><span>コスト</span> <output id="ally-cost"></output> <span id="income"></span></p>
       </div>
@@ -273,6 +286,22 @@
   </div>
   <noscript><p>戦場の表示にはJavaScriptが必要です。</p></noscript>
 </main>
+<dialog id="recruit-reveal" aria-labelledby="join-title join-name" aria-describedby="join-description">
+  <div class="join-room">
+    <div class="join-rays" aria-hidden="true"></div>
+    <div class="join-frame">
+      <div class="join-mast"><span id="join-origin"></span><span class="join-call">部隊通信</span></div>
+      <h2 id="join-title">新たな仲間が加入！</h2>
+      <div class="join-stage" aria-hidden="true">
+        <div class="join-orbit"></div><div class="join-beam"></div>
+        <div class="join-platform"></div><canvas id="join-actor" width="200" height="145"></canvas>
+        <div class="join-sparks" id="join-sparks"></div>
+      </div>
+      <div class="join-identity"><div id="join-tags"></div><p id="join-name"></p><p id="join-description"></p></div>
+      <footer class="join-actions"><a id="join-team">この仲間を編成</a><form method="dialog"><button type="submit" autofocus>戦果を見る <span aria-hidden="true">→</span></button></form></footer>
+    </div>
+  </div>
+</dialog>
 <dialog class="play-dialog" id="outcome" aria-labelledby="winner">
   <header class="play-dialog-head"><h2 id="winner">戦闘結果</h2><form method="dialog"><button class="play-button" type="submit">閉じる</button></form></header>
   <div class="play-dialog-body">
@@ -282,6 +311,9 @@
       <div><dt>味方拠点 HP</dt><dd id="result-ally-hp"></dd></div>
       <div><dt>敵拠点 HP</dt><dd id="result-enemy-hp"></dd></div>
     </dl>
+    <div id="typing-result" hidden><p class="award-strip" id="result-medals"></p><dl class="result-metrics">
+      <div><dt>正確率</dt><dd id="result-accuracy"></dd></div><div><dt>打鍵速度</dt><dd id="result-kpm"></dd></div><div><dt>最長ノーミス</dt><dd id="result-chain"></dd></div>
+    </dl><p id="result-advice"></p></div>
     <div class="result-reward" id="result-reward" hidden>
       <div class="result-xp">獲得経験値 <strong id="result-xp"></strong></div>
       <div class="result-join" id="result-join" hidden>
@@ -297,16 +329,16 @@
   </footer>
 </dialog>
 <dialog class="play-dialog" id="battle-guide" aria-labelledby="battle-guide-title">
-  <header class="play-dialog-head"><h2 id="battle-guide-title">初戦の操作</h2></header>
+  <header class="play-dialog-head"><h2 id="battle-guide-title">拠点攻略の指令</h2></header>
   <div class="play-dialog-body">
     <ol class="guide-notes">
-      <li><strong>お題を打つ</strong><p>3カウントの後、戦場の左下に出るお題を入力します。例は「空」の <code class="guide-word">sora</code> です。正しい入力でコストが増えます。</p></li>
-      <li><strong>キャラを召喚する</strong><p>開始時はオート召喚がONで、Shift＋Jで切り替えられます。カードを押すか、Shiftを押しながら枠のキー（A・S・D・F・G）を押すと手動で召喚できます。</p></li>
-      <li><strong>敵拠点を攻める</strong><p>敵拠点のHPを0にすると勝利です。タッチで戦闘を見る場合は自動デモを選べます。</p></li>
+      <li><strong>文字を打って出撃</strong><p>お題のローマ字を入力。正しい1打でコストが18増え、オート召喚で味方が出撃します。敵拠点のHPを0にすると勝利です。</p></li>
+      <li><strong>正確に打って号令を出す</strong><p>1語で指揮ゲージが1つ、ノーミスなら2つたまります。満タンで <kbd>1</kbd> 総攻撃か <kbd>2</kbd> 補給を選べます。</p></li>
+      <li><strong>送り出す部隊を選ぶ</strong><p>カードか Shift＋A・S・D・F・G で個別に召喚。Shift＋J でオートを切り替え、Esc で一時停止できます。</p></li>
     </ol>
   </div>
   <footer class="play-dialog-actions">
-    <button class="play-button" id="guide-auto" type="button">自動デモで見る</button>
+    <button class="play-button" id="guide-auto" type="button">画面キーで始める</button>
     <button class="play-button primary" id="guide-type" type="button" autofocus>タイピングで始める</button>
   </footer>
 </dialog>
@@ -323,8 +355,11 @@
       <div class="plans">
         <label id="ally-plan-label">味方の編成<select id="ally-plan" disabled></select></label>
         <label id="enemy-plan-label">敵の編成<select id="enemy-plan" disabled></select></label>
-        <label><span id="battle-mode-label">味方の出撃</span><select id="deploy-mode" disabled><option value="auto">自動</option><option value="manual">手動</option></select></label>
+        <label id="mode-label"><span id="battle-mode-label">味方の出撃</span><select id="deploy-mode" disabled><option value="auto">自動</option><option value="manual">手動</option></select></label>
+        <label>効果音 <input id="battle-volume" type="range" min="0" max="100" value="60"></label>
+        <label id="guide-position-label" hidden>指令の位置 <select id="guide-position"><option value="field">戦場の左下</option><option value="side">サイドパネル</option></select></label>
       </div>
+      <button class="play-button" type="button" data-player-switch aria-haspopup="dialog" hidden>ユーザー切替</button>
       <details class="custom" id="sandbox-custom">
         <summary>味方の編成をカスタマイズ</summary>
         <div class="custom-fields" id="custom-fields"></div>
@@ -346,7 +381,7 @@
       <h2 id="battle-roles-title">10役割の能力値</h2>
       <div class="table-wrap" tabindex="0" role="region" aria-label="10役割の能力値">
         <table>
-          <thead><tr><th scope="col">役割</th><th scope="col">体力</th><th scope="col">威力</th><th scope="col">射程</th><th scope="col">移動速度</th><th scope="col">攻撃後の待ち</th><th scope="col">出撃費</th><th scope="col">再出撃</th><th scope="col">特徴</th></tr></thead>
+          <thead><tr><th scope="col">役割</th><th scope="col">体力</th><th scope="col">威力</th><th scope="col">射程</th><th scope="col">移動速度</th><th scope="col">初撃 / 最短周期</th><th scope="col">出撃費</th><th scope="col">再出撃</th><th scope="col">特徴</th></tr></thead>
           <tbody id="roles"></tbody>
         </table>
       </div>
@@ -354,6 +389,8 @@
   </div>
 </dialog>
 <script src="campaign.js"></script>
+<script src="command-data.js"></script>
+<script src="orders.js"></script><script src="media/sfx/bank.js"></script><script src="sound.js"></script>
 <script id="battle-art" type="application/json">%%ART%%</script>
 <script id="typing-rules" type="application/json">%%TYPING_RULES%%</script>
 <script id="typing-engine">
@@ -362,8 +399,9 @@
 <script id="battle-engine">
 %%SIMULATION%%
 </script>
-<script>
+<template id="campaign-screen" data-players="stage"><script>
 %%VIEW%%
-</script>
+</script></template>
+<script src="players.js"></script>
 </body>
 </html>
