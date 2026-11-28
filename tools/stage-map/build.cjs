@@ -16,10 +16,6 @@ const escapeHtml = text => String(text).replace(/[&<>"]/g, char =>
 const mapFile = id => id + "-stage-map.html";
 
 function markup(country, config, template, assets) {
-  const mapNav = Object.entries(configs).map(([id, definition]) => {
-    const current = country === id ? ' aria-current="page"' : "";
-    return '<a data-map-country="' + id + '" href="' + mapFile(id) + '"' + current + ">" + escapeHtml(definition.navTitle) + "</a>";
-  }).join("");
   const credits = [
     ["境界の原典　" + config.boundary.name, config.boundary.url],
     ["境界データの配布元", config.boundary.intermediate],
@@ -32,10 +28,8 @@ function markup(country, config, template, assets) {
     COUNTRY: country,
     TITLE: escapeHtml(config.title),
     AREA: escapeHtml(config.areaName),
-    MAP_NAV: mapNav,
     MAP_DESCRIPTION: escapeHtml(description),
     CREDITS: credits,
-    COUNT: assets.areas.length,
     MAP_ASSETS: JSON.stringify(assets).replace(/</g, "\\u003c"),
   };
   return template.replace(/%%([A-Z_]+)%%/g, (token, name) => {

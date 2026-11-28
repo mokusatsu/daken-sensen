@@ -6,23 +6,15 @@
   <meta name="theme-color" content="#141c24">
   <title>打鍵戦線｜作戦本部</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="preview/headquarters.css?v=bb154324">
+  <link rel="stylesheet" href="preview/command-shell.css?v=a44e2202">
+  <link rel="stylesheet" href="preview/headquarters.css?v=b53cdffa">
   <link rel="stylesheet" href="preview/players.css">
   <link rel="stylesheet" href="preview/keyboard.css">
 </head>
 <body>
-  <header class="mast">
-    <div class="shell mast-inner">
-      <a class="wordmark" href="#main" aria-label="打鍵戦線 作戦本部"><i class="keyboard-mark" aria-hidden="true"></i><span>打鍵戦線<small>DAKEN SENSEN</small></span></a>
-      <nav aria-label="メインメニュー"><a href="#main" aria-current="page">作戦本部</a><a id="nav-map" aria-keyshortcuts="A" href="preview/japan-stage-map.html">戦区マップ</a><a id="nav-roster" aria-keyshortcuts="L" href="preview/character-roster.html">図鑑</a></nav>
-      <div class="mast-tools"><span class="wallet" aria-label="所持経験値"><b>XP</b> <output id="hq-xp">0</output></span><button class="player-switch" aria-keyshortcuts="F" data-player-switch data-key-back aria-haspopup="dialog" hidden><strong data-player-name></strong><small>ユーザー切替</small></button><button class="sound-button" id="sound-settings" aria-label="サウンド設定" title="サウンド設定"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button></div>
-    </div>
-  </header>
+  <header class="mast"></header>
   <main class="shell" id="main">
-    <nav class="fronts" aria-label="戦線マップ">
-      <a id="front-japan" href="preview/japan-stage-map.html"><b>日本戦線</b><small id="japan-progress">0 / 47</small></a>
-      <a id="front-usa" aria-disabled="true"><b>アメリカ戦線</b><small id="usa-progress">日本47拠点の制圧で解放</small></a>
-    </nav>
+    <nav class="fronts" aria-label="戦線マップ"></nav>
     <section class="hero" aria-labelledby="title">
       <img id="target-scenery" class="hero-image" width="1440" height="480" alt="" decoding="async" fetchpriority="high">
       <div class="hero-content">
@@ -51,10 +43,10 @@
     </div>
     <noscript>ゲームを遊ぶにはJavaScriptを有効にしてください。</noscript>
   </main>
-  <dialog id="hq-dialog" aria-labelledby="dialog-title"><header><h2 id="dialog-title"></h2><form method="dialog"><button class="close" aria-label="閉じる" autofocus>×</button></form></header><div class="dialog-body" id="dialog-body"></div></dialog>
   <script src="preview/campaign.js?v=0936d174"></script><script src="preview/orders.js"></script><script src="preview/command-data.js?v=dcd591ac"></script>
   <script src="preview/media/sfx/bank.js"></script><script src="preview/sound.js"></script>
-  <template id="campaign-screen" data-players="home"><script src="preview/headquarters.js?v=e41f3c8f"></script></template>
+  <script src="preview/command-shell.js?v=746c9211"></script>
+  <template id="campaign-screen" data-players="home"><script src="preview/headquarters.js?v=c27904e1"></script></template>
   <script src="preview/keyboard.js"></script><script src="preview/players.js"></script>
 </body>
 </html>

@@ -1,0 +1,81 @@
+:root {
+  color-scheme: dark;
+  --base: #141c24; --panel: #202c36; --line: #37454e; --paper: #f5f2e7;
+  --dim: #b2c0c4; --orange: #ff985d; --mint: #9ee3c7;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+  font-family: "Barlow", "Yu Gothic UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  color: var(--paper); background: var(--base);
+}
+* { box-sizing: border-box; }
+body, p, h1, h2, h3, ul, dl, dd { margin: 0; }
+body { min-height: 100vh; background: radial-gradient(ellipse at 80% 25%, #25333a66, transparent 55%), var(--base); }
+a, button { color: inherit; font: inherit; }
+a { text-decoration: none; }
+button { cursor: pointer; }
+button, a { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
+.shell { max-width: 1536px; margin: 0 auto; padding-inline: clamp(16px,4.3vw,72px); }
+.mast { background: #151e26; border-bottom: 1px solid var(--line); }
+.mast-inner { min-height: 74px; display: flex; align-items: center; gap: clamp(20px,5vw,80px); }
+.wordmark { display: inline-flex; align-items: center; gap: 13px; white-space: nowrap; }
+.wordmark > span { font-weight: 900; font-size: 21px; letter-spacing: .09em; line-height: 1.13; }
+.wordmark small { display: block; color: #bfcac7; font: 700 8px/1.45 var(--mono); letter-spacing: .22em; }
+.keyboard-mark { display: block; position: relative; width: 37px; height: 29px; transform: skewY(-5deg); border-radius: 5px; background: var(--orange); box-shadow: 0 3px #a85f3e; }
+.keyboard-mark::before, .keyboard-mark::after { content: ""; position: absolute; left: 6px; top: 7px; background: #26323b; width: 4px; height: 4px; box-shadow: 7px 0 #26323b,14px 0 #26323b,21px 0 #26323b,0 7px #26323b,7px 7px #26323b; }
+.keyboard-mark::after { top: 14px; left: 20px; width: 11px; box-shadow: none; }
+.mast nav { display: grid; align-items: center; grid-template-columns: 6em 7em auto; gap: clamp(8px, 1.1vw, 16px); font-size: 14px; }
+.mast nav a { position: relative; display: grid; place-items: center; justify-self: start; min-height: 73px; color: var(--dim); font-size: 14px; font-weight: 700; white-space: nowrap; }
+.mast nav a[aria-current] { color: var(--paper); }
+.mast nav a[aria-current]::before { position: absolute; content: ""; height: 3px; background: var(--orange); inset: auto 0 0; }
+.mast nav a:hover, .text-button:hover, .how:hover { color: var(--orange); }
+.mast-tools { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.mast-tools .player-switch { width: 135px; }
+.wallet { font: 700 16px var(--mono); white-space: nowrap; }
+.wallet b { color: var(--orange); font-size: 12px; }
+.sound-button, .close { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.sound-bars { display: flex; align-items: center; gap: 3px; height: 20px; }
+.sound-bars i { width: 3px; background: var(--paper); height: 7px; border-radius: 2px; }
+.sound-bars i:nth-child(2) { height: 16px; } .sound-bars i:nth-child(3) { height: 11px; }
+.sound-button[data-muted="true"] .sound-bars i { background: var(--dim); height: 3px; }
+main.shell { padding-top: clamp(16px,2.5vh,30px); padding-bottom: 20px; }
+.fronts { display: flex; flex-wrap: wrap; gap: 5px 10px; margin: -5px 0 10px; }
+.fronts a { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 3px 8px; padding: 5px 12px; min-height: 36px; border: 1px solid #485861; border-radius: 6px; color: var(--paper); }
+.fronts a[aria-current] { background: #293c40; border-color: #6b9689; }
+.fronts a[href]:hover { border-color: var(--mint); }
+.fronts a[aria-disabled] { border-style: dashed; color: var(--dim); }
+.fronts b { font-size: 14px; }
+.fronts small { color: var(--dim); font-size: 12px; }
+.wordmark, .fronts a { position: relative; }
+.home-keys :is(.mast a, .fronts a):focus:not([aria-keyshortcuts])::after {
+  position: absolute; right: 1px; bottom: 0; margin: 0; padding: 0 2px; background: var(--base); font-size: 9px;
+}
+@media (pointer: coarse) { .fronts a { min-height: 44px; } }
+@media (max-width: 520px) {
+  .fronts { display: grid; grid-template-columns: auto 1fr; }
+  .fronts a { display: grid; align-content: center; padding: 4px 8px; }
+}
+.launch { min-height: 50px; padding: 0 19px; background: var(--orange); color: #211e1a; border-radius: 6px; box-shadow: 0 3px 0 #ac6140; }
+.launch:hover { background: #ffb480; }
+.launch:active { transform: translateY(2px); box-shadow: 0 1px 0 #ac6140; }
+.section-mark { width: 4px; height: 16px; background: var(--orange); transform: skew(-12deg); }
+dialog { width: min(510px,calc(100vw - 28px)); max-height: 90dvh; color: var(--paper); background: #202d37; border: 1px solid #556772; padding: 0; border-radius: 13px; box-shadow: 0 18px 60px #060c1280; }
+dialog::backdrop { background: #07121bd6; }
+dialog header { display: flex; align-items: center; justify-content: space-between; padding: 14px 19px; border-bottom: 1px solid var(--line); }
+dialog h2 { font-size: 21px; } .close { font-size: 22px; }
+.dialog-body { display: grid; gap: 14px; padding: 20px; line-height: 1.55; font-size: 15px; }
+.dialog-body p { color: var(--dim); } .dialog-body strong { color: var(--paper); }
+.dialog-body label { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.dialog-body input { accent-color: var(--orange); max-width: 56%; }
+.dialog-body .records { display: grid; gap: 5px; grid-template-columns: 1fr auto; }
+.records dt { color: var(--dim); } .records dd { font: bold 18px var(--mono); }
+@media (max-height: 700px) and (min-width: 850px) {
+  .mast-inner, .mast nav a { min-height: 51px; } main.shell { padding-top: 12px; }
+}
+@media (max-width: 760px) {
+  .mast-inner { min-height: 58px; gap: 15px; } .mast nav { display: flex; margin-left: auto; gap: 14px; } .mast nav a { font-size: 12px; min-height: 58px; }
+  .mast-tools { margin-left: 0; gap: 8px; } .wallet { display: none; }
+  .wordmark { gap: 7px; } .wordmark > span { font-size: 17px; } .wordmark small { font-size: 7px; }
+}
+@media (max-width: 480px) {
+  .shell { padding-inline: 12px; } .mast-inner { gap: 8px; } .mast nav { gap: 10px; } .mast nav a:first-child { display: none; }
+}

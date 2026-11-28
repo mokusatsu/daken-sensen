@@ -1,7 +1,6 @@
 {
   "japan": {
     "title": "日本戦区",
-    "navTitle": "日本マップ",
     "areaName": "都道府県",
     "initialStage": 43,
     "seed": 24061136,
@@ -42,7 +41,6 @@
   },
   "usa": {
     "title": "アメリカ戦区",
-    "navTitle": "アメリカマップ",
     "areaName": "州",
     "initialStage": 36,
     "seed": 27051244,

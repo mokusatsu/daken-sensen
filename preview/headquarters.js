@@ -2,12 +2,11 @@
 
 const hq = openCampaign(commandData.starters);
 const profile = hq.state;
-const radio = fieldRadio(profile.volume);
 const node = id => document.getElementById(id);
 const {country, stages, nextBase} = campaignFront(profile);
 const americaOpen = country === "usa";
 const front = americaOpen ? profile.usa : profile;
-const dialog = node("hq-dialog");
+const openPanel = CommandShell.bind(hq, country, nextBase.id, syncLinks);
 const squadCards = Array.from({length: 5}, (_, i) => commandData.roster.find(card => card.id === profile.slots[i]));
 const portraits = new Map();
 for (const card of squadCards) {
@@ -28,12 +27,7 @@ function linkTo(path, extra = {}) {
 function syncLinks() {
   node("launch").href = profile.slots.some(Boolean) ? linkTo("battle-demo.html") : linkTo("formation-demo.html");
   node("team-link").href = linkTo("formation-demo.html");
-  node("nav-map").href = linkTo(country + "-stage-map.html");
-  node("front-japan").href = hq.href("preview/japan-stage-map.html", 0, {country: "japan"});
-  if (americaOpen) node("front-usa").href = linkTo("usa-stage-map.html");
-  node("nav-roster").href = linkTo("character-roster.html");
   node("drill-link").href = linkTo("battle-demo.html", {exercise: "daily"});
-  node("sound-settings").dataset.muted = String(!profile.volume);
 }
 
 function paintSquad() {
@@ -58,12 +52,8 @@ Promise.all([...portraits.values()].map(sheet => sheet.decode())).then(paintSqua
 const records = [...Object.values(profile.records), ...Object.values(profile.usa.records)];
 const medals = profile.cleared.length + profile.usa.cleared.length + records.filter(r => r.precision).length + records.filter(r => r.command).length;
 const conquered = americaOpen && front.cleared.length === stages.length;
-node("front-" + country).setAttribute("aria-current", "true");
-node("japan-progress").textContent = profile.cleared.length + " / 47";
 if (americaOpen) {
   document.body.classList.add("usa-front");
-  node("front-usa").removeAttribute("aria-disabled");
-  node("usa-progress").textContent = front.cleared.length + " / 50";
   node("front-name").textContent = nextBase.region;
   node("title").textContent = "アメリカ戦線";
   document.querySelector(".objective").textContent = front.cleared.length
@@ -82,7 +72,6 @@ if (conquered) {
   node("launch").firstChild.data = "最終拠点に再戦 ";
 }
 if (!profile.slots.some(Boolean)) node("launch").firstChild.data = "出撃部隊を編成 ";
-node("hq-xp").textContent = profile.experience.toLocaleString("ja-JP");
 node("clear-stat").replaceChildren(document.createTextNode(front.cleared.length + " "), element("small", "/ " + stages.length));
 node("clear-meter").max = stages.length;
 node("clear-meter").value = front.cleared.length;
@@ -107,12 +96,6 @@ window.addEventListener("focus", () => {
   if (hq.sync()) GamePlayers.refresh();
   else showDaily();
 });
-function openPanel(title, ...contents) {
-  radio.play("deploy");
-  node("dialog-title").textContent = title;
-  node("dialog-body").replaceChildren(...contents);
-  dialog.showModal();
-}
 function note(heading, body) {
   const item = element("div");
   item.append(element("strong", heading), element("p", body));
@@ -142,24 +125,4 @@ node("open-records").addEventListener("click", () => {
     list.append(element("dt", label), element("dd", value));
   }
   openPanel("戦績", list, note("拠点ごとの勲章", "「制圧」は勝利、「精密」は3語以上を打ち切り正確率95%以上で勝利、「指揮」は号令を使って勝利すると獲得できます。"));
-});
-node("sound-settings").addEventListener("click", () => {
-  const row = element("label");
-  const slider = element("input");
-  slider.type = "range"; slider.min = "0"; slider.max = "100"; slider.value = String(Math.round(profile.volume * 100));
-  const caption = element("span", "効果音　" + slider.value + "%");
-  row.append(caption, slider);
-  slider.addEventListener("input", () => {
-    caption.textContent = "効果音　" + slider.value + "%";
-    profile.volume = Number(slider.value) / 100;
-    radio.setVolume(profile.volume);
-  });
-  slider.addEventListener("change", () => {
-    hq.sync();
-    profile.volume = Number(slider.value) / 100;
-    hq.save();
-    syncLinks();
-    radio.play("word");
-  });
-  openPanel("サウンド設定", row);
 });
