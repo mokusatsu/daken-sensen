@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f6f1">
 <title>%%TITLE%% | 打鍵戦線</title>
+<link rel="stylesheet" href="play-layout.css">
 <style>
   :root {
     color-scheme: light;
@@ -107,6 +108,7 @@
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
   .legend .under { background: var(--occupied); border: 1px solid #a25357; }
   .legend .free { background: var(--cleared); border: 1px solid #427966; }
+  .legend .locked { background: #9a9cb8; border: 1px solid #5b5874; }
   .legend .boss { width: 9px; height: 9px; background: #eac277; border: 1px solid #8e592b; border-radius: 0; transform: rotate(45deg); }
   .tip { line-height: 1.5; }
   .stage-card { padding: 15px; }
@@ -156,14 +158,73 @@
     font-size: 13px; font-weight: 800;
   }
   .toggle:hover { background: #ddd0fa; }
-  .starter { margin-top: 14px; padding: 11px 14px; }
-  .starter summary { cursor: pointer; font-size: 13px; color: var(--ink); font-weight: 700; }
-  .starter p { margin-block: 9px 6px; color: var(--muted); font-size: 12px; line-height: 1.6; }
-  .starter-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+  .starter-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
   .starter-list li { display: grid; grid-template-columns: auto 1fr; gap: 3px 7px; align-items: center; padding: 6px 9px; border-radius: 7px; background: #f4f0fa; font-size: 11px; }
   .starter-list canvas { grid-row: span 2; width: 30px; height: 30px; object-fit: contain; image-rendering: pixelated; }
   .starter-list strong { font-size: 12px; }
-  .credit { display: flex; gap: 6px 15px; flex-wrap: wrap; padding-block: 17px 23px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+  .small-action { min-height: 44px; padding: 4px 8px; border: 0; background: transparent; color: var(--accent); font-size: 12px; font-weight: 700; }
+  .nav .small-action { white-space: nowrap; }
+  .wallet { font: 700 14px/1.2 var(--mono); color: #5a3970; white-space: nowrap; }
+  .stage-deck { margin-top: 9px; }
+  .stage-deck h3 { font-size: 13px; }
+  .stage-deck ol { display: grid; gap: 3px; padding: 0; margin: 5px 0 0; list-style: none; }
+  .enemy-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1px 6px; padding: 4px 7px; border-radius: 6px; background: #f5f1f8; }
+  .enemy-line strong { font-size: 12px; overflow-wrap: anywhere; }
+  .enemy-line .rank { color: var(--muted); font: 700 11px/1.3 var(--mono); }
+  .enemy-meta { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 3px 5px; }
+  .enemy-meta .type { padding: 2px 4px; }
+  .stage-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 6px; margin-top: 10px; }
+  .stage-actions a { white-space: nowrap; }
+  .campaign-map .guard { display: grid; grid-template-columns: 64px minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 9px; align-items: center; margin-top: 8px; }
+  .campaign-map .portrait { grid-row: 1 / 3; grid-column: 1; height: 52px; }
+  .campaign-map .guard h3 { grid-column: 2; margin: 0; color: var(--muted); }
+  .campaign-map .guard-name { grid-column: 2; margin: 1px 0 0; font-size: 15px; align-self: start; }
+  .campaign-map .guard-tags, .campaign-map .map-demo-only { display: none; }
+  .campaign-map .enemy-slots { grid-template-columns: 1fr; margin-top: 7px; padding: 5px 0; }
+  .stage-card .type, .stage-card .role { white-space: nowrap; }
+  .status.locked { background: #ebe8f1; color: #4e475f; }
+  .guide-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .guide-steps article { padding: 11px 12px; border-radius: 9px; background: #f4effa; }
+  .guide-steps h3 { font-size: 14px; margin-bottom: 4px; }
+  .guide-steps p { font-size: 13px; }
+  .starter-list li { flex: 1 1 108px; }
+  .source-list { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+  @media (min-width: 900px) and (min-height: 550px) and (orientation: landscape) {
+    main.landscape-main { display: grid; grid-template-rows: auto minmax(0, 1fr); padding-block: 0 12px; }
+    .masthead .wrap { min-height: 56px; }
+    .intro { align-items: center; padding-block: 9px; }
+    .intro h1 { font-size: clamp(28px, 3vw, 42px); }
+    .intro p { margin-top: 3px; font-size: 12px; }
+    .progress { padding: 7px 10px; }
+    .workbench { grid-template-columns: minmax(0, 1fr) minmax(265px, 32%); align-items: stretch; gap: 11px; min-height: 0; }
+    .map-card { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+    .water { height: auto; min-height: 0; }
+    .region-bar { overflow: visible; flex-wrap: wrap; gap: 3px; padding: 4px 7px; }
+    .region-bar button { padding-inline: clamp(5px, .7vw, 10px); min-height: 39px; }
+    .map-bottom { min-height: 42px; padding: 3px 9px; gap: 4px 8px; }
+    .map-bottom .tip { display: none; }
+    .stage-card { display: block; padding: 10px 12px; }
+    .stage-card .selector { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .stage-card .selector select { flex: 1; min-width: 0; min-height: 44px; }
+    .stage-heading { margin-top: 6px; }
+    .stage-heading h2 { margin-top: 2px; font-size: clamp(23px, 2.4vw, 33px); }
+    .stage-tags { margin-top: 3px; }
+    .map-tools button { width: 44px; height: 44px; }
+  }
+  @media (min-width: 900px) and (max-height: 700px) and (orientation: landscape) {
+    .intro { padding-block: 6px; }
+    .intro p { display: none; }
+    .portrait { height: 90px; }
+    .campaign-map .stage-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+    .campaign-map .stage-meta, .campaign-map .enemy-slots { grid-column: 1 / -1; }
+    .campaign-map .stage-tags { justify-content: flex-end; }
+    .campaign-map .stage-deck { margin-top: 5px; }
+    .enemy-line { grid-template-columns: minmax(0, 1fr) auto auto; min-height: 29px; gap: 4px; padding-block: 3px; }
+    .enemy-line .rank { grid-row: 1; grid-column: 3; }
+    .enemy-meta { grid-row: 1; grid-column: 2; flex-wrap: nowrap; }
+    .campaign-map .guard { margin-top: 5px; }
+    .campaign-map .stage-actions { margin-top: 6px; }
+  }
   @media (max-width: 920px) {
     .workbench { grid-template-columns: minmax(0, 1fr); }
     .stage-card { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
@@ -187,18 +248,20 @@
     .compass { bottom: 10px; right: 10px; }
     .portrait { height: 106px; }
     .guard-name { font-size: 15px; overflow-wrap: anywhere; }
+    .guide-steps { grid-template-columns: 1fr; }
+    .campaign-map .stage-card { display: block; }
   }
 </style>
 </head>
-<body>
+<body class="play-page" data-country="%%COUNTRY%%">
 <header class="masthead"><div class="wrap">
   <div class="brand"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></div>
-  <nav class="nav" aria-label="ページ">%%MAP_NAV%%<a href="character-roster.html">キャラクター図鑑 <span aria-hidden="true">↗</span></a></nav>
+  <nav class="nav" aria-label="ページ">%%MAP_NAV%%<a id="map-formation" href="formation-demo.html">編成</a><a id="map-roster" href="character-roster.html">図鑑</a><a id="map-matchups" hidden>相性表</a><button class="small-action" id="open-guide" type="button" aria-haspopup="dialog">初回ガイド</button></nav>
 </div></header>
-<main class="wrap">
+<main class="wrap landscape-main">
   <header class="intro">
     <div><h1>%%TITLE%%</h1><p>%%AREA%%を選ぶと、ステージの門番と解放状況を確認できます。</p></div>
-    <div class="progress"><span>解放済み</span><strong id="released-count" aria-live="polite">4 / %%COUNT%%</strong><progress id="progress" max="%%COUNT%%" value="4" aria-label="解放済みの%%AREA%%"></progress></div>
+    <div class="progress"><span>攻略済み</span><strong id="released-count" aria-live="polite"></strong><progress id="progress" max="%%COUNT%%" value="0" aria-label="攻略済みの%%AREA%%"></progress></div>
   </header>
   <div class="workbench">
     <section class="sheet map-card" aria-label="ステージマップ">
@@ -215,11 +278,13 @@
       </div>
       <div class="map-bottom">
         <div class="legend" aria-label="地図の凡例">
-          <span><i class="under" aria-hidden="true"></i>占領中</span>
-          <span><i class="free" aria-hidden="true"></i>解放済み</span>
+          <span><i class="under" aria-hidden="true"></i><b id="occupied-legend">占領中</b></span>
+          <span><i class="free" aria-hidden="true"></i>攻略済み</span>
+          <span id="locked-legend" hidden><i class="locked" aria-hidden="true"></i>未解放</span>
           <span><i class="boss" aria-hidden="true"></i>地方ボス</span>
         </div>
         <p class="tip" id="map-tip">ドラッグで移動。ホイール・ピンチで拡大縮小。矢印キーでも移動できます。</p>
+        <button class="small-action" id="open-sources" type="button" aria-haspopup="dialog">地形データ</button>
       </div>
     </section>
     <aside class="sheet stage-card" aria-labelledby="stage-name">
@@ -232,33 +297,48 @@
           <span class="flag" id="stage-boss" hidden>◆ 地方ボス</span>
         </div>
         <dl class="enemy-slots">
-          <div><dt>敵の編成枠</dt><dd id="enemy-slots"></dd></div>
-          <div><dt>標高帯</dt><dd id="stage-height"></dd></div>
+          <div class="map-demo-only"><dt>敵の編成枠</dt><dd id="enemy-slots"></dd></div>
+          <div class="map-demo-only"><dt>標高帯</dt><dd id="stage-height"></dd></div>
+          <div id="stage-reward" hidden><dt>攻略報酬</dt><dd><span id="reward-xp"></span> ／ 所持 <span class="wallet" id="map-xp"></span></dd></div>
         </dl>
       </div>
       <div class="guard">
-        <h3>門番</h3>
+        <h3 id="guard-label">門番</h3>
         <figure class="portrait"><canvas id="guard-canvas" aria-hidden="true"></canvas></figure>
         <p class="guard-name" id="guard-name"></p>
         <div class="guard-tags" id="guard-tags"></div>
       </div>
-      <div class="unlock-actions">
+      <section class="stage-deck" id="stage-deck" aria-labelledby="stage-deck-title" hidden>
+        <h3 id="stage-deck-title">敵の編成</h3><ol id="enemy-lineup"></ol>
+      </section>
+      <div class="unlock-actions map-demo-only">
         <p class="unlock" id="unlock"></p>
         <button class="toggle" type="button" id="toggle-status"></button>
       </div>
+      <div class="stage-actions" id="stage-actions" hidden>
+        <a class="play-button" id="edit-stage-team">編成を変更</a><a class="play-button primary" id="launch-stage">出撃</a>
+      </div>
     </aside>
   </div>
-  <details class="sheet starter">
-    <summary>初期手持ちの候補　5体</summary>
-    <p>この5体から出発し、各地で門番が仲間に加わります。</p>
-    <ul id="starter-list" class="starter-list"></ul>
-  </details>
-  <footer class="credit">
-    <span>%%MAP_DESCRIPTION%%</span>
-    %%CREDITS%%
-  </footer>
   <noscript><p>地図とステージの表示にはJavaScriptが必要です。</p></noscript>
 </main>
+<dialog class="play-dialog" id="map-guide" aria-labelledby="guide-title">
+  <header class="play-dialog-head"><h2 id="guide-title">初回ガイド</h2><form method="dialog"><button class="play-button" type="submit">閉じる</button></form></header>
+  <div class="play-dialog-body">
+    <section aria-label="初期の手持ち"><p>この5体から攻略を始めます。</p><ul id="starter-list" class="starter-list"></ul></section>
+    <div class="guide-steps">
+      <article><h3>県を選ぶ</h3><p>最初は沖縄県。県を選ぶと、敵のタイプや攻略報酬を確認できます。</p></article>
+      <article><h3>部隊を決める</h3><p>最大5体で出撃します。「編成を変更」から入れ替えられます。</p></article>
+      <article><h3>戦場で出撃</h3><p>表示された文字を打ってコストを貯め、出撃枠を押します。タッチだけなら自動出撃で試せます。</p></article>
+    </div>
+  </div>
+  <footer class="play-dialog-actions"><button class="play-button primary" id="guide-first-stage" type="button" autofocus>最初の県を見る</button></footer>
+</dialog>
+<dialog class="play-dialog" id="map-sources" aria-labelledby="sources-title">
+  <header class="play-dialog-head"><h2 id="sources-title">地形データ</h2><form method="dialog"><button class="play-button" type="submit" autofocus>閉じる</button></form></header>
+  <div class="play-dialog-body"><p>%%MAP_DESCRIPTION%%</p><div class="source-list">%%CREDITS%%</div></div>
+</dialog>
+<script src="campaign.js"></script>
 <script id="map-assets" type="application/json">%%MAP_ASSETS%%</script>
 <script>
 "use strict";
@@ -266,8 +346,12 @@ const assets = JSON.parse(document.getElementById("map-assets").textContent);
 const {pitch, spacing, layers, baseLand, elevationStepMetres, yawDegrees} = assets.projection;
 const baseLift = baseLand * spacing;
 const get = id => document.getElementById(id);
+const session = document.body.dataset.country === "japan" ? openCampaign(assets.starters.map(guard => guard.id)) : null;
+const journey = session ? campaignStages(assets) : [];
+const stageData = new Map(journey.map(stage => [stage.id, stage]));
 const areas = new Map(assets.areas.map(data => [data.id, {...data, band: 0}]));
 const guards = new Map(assets.gates.map(({id, guard}) => [id, guard]));
+const unitsById = new Map([...guards.values(), ...assets.starters].map(guard => [guard.id, guard]));
 const regions = assets.regions.map(data => ({
   ...data,
   stages: data.ids.map(id => areas.get(id)),
@@ -281,17 +365,28 @@ for (const region of regions) {
     stage.boss = stage.id === region.ids.at(-1);
   }
 }
-const cleared = new Set(regions[0].ids.slice(0, 4));
+const cleared = new Set(session?.state.cleared ?? regions[0].ids.slice(0, 4));
+const playable = new Set(journey.filter(stage => stageAvailable(journey, stage.id, [...cleared])).map(stage => stage.id));
 const openColors = [[123, 209, 175], [140, 215, 172], [117, 200, 171], [128, 204, 188]];
 const heldColors = [[244, 161, 141], [236, 151, 133], [245, 168, 147], [235, 150, 145]];
+const lockedColors = [[155, 149, 181], [144, 151, 179], [162, 151, 173]];
 const selector = get("stage-select");
 const regionBar = get("region-bar");
 const map = get("map");
 const water = get("water");
 const ctx = map.getContext("2d");
 const camera = {x: 0, y: 0, scale: 1, fit: 1};
+const returnView = new URLSearchParams(location.search).get("view")?.split(",");
+const dispatchLinks = [
+  [get("map-roster"), "character-roster.html", ""],
+  [get("map-matchups"), "character-roster.html", "#matchups"],
+  [get("map-formation"), "formation-demo.html", ""],
+  [get("edit-stage-team"), "formation-demo.html", ""],
+  [get("launch-stage"), "battle-demo.html", ""],
+];
 let activeRegion = null;
-let selected = areas.get(assets.initialStage);
+let selected = areas.get(session ? (stageData.has(session.stageId) ? session.stageId :
+  journey.find(stage => !cleared.has(stage.id))?.id ?? journey[0].id) : assets.initialStage);
 let hovered = null;
 let previewWidth = 0;
 let previewHeight = 0;
@@ -341,7 +436,7 @@ function buildSurface(region) {
   const pixels = context.createImageData(stride, height);
   const {data} = pixels;
   const tones = new Map(region.ids.map(id => {
-    const palette = cleared.has(id) ? openColors : heldColors;
+    const palette = cleared.has(id) ? openColors : session && !playable.has(id) ? lockedColors : heldColors;
     return [id, palette[id % palette.length]];
   }));
   // 上面までの高さを1セルずつ保ち、表面と斜面に%%AREA%%の色を付ける。
@@ -410,12 +505,14 @@ function fitView() {
 function resize() {
   const bounds = water.getBoundingClientRect();
   if (!bounds.width || !bounds.height) return;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  if (bounds.width === previewWidth && bounds.height === previewHeight && dpr === pixelRatio) return;
   const ratio = camera.scale / camera.fit;
   const oldPosition = [camera.x, camera.y];
   const first = previewWidth === 0;
   previewWidth = bounds.width;
   previewHeight = bounds.height;
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  dpr = pixelRatio;
   map.width = Math.round(previewWidth * dpr);
   map.height = Math.round(previewHeight * dpr);
   fitView();
@@ -741,9 +838,44 @@ function showStage(stage) {
   }), element("span", guard.role, "role"));
   get("unlock").textContent = released ? "門番は編成に加わっています。" : "クリアすると門番が仲間に加わります。";
   get("toggle-status").textContent = released ? "占領中に戻す" : "解放済みにする";
+  if (session) showDispatch(stage);
   if (gateAtlas) portrait(get("guard-canvas"), guard);
   hovered = null;
   schedule();
+}
+
+function showDispatch(stage) {
+  const details = stageData.get(stage.id);
+  const released = cleared.has(stage.id);
+  const available = playable.has(stage.id);
+  const status = get("stage-status");
+  status.textContent = released ? "攻略済み" : available ? "挑戦可能" : "未解放";
+  status.classList.toggle("locked", !available);
+  get("map-xp").textContent = session.state.experience.toLocaleString("ja-JP") + " XP";
+  get("reward-xp").textContent = details.xp.toLocaleString("ja-JP") + " XP";
+  get("guard-label").textContent = released ? "加入済み" : "初回攻略で加入";
+  get("enemy-lineup").replaceChildren(...details.enemies.map(({id, level}) => {
+    const unit = unitsById.get(id);
+    const line = element("li", undefined, "enemy-line");
+    const meta = element("span", undefined, "enemy-meta");
+    for (const [name, ink, fill] of unit.types) {
+      const type = element("span", name, "type");
+      type.style.color = ink;
+      type.style.backgroundColor = fill;
+      meta.append(type);
+    }
+    meta.append(element("span", unit.role, "role"));
+    line.append(element("strong", unit.name), element("span", "Lv." + level, "rank"), meta);
+    return line;
+  }));
+  const launch = get("launch-stage");
+  const ready = available && session.state.slots.some(Boolean);
+  launch.textContent = !available ? "ひとつ前の県を攻略" : !ready ? "編成が必要" : released ? "再挑戦" : "出撃";
+  launch.setAttribute("aria-disabled", String(!ready));
+  for (const [link, path, hash] of dispatchLinks) {
+    if (link !== launch || ready) link.href = session.href(path, stage.id, {}, hash);
+    else link.removeAttribute("href");
+  }
 }
 
 function showRegion(region) {
@@ -785,15 +917,47 @@ selector.addEventListener("change", () => {
     schedule();
   }
 });
+function updateProgress() {
+  get("released-count").textContent = cleared.size + " / " + areas.size;
+  get("progress").value = cleared.size;
+}
 get("toggle-status").addEventListener("click", () => {
   if (!loaded) return;
   if (cleared.has(selected.id)) cleared.delete(selected.id);
   else cleared.add(selected.id);
-  get("released-count").textContent = cleared.size + " / " + areas.size;
-  get("progress").value = cleared.size;
+  updateProgress();
   buildSurface(selected.region);
   showStage(selected);
 });
+
+const guide = get("map-guide");
+get("open-guide").hidden = !session;
+get("open-guide").addEventListener("click", () => guide.showModal());
+get("guide-first-stage").addEventListener("click", () => {
+  const first = areas.get(journey[0].id);
+  showRegion(first.region);
+  showStage(first);
+  guide.close();
+  selector.focus({preventScroll: true});
+});
+guide.addEventListener("close", () => {
+  if (session.state.mapGuide) return;
+  session.state.mapGuide = true;
+  session.save();
+  showDispatch(selected);
+});
+get("open-sources").addEventListener("click", () => get("map-sources").showModal());
+if (session) {
+  document.body.classList.add("campaign-map");
+  for (const id of ["stage-deck", "stage-reward", "stage-actions", "locked-legend", "map-matchups"]) get(id).hidden = false;
+  get("occupied-legend").textContent = "挑戦可能";
+  for (const [link, path, hash] of dispatchLinks) link.addEventListener("click", () => {
+    if (!link.hasAttribute("href")) return;
+    const view = [activeRegion?.id ?? "", camera.x.toFixed(2), camera.y.toFixed(2), (camera.scale / camera.fit).toFixed(3)].join(",");
+    link.href = session.href(path, selected.id, {view}, hash);
+  });
+}
+updateProgress();
 
 const center = () => [previewWidth / 2, previewHeight / 2];
 get("zoom-in").addEventListener("click", () => zoomAt(1.3, center()));
@@ -912,6 +1076,18 @@ Promise.all([imageFor(assets.guardAtlas), ...regions.map(region => Promise.all([
     loaded = true;
     showStage(selected);
     resize();
+    if (session && returnView?.length === 4) {
+      const [name, ...position] = returnView;
+      const [x, y, zoom] = position.map(Number);
+      if ((!name || name === selected.region.id) && Math.abs(x) < 20000 && Math.abs(y) < 20000 && zoom >= .5 && zoom <= 25) {
+        showRegion(name ? selected.region : null);
+        camera.x = x;
+        camera.y = y;
+        camera.scale = camera.fit * zoom;
+        schedule();
+      }
+    }
+    if (session && !session.state.mapGuide) guide.showModal();
   });
 </script>
 </body>

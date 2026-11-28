@@ -138,9 +138,9 @@ function deploy(battle, team, cardId) {
 }
 
 function buyUnits(battle, dt) {
-  const {costLimit, income} = battle.settings;
+  const {costLimit, income, teamIncome} = battle.settings;
   for (const [team, army] of battle.teams.entries()) {
-    army.cost = Math.min(costLimit, army.cost + dt * income);
+    army.cost = Math.min(costLimit, army.cost + dt * (teamIncome?.[team] ?? income));
     if (!army.auto || battle.time < army.nextBuy) continue;
     army.nextBuy = battle.time + .42 + random(army) * .34;
     if (army.nextCard === null) {

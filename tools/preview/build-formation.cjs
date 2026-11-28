@@ -10,7 +10,7 @@ async function build() {
     readJapanRoster(),
     readFile(resolve(__dirname, "formation.template.html"), "utf8"),
   ]);
-  assert.equal(new Set([...starters, ...rewards.map(reward => reward.id)]).size, 9);
+  assert.equal(new Set([...starters, ...rewards.map(reward => reward.id)]).size, 52);
 
   const {data, renderer} = await withPreviewPage("formation", async page => {
     await page.goto(pathToFileURL(resolve(preview, "character-roster.html")).href);

@@ -1,0 +1,57 @@
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 7px 13px;
+  border: 1px solid var(--rule, #ddd5e5);
+  border-radius: 9px;
+  background: var(--sheet, #fffefa);
+  color: var(--ink, #25223b);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.play-button:not(:disabled):not([aria-disabled="true"]):hover { border-color: var(--accent, #4a36ba); }
+.play-button.primary { color: white; background: var(--accent, #4a36ba); border-color: transparent; }
+.play-button:disabled, .play-button[aria-disabled="true"] { opacity: .5; cursor: default; }
+.play-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 28px);
+  padding: 0;
+  border: 1px solid var(--rule, #e1dce7);
+  border-radius: 18px;
+  background: var(--sheet, #fffefa);
+  color: var(--ink, #25223b);
+  box-shadow: 0 22px 70px #17102f45;
+}
+.play-dialog::backdrop { background: #251d39a6; }
+.play-dialog-head, .play-dialog-actions {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 8px 16px; padding: 12px 20px;
+}
+.play-dialog-head { border-bottom: 1px solid var(--rule, #e1dce7); }
+.play-dialog-head h2 { font-size: clamp(20px, 3vw, 28px); }
+.play-dialog-body { display: grid; gap: 14px; padding: clamp(14px, 3vw, 24px); }
+.play-dialog-body p { color: var(--muted, #615a71); line-height: 1.6; }
+.play-dialog-actions { justify-content: flex-end; border-top: 1px solid var(--rule, #e1dce7); }
+.landscape-main { min-width: 0; }
+
+@media (min-width: 900px) and (min-height: 550px) and (orientation: landscape) {
+  body.play-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .play-page > header { flex: none; }
+  .play-page > header nav a { display: inline-flex; align-items: center; min-height: 44px; }
+  .play-page > main.landscape-main { width: 100%; flex: 1; min-height: 0; }
+  .play-dialog { overscroll-behavior: contain; }
+}

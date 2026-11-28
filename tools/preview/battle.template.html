@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7f6f1">
 <title>バトルデモ | 打鍵戦線</title>
+<link rel="stylesheet" href="play-layout.css">
 <style>
   :root {
     color-scheme: light;
@@ -78,36 +79,42 @@
   #time { font: 700 13px/1.25 var(--mono); color: #e3dced; }
   .arena { position: relative; min-width: 0; isolation: isolate; background: #212436; }
   #field { width: 100%; height: auto; display: block; image-rendering: pixelated; }
-  .outcome {
-    position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; justify-items: center;
-    font-size: clamp(26px, 5vw, 58px); background: #2017339c; color: #fff4d7; font-weight: 800;
-  }
   .caption { display: flex; gap: 7px 13px; flex-wrap: wrap; justify-content: space-between; padding: 8px 15px; align-items: center; background: #2a2741; border-top: 1px solid #4b465b; color: #e4ddeb; font-size: 11px; line-height: 1.45; }
   .caption span:first-child { color: #fae2a1; font-weight: 700; }
-  .below { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(270px, 1fr); gap: 13px; margin-top: 13px; align-items: start; }
+  .below { margin-top: 10px; }
   .panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: 13px; padding: 12px; min-width: 0; }
   .panel h2 { font-size: 16px; font-weight: 800; }
   .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .deploy-head { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 12px; margin-bottom: 5px; }
+  .deploy-head .bank { margin-inline-start: auto; }
+  .summon-hint { font-size: 12px; color: var(--muted); }
+  .auto-toggle { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .auto-toggle[aria-pressed="true"] { border-color: #a993da; background: var(--soft); color: var(--purple); }
+  .summon-key { flex: none; padding: 1px 4px; border: 1px solid #ded3f0; border-radius: 4px; background: #f1ebf9; color: #533e76; font: 750 10px/1.2 var(--mono); white-space: nowrap; }
   .bank { color: #4a3b72; font: 700 13px/1.4 var(--mono); white-space: nowrap; }
   .bank span { color: var(--muted); font: 700 11px/1.4 "Yu Gothic UI", "Meiryo", sans-serif; }
   .deck { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; list-style: none; padding: 0; }
   .card { min-width: 0; }
   .unit-card {
-    position: relative; width: 100%; height: 100%; min-height: 116px; overflow: hidden;
-    border: 1px solid #e8dfef; border-radius: 8px; background: #fbf8fd; padding: 5px 6px 6px; text-align: left;
+    display: grid; grid-template-columns: clamp(36px, 4vw, 48px) minmax(0, 1fr); gap: 7px; align-items: center;
+    width: 100%; height: 100%; min-height: 62px; border: 1px solid #e8dfef; border-radius: 8px;
+    background: #fbf8fd; padding: 5px 6px; text-align: left;
   }
-  .unit-card:not(:disabled):hover { border-color: #9074c9; background: #f2eafa; }
+  button.unit-card:not(:disabled):hover { border-color: #9074c9; background: #f2eafa; }
   .unit-card.ready { border-color: #9173d1; }
   .portrait {
-    display: grid; justify-items: center; width: 100%; height: 54px;
+    display: block; width: 100%; aspect-ratio: 1;
     background: radial-gradient(circle, #7a629a40 1px, transparent 1.25px) center / 11px 11px, var(--tint, #f0eaf7);
-    border-radius: 5px; overflow: hidden; position: relative;
+    border-radius: 5px; position: relative;
   }
-  .portrait canvas { position: absolute; inset: 2px 14%; width: 72%; height: calc(100% - 4px); object-fit: contain; image-rendering: pixelated; pointer-events: none; }
-  .cost { position: absolute; right: 7px; top: 7px; background: #fffaf2; color: #735330; border-radius: 5px; padding: 2px 4px; font: 700 10px/1.3 var(--mono); }
-  .card strong { display: block; margin-top: 3px; font-size: 12px; overflow-wrap: anywhere; line-height: 1.2; }
-  .card-role { display: block; color: #5a4a74; font-size: 10px; margin-top: 3px; }
-  .card-status { display: block; font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+  .portrait canvas { position: absolute; inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); object-fit: contain; image-rendering: pixelated; pointer-events: none; }
+  .card-copy { display: grid; gap: 2px; min-width: 0; }
+  .card-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px; }
+  .card-name { font-size: 12px; overflow-wrap: anywhere; line-height: 1.3; }
+  .cost { border-radius: 4px; padding: 1px 4px; background: #f4ead9; color: #68491e; font: 700 11px/1.3 var(--mono); }
+  .card-meta { display: flex; flex-wrap: wrap; gap: 0 6px; color: #5a4a74; font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+  .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .card-status { color: var(--muted); font-size: 11px; line-height: 1.3; }
   .unit-card.ready .card-status { color: #4a36ba; font-weight: 800; }
   .enemy-deck { margin-top: 8px; }
   .enemy-deck summary { cursor: pointer; color: var(--muted); font-size: 11px; font-weight: 700; }
@@ -121,7 +128,6 @@
   .last-hit b { color: var(--ink); font-weight: 800; }
   .role-usage { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 7px; }
   .role-table { margin-top: 11px; }
-  .role-table summary { cursor: pointer; font-size: 13px; font-weight: 800; }
   .table-wrap { overflow: auto; }
   table { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 12px; text-align: left; }
   th, td { padding: 6px; border-bottom: 1px solid #e8e0ed; white-space: nowrap; }
@@ -132,9 +138,63 @@
   .impact { border: 1px solid #e4dce9; border-radius: 7px; padding: 4px 7px; background: #faf7fc; min-height: 31px; color: #4d4162; font-size: 11px; font-weight: 700; white-space: nowrap; }
   .impact:hover { border-color: #a894cf; color: var(--purple); }
   .impact i { display: inline-block; width: 8px; height: 8px; margin-right: 5px; background: var(--trace); transform: rotate(45deg); border: 1px solid #544363; }
+  .type-console {
+    position: absolute; left: clamp(9px, 2vw, 25px); bottom: clamp(6px, 2vh, 20px); z-index: 1;
+    max-width: calc(100% - 32px); display: grid; gap: 3px; pointer-events: none;
+    color: #fff8ef; text-shadow: 0 1px 3px #151024, -1px 0 #211939, 1px 0 #211939;
+  }
+  .prompt-word { display: flex; align-items: baseline; gap: 8px; font-size: clamp(16px, 2.6vw, 29px); line-height: 1.12; }
+  .prompt-word span { font-size: .6em; }
+  .type-console p { font-size: clamp(11px, 1.35vw, 15px); }
+  .type-console code { font: 800 clamp(23px, 4.7vw, 54px)/1.08 var(--mono); letter-spacing: .035em; overflow-wrap: anywhere; }
+  .type-console code b { color: #98ffd0; }
+  .type-console.fault :is(code span, p) { color: #ffd0c1; }
+  .countdown { display: grid; place-items: center; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: #1c183c54; }
+  .countdown output { color: #fff4d7; font: 850 clamp(44px, 12vh, 96px)/1 var(--mono); text-shadow: 0 4px 16px #170f35; }
+  .detail-tabs { display: flex; flex-wrap: wrap; gap: 5px; }
+  .detail-tabs button[aria-pressed="true"] { background: var(--soft); color: var(--purple); }
+  #battle-details { width: min(900px, calc(100vw - 32px)); }
+  #battle-details .play-dialog-body { padding-block: 12px; gap: 9px; }
+  .guide-notes { display: grid; gap: 8px; margin: 0; padding-inline-start: 20px; }
+  .guide-notes li { padding-left: 4px; }
+  .guide-notes strong { display: block; margin-bottom: 2px; }
+  .guide-word { padding: 2px 5px; border-radius: 3px; background: var(--soft); color: #3d2c84; font-weight: 800; }
+  .result-summary { display: flex; align-items: center; gap: 14px; justify-content: space-between; }
+  .result-stage { font-size: 17px; font-weight: 800; }
+  .result-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .result-metrics > div { padding: 10px; border: 1px solid var(--rule); background: #f7f1fb; border-radius: 8px; }
+  .result-metrics dt { color: var(--muted); font-size: 11px; }
+  .result-metrics dd { margin-top: 3px; font: 800 17px/1.25 var(--mono); }
+  .result-reward { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+  .result-xp { padding: 8px 11px; border-radius: 8px; background: #f3e7c9; color: #64451e; font-size: 13px; font-weight: 700; }
+  .result-xp strong { font: 800 19px/1.25 var(--mono); }
+  .result-join { display: flex; align-items: center; gap: 8px; }
+  .result-join canvas { width: 58px; height: 54px; object-fit: contain; image-rendering: pixelated; border-radius: 8px; background: #ede7f9; }
+  .result-join p { font-size: 12px; }
+  #outcome[data-win="true"] .play-dialog-head { background: #ebf6ea; }
+  #outcome[data-win="false"] .play-dialog-head { background: #f9eae6; }
+  @media (min-width: 900px) and (min-height: 550px) and (orientation: landscape) {
+    .bar .wrap { min-height: 54px; }
+    main.landscape-main { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; padding-bottom: 10px; }
+    .intro { padding-block: 8px 0; align-items: center; }
+    .battle-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 11px; }
+    .intro h1 { font-size: clamp(24px, 2.6vw, 34px); }
+    .intro p { margin-top: 0; }
+    .button, .tools select, .plans select, .custom select { min-height: 44px; }
+    .stage { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+    .hud { padding-block: 7px; }
+    .line-status { display: flex; align-items: center; gap: 7px; }
+    .arena { min-height: 0; }
+    #field { height: 100%; object-fit: contain; }
+    .caption { padding-block: 5px; }
+    .below { margin-top: 0; }
+    .below .panel { padding: 7px 10px; }
+    .table-wrap { overflow: visible; }
+    th, td { white-space: normal; padding: 4px; }
+  }
   @media (max-width: 850px) {
-    .below { grid-template-columns: minmax(0, 1fr); }
     .intro { align-items: start; }
+    .deck { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   @media (max-width: 555px) {
     .bar .wrap { flex-wrap: wrap; gap: 6px; padding-block: 8px; min-height: 56px; }
@@ -152,41 +212,31 @@
     .side-head { display: grid; gap: 2px; }
     .caption { padding-inline: 7px; gap: 4px 7px; }
     .panel { padding: 8px; }
-    .deck { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .card strong { font-size: 11px; }
+    .deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
 </head>
-<body>
+<body class="play-page">
 <header class="bar"><div class="wrap">
   <div class="brand"><span class="key" aria-hidden="true">打</span>打鍵戦線</div>
   <nav class="nav" aria-label="ページ">
-    <a href="japan-stage-map.html">日本マップ</a>
-    <a href="formation-demo.html">編成</a>
+    <a id="battle-map" href="japan-stage-map.html">日本マップ</a>
+    <a id="battle-formation" href="formation-demo.html">編成</a>
     <a href="battle-demo.html" aria-current="page">バトル</a>
   </nav>
 </div></header>
-<main class="wrap">
+<main class="wrap landscape-main">
   <header class="intro">
-    <div><h1>バトルデモ</h1><p>草丘の関所 / 10レーン</p></div>
+    <div class="battle-heading"><h1 id="battle-title">バトルデモ</h1><p id="battle-subtitle">草丘の関所 / 10レーン</p></div>
     <div class="tools" role="group" aria-label="バトルの操作">
       <button class="button primary" id="pause" type="button" disabled>一時停止</button>
       <label>速度 <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
       <button class="button" id="reset" type="button" disabled>最初から</button>
+      <button class="button" id="show-battle-details" type="button" aria-haspopup="dialog">戦況・設定</button>
+      <button class="button" id="show-battle-guide" type="button" aria-haspopup="dialog" hidden>初回ガイド</button>
+      <button class="button primary" id="show-outcome" type="button" aria-haspopup="dialog" hidden>結果を見る</button>
     </div>
   </header>
-  <section class="panel settings" aria-label="対戦条件">
-    <div class="plans">
-      <label>味方の編成<select id="ally-plan" disabled></select></label>
-      <label>敵の編成<select id="enemy-plan" disabled></select></label>
-      <label>味方の出撃<select id="deploy-mode" disabled><option value="auto">自動</option><option value="manual">手動</option></select></label>
-    </div>
-    <details class="custom">
-      <summary>味方の編成をカスタマイズ</summary>
-      <div class="custom-fields" id="custom-fields"></div>
-      <p id="custom-error" role="status" hidden></p>
-    </details>
-  </section>
   <section class="stage" aria-label="戦場">
     <div class="hud">
       <div class="side enemy">
@@ -201,42 +251,114 @@
     </div>
     <figure class="arena">
       <canvas id="field" width="1280" height="535" aria-label="クオータービューの戦場"></canvas>
-      <div class="outcome" id="outcome" hidden><span id="winner"></span><button type="button" class="button primary" id="again">もう一度</button></div>
+      <div class="type-console" id="type-console" hidden>
+        <div class="prompt-word"><strong id="typing-word"></strong><span id="typing-reading"></span></div>
+        <code aria-label="ローマ字入力ガイド"><b id="typed"></b><span id="to-type"></span></code>
+        <p id="type-feedback" role="status">英字キーで入力</p>
+      </div>
+      <div class="countdown" id="countdown" hidden><output id="count-number" aria-label="出撃までの秒数"></output></div>
     </figure>
     <div class="caption"><span id="line-caption">会敵すると全レーンの前線が固定</span><span id="army-count">敵 0体 ／ 味方 0体</span></div>
   </section>
-  <section class="panel effects" aria-labelledby="effects-title">
-    <h2 id="effects-title">相性エフェクトの見本</h2>
-    <div id="impact-buttons" role="group" aria-label="相性ごとのエフェクトを再生"></div>
-  </section>
   <div class="below">
     <section class="panel" aria-labelledby="deploy-title">
-      <div class="panel-head"><h2 id="deploy-title">味方の出撃</h2><p class="bank"><span>コスト</span> <output id="ally-cost"></output> <span id="income"></span></p></div>
+      <div class="deploy-head">
+        <h2 id="deploy-title">味方の出撃</h2>
+        <span class="summon-hint">Shift＋枠のキー</span>
+        <button class="button auto-toggle" id="auto-summon" type="button" aria-pressed="true" aria-keyshortcuts="Shift+J" disabled>オート召喚 <strong id="auto-state">ON</strong><kbd class="summon-key" aria-hidden="true">Shift+J</kbd></button>
+        <p class="bank"><span>コスト</span> <output id="ally-cost"></output> <span id="income"></span></p>
+      </div>
       <ul class="deck" id="ally-deck"></ul>
-      <details class="enemy-deck">
-        <summary id="enemy-deck-label">敵の編成</summary>
-        <ul class="deck" id="enemy-deck"></ul>
-      </details>
     </section>
-    <section class="panel" aria-labelledby="log-title">
+  </div>
+  <noscript><p>戦場の表示にはJavaScriptが必要です。</p></noscript>
+</main>
+<dialog class="play-dialog" id="outcome" aria-labelledby="winner">
+  <header class="play-dialog-head"><h2 id="winner">戦闘結果</h2><form method="dialog"><button class="play-button" type="submit">閉じる</button></form></header>
+  <div class="play-dialog-body">
+    <div class="result-summary"><p class="result-stage" id="result-stage"></p><p id="result-kind"></p></div>
+    <dl class="result-metrics">
+      <div><dt>戦闘時間</dt><dd id="result-time"></dd></div>
+      <div><dt>味方拠点 HP</dt><dd id="result-ally-hp"></dd></div>
+      <div><dt>敵拠点 HP</dt><dd id="result-enemy-hp"></dd></div>
+    </dl>
+    <div class="result-reward" id="result-reward" hidden>
+      <div class="result-xp">獲得経験値 <strong id="result-xp"></strong></div>
+      <div class="result-join" id="result-join" hidden>
+        <canvas id="recruit-portrait" aria-hidden="true"></canvas><div><p>新しく加入</p><strong id="recruit-name"></strong></div>
+      </div>
+    </div>
+  </div>
+  <footer class="play-dialog-actions">
+    <a class="play-button" id="result-map" href="japan-stage-map.html">地図へ</a>
+    <a class="play-button" id="result-team" href="formation-demo.html">編成を見直す</a>
+    <button class="play-button" id="again" type="button">再挑戦</button>
+    <a class="play-button primary" id="result-next" hidden>次の県へ</a>
+  </footer>
+</dialog>
+<dialog class="play-dialog" id="battle-guide" aria-labelledby="battle-guide-title">
+  <header class="play-dialog-head"><h2 id="battle-guide-title">初戦の操作</h2></header>
+  <div class="play-dialog-body">
+    <ol class="guide-notes">
+      <li><strong>お題を打つ</strong><p>3カウントの後、戦場の左下に出るお題を入力します。例は「空」の <code class="guide-word">sora</code> です。正しい入力でコストが増えます。</p></li>
+      <li><strong>キャラを召喚する</strong><p>開始時はオート召喚がONで、Shift＋Jで切り替えられます。カードを押すか、Shiftを押しながら枠のキー（A・S・D・F・G）を押すと手動で召喚できます。</p></li>
+      <li><strong>敵拠点を攻める</strong><p>敵拠点のHPを0にすると勝利です。タッチで戦闘を見る場合は自動デモを選べます。</p></li>
+    </ol>
+  </div>
+  <footer class="play-dialog-actions">
+    <button class="play-button" id="guide-auto" type="button">自動デモで見る</button>
+    <button class="play-button primary" id="guide-type" type="button" autofocus>タイピングで始める</button>
+  </footer>
+</dialog>
+<dialog class="play-dialog" id="battle-details" aria-labelledby="battle-details-title">
+  <header class="play-dialog-head"><h2 id="battle-details-title">戦況・設定</h2><form method="dialog"><button class="play-button" type="submit" autofocus>閉じる</button></form></header>
+  <div class="play-dialog-body">
+    <div class="detail-tabs" role="group" aria-label="表示する項目">
+      <button class="play-button" type="button" aria-controls="battle-options" aria-pressed="true">対戦設定</button>
+      <button class="play-button" type="button" aria-controls="battle-log" aria-pressed="false">戦況</button>
+      <button class="play-button" type="button" aria-controls="battle-effects" aria-pressed="false">相性演出</button>
+      <button class="play-button" type="button" aria-controls="battle-roles" aria-pressed="false">能力値</button>
+    </div>
+    <section class="panel settings" id="battle-options" aria-label="対戦条件">
+      <div class="plans">
+        <label id="ally-plan-label">味方の編成<select id="ally-plan" disabled></select></label>
+        <label id="enemy-plan-label">敵の編成<select id="enemy-plan" disabled></select></label>
+        <label><span id="battle-mode-label">味方の出撃</span><select id="deploy-mode" disabled><option value="auto">自動</option><option value="manual">手動</option></select></label>
+      </div>
+      <details class="custom" id="sandbox-custom">
+        <summary>味方の編成をカスタマイズ</summary>
+        <div class="custom-fields" id="custom-fields"></div>
+        <p id="custom-error" role="status" hidden></p>
+      </details>
+      <div class="enemy-deck"><h2 id="enemy-deck-label">敵の編成</h2><ul class="deck" id="enemy-deck"></ul></div>
+    </section>
+    <section class="panel" id="battle-log" aria-labelledby="log-title" hidden>
       <div class="panel-head"><h2 id="log-title">戦況</h2><p class="bank"><span>敵コスト</span> <output id="enemy-cost"></output></p></div>
       <p id="last-hit" class="last-hit">会敵すると最新の一撃がここに表示されます。</p>
       <p id="role-usage" class="role-usage"></p>
       <ul class="log" id="events"></ul>
     </section>
+    <section class="panel effects" id="battle-effects" aria-labelledby="effects-title" hidden>
+      <h2 id="effects-title">相性エフェクトの見本</h2>
+      <div id="impact-buttons" role="group" aria-label="相性ごとのエフェクトを再生"></div>
+    </section>
+    <section class="panel role-table" id="battle-roles" aria-labelledby="battle-roles-title" hidden>
+      <h2 id="battle-roles-title">10役割の能力値</h2>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="10役割の能力値">
+        <table>
+          <thead><tr><th scope="col">役割</th><th scope="col">体力</th><th scope="col">威力</th><th scope="col">射程</th><th scope="col">移動速度</th><th scope="col">攻撃後の待ち</th><th scope="col">出撃費</th><th scope="col">再出撃</th><th scope="col">特徴</th></tr></thead>
+          <tbody id="roles"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
-  <details class="panel role-table">
-    <summary>10役割の能力値</summary>
-    <div class="table-wrap" tabindex="0" role="region" aria-label="10役割の能力値">
-      <table>
-        <thead><tr><th scope="col">役割</th><th scope="col">体力</th><th scope="col">威力</th><th scope="col">射程</th><th scope="col">移動速度</th><th scope="col">攻撃後の待ち</th><th scope="col">出撃費</th><th scope="col">再出撃</th><th scope="col">特徴</th></tr></thead>
-        <tbody id="roles"></tbody>
-      </table>
-    </div>
-  </details>
-  <noscript><p>戦場の表示にはJavaScriptが必要です。</p></noscript>
-</main>
+</dialog>
+<script src="campaign.js"></script>
 <script id="battle-art" type="application/json">%%ART%%</script>
+<script id="typing-rules" type="application/json">%%TYPING_RULES%%</script>
+<script id="typing-engine">
+%%TYPING_ENGINE%%
+</script>
 <script id="battle-engine">
 %%SIMULATION%%
 </script>

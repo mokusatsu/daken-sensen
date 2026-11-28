@@ -5,7 +5,7 @@ const get = id => document.getElementById(id);
 const field = get("field");
 const worldContext = field.getContext("2d");
 const backdrop = document.createElement("canvas");
-const atlas = new Image();
+const atlases = new Map();
 const compact = matchMedia("(max-width: 640px)");
 const yaw = art.camera.heading * Math.PI / 180;
 const cameraSin = Math.sin(yaw);
@@ -24,9 +24,25 @@ const initialSeed = 0x503df971;
 const cardsById = new Map(art.cards.map(card => [card.id, card]));
 const plans = new Map(art.presets.map(preset => [preset.id, preset]));
 const imported = readFormation();
+const session = new URLSearchParams(location.search).has("stage") ? openCampaign(art.opening[1]) : null;
+const stage = art.stages.find(entry => entry.id === session?.stageId &&
+  stageAvailable(art.stages, entry.id, session.state.cleared) && session.state.slots.some(id => cardsById.has(id)));
+const guide = get("battle-guide");
+const outcome = get("outcome");
+const details = get("battle-details");
+const prompts = [["空", "そら"], ["風", "かぜ"], ["出撃", "しゅつげき"], ["前線", "ぜんせん"],
+  ["一気に", "いっきに"], ["チーム", "ちーむ"], ["指揮", "しき"]];
+const summonKeys = ["A", "S", "D", "F", "G"];
 let scene;
 let battle;
+let allySlots = [];
 let paused = false;
+let loading = false;
+let restartId = 0;
+let resultShown = false;
+let countdownRemaining = 0;
+let promptIndex = 0;
+let typingEngine = null;
 let sample = null;
 let frameRequest = 0;
 let priorTime = 0;
@@ -57,6 +73,22 @@ function readFormation() {
   } catch {
     return null;
   }
+}
+
+function loadAtlas(id) {
+  if (!atlases.has(id)) {
+    const image = new Image();
+    image.src = art.atlases[id];
+    atlases.set(id, image);
+  }
+  return atlases.get(id).decode();
+}
+
+function drawPortrait(canvas, card) {
+  const [x, y, w, h, , , atlasId] = card.portrait;
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext("2d").drawImage(atlases.get(atlasId), x, y, w, h, 0, 0, w, h);
 }
 
 function across(lane) {
@@ -189,8 +221,8 @@ function makeBackdrop() {
 }
 
 function packed(ctx, frame, x, y, scale = 1) {
-  const [sx, sy, w, h, ox, oy] = frame;
-  ctx.drawImage(atlas, sx, sy, w, h, Math.round(x - ox * scale), Math.round(y - oy * scale),
+  const [sx, sy, w, h, ox, oy, atlasId] = frame;
+  ctx.drawImage(atlases.get(atlasId), sx, sy, w, h, Math.round(x - ox * scale), Math.round(y - oy * scale),
     Math.round(w * scale), Math.round(h * scale));
 }
 
@@ -390,6 +422,33 @@ function render(now) {
 }
 
 const deckNodes = [new Map(), new Map()];
+function canSummon() {
+  return battle && !loading && (!stage || !paused) && !guide.open && !countdownRemaining && battle.winner === null;
+}
+
+function summon(cardId) {
+  if (!canSummon() || !deploy(battle, 1, cardId)) return;
+  updateHud();
+  queueFrame();
+}
+
+function showAutoMode() {
+  const auto = battle.teams[1].auto;
+  get("auto-summon").setAttribute("aria-pressed", String(auto));
+  get("auto-state").textContent = auto ? "ON" : "OFF";
+}
+
+function toggleAuto() {
+  if (!canSummon()) return;
+  const army = battle.teams[1];
+  army.auto = !army.auto;
+  army.nextCard = null;
+  if (army.auto) army.nextBuy = battle.time;
+  showAutoMode();
+  updateHud();
+  queueFrame();
+}
+
 function fillDeck(team) {
   const list = get(team === 0 ? "enemy-deck" : "ally-deck");
   list.replaceChildren();
@@ -399,31 +458,34 @@ function fillDeck(team) {
     const title = card.roleName + " / " + card.type.map(type => art.names[type][0]).join(" / ") +
       " / 射程 " + card.range + " / 再出撃 " + card.redeploy + "秒";
     li.title = title;
-    const button = team === 1 && !battle.teams[team].auto ? make("button", undefined, "unit-card") : null;
+    const button = team === 1 ? make("button", undefined, "unit-card") : null;
     const panel = button ?? make("div", undefined, "unit-card");
     const wrap = make("span", undefined, "portrait");
     wrap.style.setProperty("--tint", art.names[card.type[0]][2]);
     const icon = document.createElement("canvas");
-    const [x, y, w, h] = card.portrait;
-    icon.width = w;
-    icon.height = h;
     icon.setAttribute("aria-hidden", "true");
-    icon.getContext("2d").drawImage(atlas, x, y, w, h, 0, 0, w, h);
+    drawPortrait(icon, card);
     wrap.append(icon);
     const summary = make("span", undefined, "card-status");
     const type = card.type.map(code => art.names[code][0]).join("・");
-    panel.append(wrap, make("span", card.cost, "cost"), make("strong", card.name),
-      make("span", card.roleName + " / Lv." + card.level, "card-role"),
-      make("span", type, "card-role"), summary);
+    const heading = make("span", undefined, "card-head");
+    heading.append(make("strong", card.name, "card-name"), make("span", card.cost, "cost"));
+    const meta = make("span", undefined, "card-meta");
+    meta.append(make("span", card.roleName + " Lv." + card.level), make("span", type));
+    const foot = make("span", undefined, "card-foot");
+    foot.append(summary);
+    const copy = make("span", undefined, "card-copy");
+    copy.append(heading, meta, foot);
+    panel.append(wrap, copy);
     if (button) {
+      const shortcut = summonKeys[allySlots.indexOf(card.id)];
+      const keycap = make("kbd", shortcut, "summon-key");
+      keycap.setAttribute("aria-hidden", "true");
+      foot.append(keycap);
       button.type = "button";
       button.setAttribute("aria-label", card.name + "を出撃　コスト" + card.cost);
-      button.addEventListener("click", () => {
-        if (deploy(battle, team, card.id)) {
-          updateHud();
-          queueFrame();
-        }
-      });
+      button.setAttribute("aria-keyshortcuts", "Shift+" + shortcut);
+      button.addEventListener("click", () => summon(card.id));
     }
     li.append(panel);
     deckNodes[team].set(card.id, {button, summary});
@@ -434,6 +496,17 @@ function fillDeck(team) {
 function fillPlans() {
   const ally = get("ally-plan");
   const enemy = get("enemy-plan");
+  const mode = get("deploy-mode");
+  if (stage) {
+    get("ally-plan-label").hidden = get("enemy-plan-label").hidden = get("sandbox-custom").hidden = true;
+    get("battle-mode-label").textContent = "バトルモード";
+    mode.options[0].textContent = "自動デモ";
+    mode.options[1].textContent = "タイピング";
+    mode.value = "manual";
+    mode.disabled = false;
+    mode.addEventListener("change", () => restart());
+    return;
+  }
   for (const plan of plans.values()) {
     ally.add(new Option(plan.label, plan.id));
     enemy.add(new Option(plan.label, plan.id));
@@ -481,7 +554,7 @@ function fillPlans() {
     ally.value = "custom";
     restart();
   });
-  for (const control of [ally, enemy, get("deploy-mode")]) {
+  for (const control of [ally, enemy, mode]) {
     control.disabled = false;
     control.addEventListener("change", () => {
       if (control === ally && ally.value === "custom" && !plans.has("custom")) {
@@ -525,6 +598,8 @@ function updateHud() {
     if (activeUnit(unit)) contact[unit.team]++;
     else returning[unit.team]++;
   }
+  const canOrder = canSummon();
+  get("auto-summon").disabled = !canOrder;
   for (const [i, key] of ["enemy", "ally"].entries()) {
     const army = battle.teams[i];
     get(key + "-cost").value = Math.floor(army.cost);
@@ -533,7 +608,7 @@ function updateHud() {
     for (const card of army.cards) {
       const {button, summary} = deckNodes[i].get(card.id);
       const cooldown = Math.max(0, army.ready.get(card.id) - battle.time);
-      const available = battle.winner === null && !army.auto && i === 1 && !cooldown &&
+      const available = canOrder && i === 1 && !cooldown &&
         army.cost >= card.cost && alive[i] < battle.settings.unitLimit;
       if (button) {
         button.disabled = !available;
@@ -541,7 +616,8 @@ function updateHud() {
       }
       if (cooldown > 0) summary.textContent = "再出撃 " + cooldown.toFixed(1) + "秒";
       else if (available) summary.textContent = "出撃する";
-      else if (i === 1 && !army.auto && army.cost < card.cost) summary.textContent = "コスト " + Math.ceil(card.cost - army.cost) + "不足";
+      else if (i === 1 && countdownRemaining) summary.textContent = "開始待ち";
+      else if (i === 1 && army.cost < card.cost) summary.textContent = "コスト " + Math.ceil(card.cost - army.cost) + "不足";
       else summary.textContent = "出撃 " + army.purchases.get(card.id) + "回";
     }
   }
@@ -549,7 +625,7 @@ function updateHud() {
   get("role-usage").textContent = "味方の後列からの命中 " + rear + " ／ 巻き込み " + splash + " ／ 減速 " + slowed;
   const finished = battle.winner !== null;
   const engaged = battle.front !== null && !finished;
-  get("phase").textContent = finished ? "決着" : paused ? "一時停止" : engaged ? "会敵中" : "進軍中";
+  get("phase").textContent = finished ? "決着" : loading || countdownRemaining ? "出撃準備" : paused ? "一時停止" : engaged ? "会敵中" : "進軍中";
   get("phase").classList.toggle("engaged", engaged);
   get("time").textContent = clock(battle.time);
   const frontCount = team => contact[team] + "体" + (returning[team] ? "（復帰中 " + returning[team] + "体）" : "");
@@ -557,9 +633,9 @@ function updateHud() {
     : "会敵すると全レーンの前線が固定";
   get("army-count").textContent = "出撃中　敵 " + alive[0] + "体 ／ 味方 " + alive[1] + "体";
   get("pause").textContent = paused ? "再開" : "一時停止";
-  get("pause").disabled = finished;
-  get("outcome").hidden = !finished;
-  if (finished) get("winner").textContent = sides[battle.winner] + "の勝利";
+  get("pause").disabled = finished || loading || countdownRemaining > 0;
+  get("show-outcome").hidden = !finished;
+  if (finished && !resultShown) showResult();
 
   if (eventHead !== battle.events[0]) {
     eventHead = battle.events[0];
@@ -585,15 +661,131 @@ function queueFrame() {
   if (!frameRequest) frameRequest = requestAnimationFrame(tick);
 }
 
+function campaignLinks() {
+  get("battle-map").href = get("result-map").href = session.href("japan-stage-map.html");
+  get("battle-formation").href = get("result-team").href = session.href("formation-demo.html");
+}
+
+function showResult() {
+  resultShown = true;
+  const won = battle.winner === 1;
+  get("winner").textContent = stage ? (won ? "攻略完了" : "敗北") : sides[battle.winner] + "の勝利";
+  outcome.dataset.win = String(won);
+  get("result-stage").textContent = stage?.name ?? "草丘の関所";
+  get("result-time").textContent = clock(battle.time);
+  get("result-ally-hp").textContent = battle.teams[1].health;
+  get("result-enemy-hp").textContent = battle.teams[0].health;
+  get("result-reward").hidden = !(stage && won);
+  get("result-join").hidden = true;
+  get("result-next").hidden = true;
+  get("result-team").textContent = won ? "編成・育成" : "編成を見直す";
+  get("result-kind").textContent = "";
+  if (stage) {
+    const progress = session.state;
+    const first = !progress.cleared.includes(stage.id);
+    const seen = battle.teams[0].cards.filter(card => battle.teams[0].purchases.get(card.id) > 0).map(card => card.id);
+    progress.seen = [...new Set([...progress.seen, ...seen])];
+    if (won) {
+      progress.experience += stage.xp;
+      get("result-kind").textContent = first ? "初回攻略" : "再攻略";
+      get("result-xp").textContent = "+" + stage.xp.toLocaleString("ja-JP") + " XP";
+      if (first) {
+        progress.cleared.push(stage.id);
+        if (!progress.members.includes(stage.recruit)) progress.members.push(stage.recruit);
+        const recruit = cardsById.get(stage.recruit);
+        get("recruit-name").textContent = recruit.name;
+        drawPortrait(get("recruit-portrait"), recruit);
+        get("result-join").hidden = false;
+      }
+    }
+    session.save();
+    campaignLinks();
+    const next = art.stages[stage.number];
+    if (won && next) {
+      const link = get("result-next");
+      link.href = session.href("japan-stage-map.html", next.id);
+      link.textContent = next.name + "へ";
+      link.hidden = false;
+    }
+  }
+  if (details.open) details.close();
+  outcome.showModal();
+}
+
+function setPrompt(index) {
+  promptIndex = index % prompts.length;
+  const [word, reading] = prompts[promptIndex];
+  typingEngine = new RomajiEngine(reading);
+  get("typing-word").textContent = word;
+  get("typing-reading").textContent = reading === word ? "" : reading;
+}
+
+function showPrompt(message, fault = false) {
+  get("typed").textContent = typingEngine.typedText;
+  get("to-type").textContent = typingEngine.guide;
+  get("type-feedback").textContent = message;
+  get("type-console").classList.toggle("fault", fault);
+}
+
+document.addEventListener("keydown", event => {
+  if (!canSummon() || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey ||
+      event.isComposing || event.repeat || document.querySelector("dialog[open]")) return;
+  if (event.shiftKey) {
+    const key = event.code.startsWith("Key") ? event.code.slice(3) : event.key.toUpperCase();
+    const slot = summonKeys.indexOf(key);
+    if (key === "J" || slot !== -1) {
+      event.preventDefault();
+      if (key === "J") toggleAuto();
+      else if (allySlots[slot]) summon(allySlots[slot]);
+      return;
+    }
+  }
+  if (!typingEngine || !/^[a-z'-]$/i.test(event.key)) return;
+  event.preventDefault();
+  const result = typingEngine.step(event.key);
+  if (!result.accepted) {
+    showPrompt("次は「" + result.guide[0] + "」", true);
+    return;
+  }
+  const army = battle.teams[1];
+  const before = army.cost;
+  army.cost = Math.min(battle.settings.costLimit, before + 18);
+  const gain = Math.floor(army.cost - before);
+  if (result.completed) setPrompt(promptIndex + 1);
+  showPrompt(gain ? "コスト +" + gain : "コスト上限");
+  updateHud();
+});
+
+function showCountdown() {
+  const countdown = get("countdown");
+  countdown.hidden = !countdownRemaining || guide.open || loading;
+  if (!countdown.hidden) {
+    const number = get("count-number");
+    const seconds = String(Math.ceil(countdownRemaining));
+    if (number.value !== seconds) number.value = seconds;
+  }
+}
+
 function tick(now) {
   frameRequest = 0;
-  const elapsed = priorTime ? Math.min(.064, (now - priorTime) / 1000) : 0;
+  if (!battle) return;
+  const delta = priorTime ? (now - priorTime) / 1000 : 0;
+  const elapsed = Math.min(.064, delta);
   priorTime = now;
-  if (!paused && battle.winner === null) {
-    accumulator += elapsed * Number(get("speed").value);
-    while (accumulator >= step) {
-      stepBattle(battle, step);
-      accumulator -= step;
+  if (!paused && !guide.open && !loading && battle.winner === null) {
+    if (countdownRemaining) {
+      countdownRemaining = Math.max(0, countdownRemaining - delta);
+      showCountdown();
+      if (!countdownRemaining) {
+        recordEvent(battle, stage.name + "で進軍開始");
+        updateHud();
+      }
+    } else {
+      accumulator += elapsed * Number(get("speed").value);
+      while (accumulator >= step) {
+        stepBattle(battle, step);
+        accumulator -= step;
+      }
     }
   }
   sinceHud += elapsed;
@@ -602,25 +794,61 @@ function tick(now) {
     updateHud();
   }
   render(now);
-  if ((!paused && battle.winner === null) || sample) queueFrame();
+  if ((!paused && !guide.open && !loading && battle.winner === null) || sample) queueFrame();
   else priorTime = 0;
 }
 
-function restart(opening = false) {
-  const ally = plans.get(get("ally-plan").value);
-  const enemy = plans.get(get("enemy-plan").value);
-  const auto = get("deploy-mode").value === "auto";
-  battle = createBattle(art, initialSeed, {decks: [enemy.ids, ally.ids], levels: [{}, ally.levels], auto: [true, auto]});
+async function restart(opening = false) {
+  const id = ++restartId;
+  const ally = stage ? {ids: session.state.slots.filter(id => cardsById.has(id)), levels: session.state.levels} :
+    plans.get(get("ally-plan").value);
+  const enemy = stage ? {ids: stage.enemies.map(unit => unit.id),
+    levels: Object.fromEntries(stage.enemies.map(unit => [unit.id, unit.level]))} : plans.get(get("enemy-plan").value);
+  const autoDemo = get("deploy-mode").value === "auto";
+  loading = true;
+  showCountdown();
+  if (outcome.open) outcome.close();
+  get("show-outcome").hidden = true;
+  get("phase").textContent = "準備中";
+  try {
+    await Promise.all([...new Set([0, ...ally.ids, ...enemy.ids])].map(loadAtlas));
+  } catch {
+    if (id === restartId) {
+      loading = false;
+      get("phase").textContent = "素材の読み込みに失敗";
+    }
+    return;
+  }
+  if (id !== restartId) return;
+  loading = false;
+  resultShown = false;
+  const typing = Boolean(stage) && !autoDemo;
+  countdownRemaining = stage ? 3 : 0;
+  allySlots = stage ? session.state.slots : ally.ids;
+  battle = createBattle(art, initialSeed, {
+    decks: [enemy.ids, ally.ids], levels: [enemy.levels, ally.levels], auto: [true, autoDemo || typing],
+    settings: typing ? {teamIncome: [rules.income, 0]} : undefined,
+  });
   fillDeck(0);
   fillDeck(1);
-  get("deploy-title").textContent = auto ? "味方の自動出撃" : "味方の手動出撃";
+  showAutoMode();
+  get("type-console").hidden = !typing;
+  typingEngine = null;
+  if (typing) {
+    setPrompt(0);
+    showPrompt("英字キーで入力");
+  }
+  get("income").textContent = typing ? "タイピングで増加" : "+" + rules.income + " / 秒";
   get("enemy-deck-label").textContent = "敵の編成　" + enemy.ids.length + "体";
-  recordEvent(battle, "草丘の関所で進軍開始");
-  if (opening && !imported) for (let i = 0; i < 384; i++) stepBattle(battle, step);
-  paused = opening && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!stage) recordEvent(battle, "草丘の関所で進軍開始");
+  if (opening && !stage && !imported) for (let i = 0; i < 384; i++) stepBattle(battle, step);
+  paused = opening && !stage && matchMedia("(prefers-reduced-motion: reduce)").matches;
   sample = null;
   accumulator = 0;
   priorTime = 0;
+  if (opening && stage && !session.state.battleGuide) guide.showModal();
+  showCountdown();
+  get("reset").disabled = false;
   updateHud();
   queueFrame();
 }
@@ -632,7 +860,39 @@ get("pause").addEventListener("click", () => {
   queueFrame();
 });
 get("reset").addEventListener("click", () => restart());
+get("auto-summon").addEventListener("click", toggleAuto);
 get("again").addEventListener("click", () => restart());
+get("show-outcome").addEventListener("click", () => outcome.showModal());
+get("show-battle-details").addEventListener("click", () => details.showModal());
+get("show-battle-guide").addEventListener("click", () => {
+  guide.showModal();
+  showCountdown();
+});
+for (const [id, mode] of [["guide-auto", "auto"], ["guide-type", "manual"]]) get(id).addEventListener("click", () => {
+  const control = get("deploy-mode");
+  if (control.value !== mode) {
+    control.value = mode;
+    restart();
+  }
+  guide.close();
+});
+guide.addEventListener("close", () => {
+  if (!session.state.battleGuide) {
+    session.state.battleGuide = true;
+    session.save();
+    campaignLinks();
+  }
+  priorTime = 0;
+  showCountdown();
+  queueFrame();
+});
+const detailTabs = details.querySelectorAll(".detail-tabs button");
+for (const tab of detailTabs) tab.addEventListener("click", () => {
+  for (const button of detailTabs) {
+    button.setAttribute("aria-pressed", String(button === tab));
+    get(button.getAttribute("aria-controls")).hidden = button !== tab;
+  }
+});
 compact.addEventListener("change", () => {
   makeBackdrop();
   if (battle) queueFrame();
@@ -646,6 +906,7 @@ for (const factor of [.25, .5, 1, 2, 4, 0]) {
   icon.setAttribute("aria-hidden", "true");
   button.append(icon, document.createTextNode("×" + factor + "　" + impactStyles[factor].name));
   button.addEventListener("click", () => {
+    details.close();
     sample = {factor, u: battle.front ?? 500, lane: 4.5, type: "N", seed: 73, start: performance.now()};
     queueFrame();
   });
@@ -654,15 +915,15 @@ for (const factor of [.25, .5, 1, 2, 4, 0]) {
 
 makeBackdrop();
 worldContext.drawImage(backdrop, 0, 0);
-atlas.src = art.atlas;
-atlas.decode().then(() => {
-  fillPlans();
-  fillRoles();
-  get("enemy-bar").max = get("ally-bar").max = rules.baseHealth;
-  get("income").textContent = "+" + rules.income + " / 秒";
-  get("reset").disabled = false;
-  for (const button of get("impact-buttons").children) button.disabled = false;
-  restart(true);
-}, () => {
-  get("phase").textContent = "素材の読み込みに失敗";
+if (stage) {
+  get("battle-title").textContent = stage.name;
+  get("battle-subtitle").textContent = stage.region + " ／ " + (stage.boss ? "地方ボス" : "第" + stage.number + "ステージ");
+  get("show-battle-guide").hidden = false;
+  campaignLinks();
+}
+fillPlans();
+fillRoles();
+get("enemy-bar").max = get("ally-bar").max = rules.baseHealth;
+restart(true).then(() => {
+  for (const button of get("impact-buttons").children) button.disabled = !battle;
 });

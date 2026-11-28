@@ -2,9 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f6f1">
 <title>キャラクター図鑑 | 打鍵戦線</title>
+<link rel="stylesheet" href="play-layout.css">
 <style>
   :root {
     color-scheme: light;
@@ -46,38 +47,13 @@
   }
   .nav a:hover { color: var(--accent); background: #f3effc; }
   .nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
-  main.wrap { min-height: calc(100svh - 150px); }
-  .hero {
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, .92fr);
-    min-height: 252px; margin: 31px 0 30px; border: 1px solid #ddd3fb;
-    border-radius: 24px; overflow: hidden; background: #f1ecff;
-  }
-  .hero-copy { align-self: center; padding: 32px clamp(24px, 4.5vw, 58px); }
-  .hero h1, .subhead h1 { font-size: clamp(30px, 4.12vw, 58px); letter-spacing: -.055em; line-height: 1.13; font-weight: 800; }
-  .hero-copy p { margin-top: 17px; font-size: 14px; line-height: 1.8; color: #51476b; }
-  .hero-facts { display: flex; gap: 18px; margin: 23px 0 0; }
-  .hero-facts div { display: flex; align-items: baseline; gap: 5px; padding-right: 18px; border-right: 1px solid #d1c5ed; }
-  .hero-facts div:last-child { border: 0; padding: 0; }
-  .hero-facts dd { order: -1; margin: 0; color: var(--accent); font: 700 25px/1 var(--mono); }
-  .hero-facts dt { font-size: 12px; font-weight: 700; color: #51476b; }
-  .hero-show {
-    position: relative; min-height: 216px; isolation: isolate; border: 0; padding: 0;
-    background: radial-gradient(ellipse at 50% 46%, #decfff 5%, transparent 67%),
-      radial-gradient(circle, #a594d3 1px, transparent 1.5px) 50% 50% / 19px 19px, #e8ddfd;
-  }
-  .hero-show:focus-visible { outline-offset: -5px; }
-  .hero-show canvas { position: absolute; object-fit: contain; }
-  .hero-side:first-of-type { inset: 17% auto auto 8%; width: 29%; height: 58%; transform: rotate(-7deg); }
-  .hero-side:last-of-type { inset: 16% 7% auto auto; width: 29%; height: 57%; transform: rotate(7deg); }
-  .hero-main { inset: 8% auto auto 31%; width: 37%; height: 76%; z-index: 1; }
-  .hero-label {
-    position: absolute; z-index: 2; right: 14px; bottom: 13px; display: inline-flex; align-items: center; gap: 9px;
-    padding: 7px 11px 7px 13px; border: 1px solid #dbd0f2; border-radius: 9px;
-    color: #362675; background: #fffdfaf5; font-size: 12px; font-weight: 700;
-  }
-  .hero-show:hover .hero-label { color: #fff; background: var(--accent); }
+  main.wrap { padding-bottom: 17px; }
+  .roster-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-block: 17px 11px; }
+  .roster-head h1, .subhead h1 { font-size: clamp(25px, 3.5vw, 43px); letter-spacing: -.045em; line-height: 1.17; font-weight: 800; }
   .toolbox { padding: 13px; border: 1px solid var(--rule); border-radius: 15px; background: var(--sheet); }
-  .filters { display: grid; grid-template-columns: minmax(205px, 1fr) repeat(3, minmax(145px, .43fr)) auto; align-items: end; gap: 10px; }
+  .filters { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+  .filters label { flex: 1 1 102px; }
+  .filters .searchbox { flex: 1.9 1 215px; }
   .filters label, .match-form label { display: grid; gap: 5px; font-size: 11px; font-weight: 700; color: var(--muted); }
   input[type="search"], select, .plain-button {
     min-width: 0; min-height: 42px; padding: 0 11px; border: 1px solid #dcd6e4;
@@ -97,10 +73,11 @@
   .plain-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; }
   .plain-button:hover { color: var(--accent); border-color: #aa98db; background: #f6f1ff; }
   .plain-button:disabled { cursor: default; opacity: .45; }
-  .list-caption { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 24px 0 11px; }
-  .list-caption h2 { font-size: 19px; font-weight: 800; }
   .count { color: var(--muted); font: 600 13px/1.6 var(--mono); }
-  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+  .pager { display: flex; gap: 9px; justify-content: center; align-items: center; padding-top: 9px; }
+  .pager .plain-button { min-height: 44px; min-width: 62px; }
+  .pager output { min-width: 6em; text-align: center; }
   .card {
     background: var(--sheet); border: 1px solid var(--rule); padding: 0; text-align: start;
     min-width: 0; overflow: hidden; border-radius: 15px;
@@ -120,6 +97,9 @@
   }
   .unit-no { top: 10px; left: 10px; font: 700 11px/1.25 var(--mono); }
   .tile-open { top: 9px; right: 9px; font: 700 16px/1 var(--mono); }
+  .tile-open.owned, .tile-open.seen { font: 750 11px/1.25 sans-serif; }
+  .tile-open.owned { background: #e0f1e8; color: #316150; }
+  .tile-open.seen { background: #f8efdb; color: #6b502f; }
   .card:hover .tile-open { color: #fff; background: var(--accent); }
   .card-copy { display: grid; gap: 9px; padding: 12px 13px 13px; }
   .card-name { line-height: 1.25; font-size: clamp(14px, 1.4vw, 19px); font-weight: 800; overflow-wrap: anywhere; }
@@ -135,10 +115,9 @@
     padding: 48px 18px; text-align: center; color: var(--muted); border: 1px dashed #c8bfd5;
     background: var(--sheet); border-radius: 14px;
   }
-  .page-foot { margin: 44px 0 0; padding-block: 19px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
-  .page-foot .wrap { display: flex; justify-content: space-between; gap: 16px; }
-  .subhead { padding: 38px 0 26px; }
-  .subhead h1 { font-size: clamp(30px, 4vw, 45px); }
+  .subhead { padding: 18px 0 12px; }
+  .panel-switch { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 11px; }
+  .panel-switch button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: #bfaeec; }
   .subhead p, .panel p { margin-top: 12px; color: var(--muted); line-height: 1.72; font-size: 14px; }
   .panel { border: 1px solid var(--rule); border-radius: 16px; background: var(--sheet); padding: 21px; margin-bottom: 18px; }
   .panel h2 { font-size: 20px; font-weight: 800; }
@@ -152,6 +131,7 @@
   .match-result span { font-size: 11px; margin-top: 3px; }
   .legend { display: flex; flex-wrap: wrap; gap: 7px; margin: 13px 0; }
   .legend span { border-radius: 5px; padding: 4px 7px; font-size: 12px; }
+  .matrix-note { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
   .table-scroll { overflow: auto; border: 1px solid #e6e0ea; border-radius: 9px; }
   table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
   th, td { padding: 8px 9px; text-align: start; border-bottom: 1px solid #eae5ee; }
@@ -227,10 +207,41 @@
   .defense dl > div { display: grid; grid-template-columns: 43px 1fr; align-items: baseline; gap: 5px; }
   .defense dt { font: 700 11px/1.4 var(--mono); }
   .defense dd { margin: 0; line-height: 1.6; }
+  @media (min-width: 900px) and (min-height: 550px) and (orientation: landscape) {
+    .masthead .wrap { min-height: 56px; }
+    #roster { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; height: 100%; }
+    .roster-head { padding-block: 11px 7px; }
+    .toolbox { padding: 7px 10px; }
+    .cards { min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+    .card { display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+    .tile { min-height: 0; height: auto; }
+    .card-copy { gap: 5px; padding: 6px 9px; }
+    .subhead { padding-block: 7px; }
+    .subhead h1 { font-size: 28px; }
+    .subhead p { display: none; }
+    .panel p { margin-top: 5px; }
+    .panel-switch { margin-bottom: 7px; }
+    .panel { margin-bottom: 0; padding: 12px; }
+    .table-scroll { overflow: visible; }
+    .matrix, .research-table, .role-table { min-width: 0; }
+    .matrix th, .matrix td { padding: 2px 1px; font-size: 10px; line-height: 1.15; }
+    .matrix th:first-child { min-width: 58px; }
+    .matrix th[scope="row"], .matrix thead th:first-child { position: static; }
+    .matrix-note :is(p, .legend), #match-matrix-panel .source-link { margin-block: 4px; font-size: 12px; }
+    .matrix-note .legend span { padding-block: 2px; }
+    .research-table td { white-space: normal; }
+    .research-table :is(th, td), .role-table :is(th, td) { padding: 4px; font-size: 11px; }
+    .detail { width: min(950px, calc(100vw - 34px)); max-height: calc(100dvh - 28px); }
+    .detail-header { position: static; padding: 7px 16px; }
+    .detail-content { gap: 16px; padding: 12px 16px 15px; }
+    .turn-stage { min-height: 166px; height: clamp(180px, 41dvh, 380px); touch-action: none; }
+    .motions button, .view-buttons .plain-button, .icon-button { min-width: 44px; min-height: 44px; }
+    .copy h2 { margin-block: 7px; }
+    .flavor { margin-block: 9px; padding: 8px 10px; }
+    .copy:has(.defense[open]) :is(.meters, .role-summary, h3) { display: none; }
+  }
   @media (max-width: 990px) {
     .wrap { padding-inline: 24px; }
-    .hero-copy { padding-inline: 29px; }
-    .filters { grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(111px, .6fr)) auto; }
     .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
   @media (max-width: 730px) {
@@ -241,15 +252,7 @@
     .brand-name { font-size: 16px; }
     .nav { gap: 1px; }
     .nav a { padding: 7px 8px; font-size: 11px; }
-    .hero { grid-template-columns: 1fr; margin: 21px 0 20px; }
-    .hero-copy { padding: 23px 22px 18px; }
-    .hero-copy p { margin-top: 10px; }
-    .hero-facts { margin-top: 13px; }
-    .hero-show { min-height: 178px; }
-    .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .searchbox { grid-column: 1 / -1; }
     .tile { height: 131px; }
-    .list-caption { margin-top: 19px; }
     .match-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .findings { grid-template-columns: 1fr; }
     .detail-content { grid-template-columns: 1fr; gap: 18px; padding: 14px; }
@@ -272,55 +275,49 @@
   }
 </style>
 </head>
-<body>
+<body class="play-page">
 <header class="masthead">
   <div class="wrap">
     <a class="brand" href="#roster"><span class="brand-key" aria-hidden="true">打</span><span class="brand-name">打鍵戦線</span></a>
     <nav class="nav" aria-label="図鑑のメニュー">
+      <a id="roster-map" href="japan-stage-map.html">日本マップ</a>
       <a href="#roster" aria-current="page">キャラクター</a>
       <a href="#matchups">タイプ相性</a>
       <a href="#design">能力設計</a>
     </nav>
   </div>
 </header>
-<main class="wrap">
+<main class="wrap landscape-main">
   <section id="roster" class="page" aria-labelledby="roster-title">
-    <div class="hero">
-      <div class="hero-copy">
-        <h1 id="roster-title">キャラクター図鑑</h1>
-        <p>町じゅうの変わり者が、打鍵の合図で出撃する。<br>全キャラクターを敵味方どちらの陣営でも編成できます。</p>
-        <dl class="hero-facts">
-          <div><dt>キャラ</dt><dd id="unit-total">200</dd></div>
-          <div><dt>タイプ</dt><dd id="type-total">18</dd></div>
-          <div><dt>役割</dt><dd id="role-total">10</dd></div>
-        </dl>
-      </div>
-      <button class="hero-show" id="hero-open" type="button" aria-label="ハンコ番を回転して見る" aria-haspopup="dialog">
-        <canvas class="hero-side" aria-hidden="true"></canvas>
-        <canvas class="hero-main" aria-hidden="true"></canvas>
-        <canvas class="hero-side" aria-hidden="true"></canvas>
-        <span class="hero-label">ハンコ番の回転ビュー <span aria-hidden="true">↗</span></span>
-      </button>
-    </div>
+    <header class="roster-head"><h1 id="roster-title">キャラクター図鑑</h1><p class="count" id="result-count" aria-live="polite"></p></header>
     <form class="filters toolbox" id="filters">
       <label class="searchbox">キーワード <input type="search" id="search" placeholder="名前・見た目・フレーバーで検索" autocomplete="off"></label>
       <label>タイプ <select id="type-filter"><option value="">すべてのタイプ</option></select></label>
       <label>役割 <select id="role-filter"><option value="">すべての役割</option></select></label>
       <label>地区 <select id="district-filter"><option value="">すべての地区</option></select></label>
+      <label id="collection-filter-label" hidden>登録状況 <select id="collection-filter"><option value="">すべて</option><option value="owned">手持ち</option><option value="seen">対戦済み</option></select></label>
       <button type="reset" class="plain-button">リセット</button>
     </form>
-    <div class="list-caption"><h2>キャラクター一覧</h2><p class="count" id="result-count" aria-live="polite"></p></div>
     <div class="cards" id="cards"></div>
     <p class="empty" id="empty" hidden>条件に合うキャラクターがいません。</p>
+    <div class="pager" aria-label="図鑑のページ切り替え">
+      <button class="plain-button" id="roster-prev" type="button" aria-controls="cards">前へ</button>
+      <output class="count" id="roster-page" aria-label="ページ番号"></output>
+      <button class="plain-button" id="roster-next" type="button" aria-controls="cards">次へ</button>
+    </div>
     <noscript><p class="empty">キャラクターの表示にはJavaScriptが必要です。</p></noscript>
   </section>
   <section id="matchups" class="page" aria-labelledby="matchups-title" hidden>
     <header class="subhead">
       <h1 id="matchups-title">タイプ相性</h1>
-      <p>1回の攻撃に使うタイプは1つ。防御側が複合タイプの場合は、各タイプへの倍率を掛け合わせます。</p>
     </header>
-    <section class="panel" aria-labelledby="match-calc-title">
+    <div class="panel-switch" role="group" aria-label="相性の調べ方">
+      <button class="play-button" type="button" aria-pressed="true" aria-controls="match-calc-panel">倍率を調べる</button>
+      <button class="play-button" type="button" aria-pressed="false" aria-controls="match-matrix-panel">相性表を見る</button>
+    </div>
+    <section class="panel" id="match-calc-panel" aria-labelledby="match-calc-title">
       <h2 id="match-calc-title">ダメージ倍率を調べる</h2>
+      <p>1回の攻撃に使うタイプは1つ。防御側が複合タイプの場合は、各タイプへの倍率を掛け合わせます。</p>
       <form id="match-form" class="match-form">
         <label>攻撃タイプ <select id="attack-type"></select></label>
         <label>防御タイプ1 <select id="defense-type"></select></label>
@@ -328,14 +325,16 @@
         <output id="match-result" class="match-result" aria-live="polite"></output>
       </form>
     </section>
-    <section class="panel" aria-labelledby="matrix-title">
+    <section class="panel" id="match-matrix-panel" aria-labelledby="matrix-title" hidden>
       <h2 id="matrix-title">18タイプの相性表</h2>
-      <p>縦が攻撃タイプ、横が防御タイプです。</p>
-      <div class="legend" aria-label="凡例">
-        <span class="effective">×2 ばつぐん</span><span class="even">×1 通常</span><span class="reduced">×0.5 いまひとつ</span><span class="immune">×0 無効</span>
+      <div class="matrix-note">
+        <p>縦が攻撃タイプ、横が防御タイプです。</p>
+        <div class="legend" aria-label="凡例">
+          <span class="effective">×2 ばつぐん</span><span class="even">×1 通常</span><span class="reduced">×0.5 いまひとつ</span><span class="immune">×0 無効</span>
+        </div>
       </div>
       <div id="matrix" class="table-scroll" tabindex="0" role="region" aria-label="18タイプの相性表"></div>
-      <p><a href="https://zukan.pokemon.co.jp/typeaisyouhyou/">参照　ポケモンずかん公式タイプ相性表</a></p>
+      <p class="source-link"><a href="https://zukan.pokemon.co.jp/typeaisyouhyou/">参照　ポケモンずかん公式タイプ相性表</a></p>
     </section>
   </section>
   <section id="design" class="page" aria-labelledby="design-title" hidden>
@@ -343,26 +342,35 @@
       <h1 id="design-title">能力設計</h1>
       <p>耐久、攻撃、移動、出撃の間隔に差をつけて、前線での使い方を変えます。</p>
     </header>
-    <section class="panel" aria-labelledby="research-title">
+    <div class="panel-switch" role="group" aria-label="能力設計の項目">
+      <button class="play-button" type="button" aria-pressed="true" aria-controls="roles-panel">10役割</button>
+      <button class="play-button" type="button" aria-pressed="false" aria-controls="research-panel">基本キャラ比較</button>
+      <button class="play-button" type="button" aria-pressed="false" aria-controls="findings-panel">比較の要点</button>
+      <button class="play-button" type="button" aria-pressed="false" aria-controls="sprite-panel">回転スプライト</button>
+    </div>
+    <section class="panel" id="research-panel" aria-labelledby="research-title" hidden>
       <h2 id="research-title">にゃんこ大戦争の基本キャラ比較</h2>
       <p>基本キャラ10体の第1形態。同じLv50相当・お宝コンプで比較し、出撃費は参照先の表示値を使っています。</p>
       <div class="table-scroll" id="research-grid" tabindex="0" role="region" aria-label="基本キャラ10体の比較"></div>
-      <div class="findings">
-        <article><h3>壁役は出し直しやすい</h3><p>タンクネコはネコの4倍の体力。攻撃力は4分の1ですが、2秒で再出撃でき、前線を支えます。</p></article>
-        <article><h3>足の速さと届く距離は別</h3><p>ウシネコはネコの3倍の速度で接敵。ネコトカゲは射程400から攻撃でき、壁役の後ろに並べやすくなります。</p></article>
-        <article><h3>範囲攻撃にも得意な距離がある</h3><p>ネコノトリは短めの射程で繰り返し攻撃。巨神ネコは高耐久で近づけますが、再出撃まで18.2秒かかります。</p></article>
-      </div>
       <ul class="sources">
         <li><a href="https://nyanko-db.aoicream.com/units">数値の参照　アオイのにゃんこDB</a></li>
         <li><a href="https://ponosgames.com/information/appli/battlecats/gacha/normal/N064.html">基本キャラの範囲　PONOS公式</a></li>
       </ul>
     </section>
-    <section class="panel" aria-labelledby="roles-title">
+    <section class="panel" id="findings-panel" aria-labelledby="findings-title" hidden>
+      <h2 id="findings-title">基本キャラ比較の要点</h2>
+      <div class="findings">
+        <article><h3>壁役は出し直しやすい</h3><p>タンクネコはネコの4倍の体力。攻撃力は4分の1ですが、2秒で再出撃でき、前線を支えます。</p></article>
+        <article><h3>足の速さと届く距離</h3><p>ウシネコはネコの3倍の速度で接敵。ネコトカゲは射程400から攻撃でき、壁役の後ろに並べやすくなります。</p></article>
+        <article><h3>範囲攻撃にも得意な距離がある</h3><p>ネコノトリは短めの射程で繰り返し攻撃。巨神ネコは高耐久で近づけますが、再出撃まで18.2秒かかります。</p></article>
+      </div>
+    </section>
+    <section class="panel" id="roles-panel" aria-labelledby="roles-title">
       <h2 id="roles-title">打鍵戦線の10役割</h2>
       <p>各能力は役割ごとの設計値です。1が低く5が高いことを示し、出撃費の5は高額、再出撃の5は短い待ち時間を表します。</p>
       <div class="table-scroll" id="role-grid" tabindex="0" role="region" aria-label="10役割の能力差"></div>
     </section>
-    <section class="panel" aria-labelledby="sprite-title">
+    <section class="panel" id="sprite-panel" aria-labelledby="sprite-title" hidden>
       <h2 id="sprite-title">回転スプライトの仕様</h2>
       <p>キャラクターを水平なピクセルの層に分け、各層を同じ角度で回転させて足元から積み上げます。歩行と攻撃は6fpsで、回転と同時に再生できます。</p>
       <p>「断面PNG」は選択中のモーションを保存します。各行は左から足元、頭の順に並ぶ断面で、上から順にアニメーションのコマです。ファイル名に断面の幅×奥行き×層数、コマ数とfpsが入ります。</p>
@@ -370,7 +378,6 @@
     </section>
   </section>
 </main>
-<footer class="page-foot"><div class="wrap"><span>打鍵戦線 / キャラクター図鑑</span><a href="#roster">一覧へ戻る</a></div></footer>
 <dialog class="detail" id="detail" aria-labelledby="detail-title">
   <header class="detail-header">
     <p id="detail-id"></p>
@@ -413,6 +420,7 @@
     </article>
   </div>
 </dialog>
+<script src="campaign.js"></script>
 <script>
 "use strict";
 
@@ -1272,6 +1280,11 @@ function setTile(element, code) {
 }
 
 const cards = byId("cards");
+const collection = typeof openCampaign === "function" ? openCampaign() : null;
+const members = new Set(collection?.state.members);
+const encountered = new Set(collection?.state.seen);
+byId("collection-filter-label").hidden = members.size === 0;
+if (collection?.stageId) byId("roster-map").href = collection.href("japan-stage-map.html");
 const previews = new IntersectionObserver(entries => {
   for (const {target, isIntersecting} of entries) {
     if (!isIntersecting) continue;
@@ -1290,8 +1303,10 @@ function addCard(unit) {
   setTile(tile, unit.type[0]);
   const canvas = make("canvas");
   canvas.setAttribute("aria-hidden", "true");
-  const open = make("span", "tile-open", "↗");
-  open.setAttribute("aria-hidden", "true");
+  const isOwned = members.has(unit.id);
+  const seen = encountered.has(unit.id);
+  const open = make("span", "tile-open" + (isOwned ? " owned" : seen ? " seen" : ""), isOwned ? "手持ち" : seen ? "対戦済み" : "↗");
+  if (!isOwned && !seen) open.setAttribute("aria-hidden", "true");
   tile.append(canvas, make("span", "unit-no", numberOf(unit)), open);
   const copy = make("span", "card-copy");
   const info = make("span", "card-info");
@@ -1311,7 +1326,6 @@ function normalize(text) {
 }
 
 const catalogCards = units.map(addCard);
-cards.append(...catalogCards);
 const searchText = units.map(unit => normalize([
   numberOf(unit), unit.name, unit.look, unit.flavor, unit.district, roles[unit.role][0], ...unit.type.map(code => types[code][0]),
 ].join(" ")));
@@ -1320,31 +1334,50 @@ addOptions(byId("type-filter"), options);
 addOptions(byId("role-filter"), Object.entries(roles).map(([code, [name]]) => [code, name]));
 addOptions(byId("district-filter"), districts.map(([name]) => [name, name]));
 for (const id of ["attack-type", "defense-type", "defense-second"]) addOptions(byId(id), options);
-byId("unit-total").textContent = units.length;
-byId("type-total").textContent = typeCodes.length;
-byId("role-total").textContent = Object.keys(roles).length;
-
 let shown = units;
+let rosterPage = 0;
+const wideCatalog = matchMedia("(min-width: 991px)");
+const mediumCatalog = matchMedia("(min-width: 531px)");
+
+function showRosterPage() {
+  const size = wideCatalog.matches ? 8 : mediumCatalog.matches ? 6 : 4;
+  const count = Math.max(1, Math.ceil(shown.length / size));
+  rosterPage = Math.min(rosterPage, count - 1);
+  const first = rosterPage * size;
+  const visible = shown.slice(first, first + size).map(unit => catalogCards[unit.id - 1]);
+  previews.disconnect();
+  cards.replaceChildren(...visible);
+  for (const card of visible) if (card.querySelector("canvas").width === 300) previews.observe(card);
+  byId("roster-page").value = (rosterPage + 1) + " / " + count;
+  byId("roster-prev").disabled = rosterPage === 0;
+  byId("roster-next").disabled = rosterPage === count - 1;
+  byId("result-count").textContent = shown.length + " / " + units.length + " 体";
+  byId("empty").hidden = shown.length > 0;
+  cards.hidden = shown.length === 0;
+}
+
 function filter() {
   const terms = normalize(byId("search").value).trim().split(/\s+/).filter(Boolean);
   const type = byId("type-filter").value;
   const role = byId("role-filter").value;
   const district = byId("district-filter").value;
-  shown = units.filter((unit, index) => {
-    const visible = (!type || unit.type.includes(type)) && (!role || unit.role === role) &&
-      (!district || unit.district === district) && terms.every(term => searchText[index].includes(term));
-    const card = catalogCards[index];
-    card.hidden = !visible;
-    if (visible && card.querySelector("canvas").width === 300) previews.observe(card);
-    return visible;
-  });
-  byId("result-count").textContent = shown.length + " / " + units.length + " 体";
-  byId("empty").hidden = shown.length > 0;
+  const status = byId("collection-filter").value;
+  const matchingIds = status === "owned" ? members : status === "seen" ? encountered : null;
+  shown = units.filter((unit, index) => (!type || unit.type.includes(type)) && (!role || unit.role === role) &&
+    (!district || unit.district === district) && (!matchingIds || matchingIds.has(unit.id)) &&
+    terms.every(term => searchText[index].includes(term)));
+  rosterPage = 0;
+  showRosterPage();
 }
 const filterForm = byId("filters");
 filterForm.addEventListener("input", filter);
 filterForm.addEventListener("submit", event => event.preventDefault());
 filterForm.addEventListener("reset", () => requestAnimationFrame(filter));
+for (const [id, step] of [["roster-prev", -1], ["roster-next", 1]]) byId(id).addEventListener("click", () => {
+  rosterPage += step;
+  showRosterPage();
+});
+for (const media of [wideCatalog, mediumCatalog]) media.addEventListener("change", showRosterPage);
 filter();
 
 const dialog = byId("detail");
@@ -1478,12 +1511,6 @@ cards.addEventListener("click", event => {
   const card = event.target.closest("button[data-unit]");
   if (card) openUnit(units[Number(card.dataset.unit) - 1]);
 });
-const hero = byId("hero-open");
-hero.addEventListener("click", () => openUnit(units[0]));
-for (const [index, unitIndex, turn] of [[0, 20, 28], [1, 0, 337], [2, 42, 15]]) {
-  drawStack(hero.querySelectorAll("canvas")[index], spriteFor(units[unitIndex]), turn);
-}
-
 previous.addEventListener("click", () => showUnit(browsingIndex - 1));
 next.addEventListener("click", () => showUnit(browsingIndex + 1));
 dialog.addEventListener("close", () => {
@@ -1574,6 +1601,15 @@ byId("research-grid").append(table("research-table",
   research));
 byId("role-grid").append(table("role-table", ["役割", ...metrics, "対象", "使い方"],
   Object.values(roles).map(([name, values, target, summary]) => [name, ...values, target, summary])));
+
+for (const group of document.querySelectorAll(".panel-switch")) group.addEventListener("click", event => {
+  const picked = event.target.closest("button[aria-controls]");
+  if (!picked) return;
+  for (const button of group.querySelectorAll("button")) {
+    button.setAttribute("aria-pressed", String(button === picked));
+    byId(button.getAttribute("aria-controls")).hidden = button !== picked;
+  }
+});
 
 function route() {
   const target = ["matchups", "design"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "roster";

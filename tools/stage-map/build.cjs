@@ -29,6 +29,7 @@ function markup(country, config, template, assets) {
     config.projection.elevationStepMetres + "m刻みで段差を強調しています。" +
     (config.regions.some(region => region.inset) ? " アラスカとハワイは別縮尺です。" : "");
   const replacements = {
+    COUNTRY: country,
     TITLE: escapeHtml(config.title),
     AREA: escapeHtml(config.areaName),
     MAP_NAV: mapNav,
@@ -137,4 +138,5 @@ async function main() {
   console.log(config.title, areas.length + "面", regions.length + "組の積層PNG", resolve(output, mapFile(country)));
 }
 
-main().catch(error => { console.error(error); process.exitCode = 1; });
+if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
+module.exports = {markup};

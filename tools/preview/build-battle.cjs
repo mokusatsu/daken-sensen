@@ -5,18 +5,20 @@ const {root, preview, readJapanRoster, withPreviewPage, renderTemplate, inlineJs
 const camera = {pitch: .44, heading: 309};
 
 async function main() {
-  const [{starters, rewards}, rosterHtml, template, engine, view] = await Promise.all([
+  const [{starters, stages}, rosterHtml, template, engine, typingEngine, typingRules, view] = await Promise.all([
     readJapanRoster(),
     readFile(resolve(preview, "character-roster.html"), "utf8"),
     readFile(resolve(__dirname, "battle.template.html"), "utf8"),
     readFile(resolve(root, "tools/battle-engine.cjs"), "utf8"),
+    readFile(resolve(root, "tools/typing/romaji-engine.cjs"), "utf8"),
+    readFile(resolve(root, "tools/typing/romaji-rules-v1.json"), "utf8"),
     readFile(resolve(__dirname, "battle-view.js"), "utf8"),
   ]);
   const battleRoster = rosterHtml.replace(/^const pitch = [\d.]+;$/m, "const pitch = " + camera.pitch + ";");
   assert.notEqual(battleRoster, rosterHtml, "図鑑の投影設定を確認してください");
   const data = await withPreviewPage("battle", async page => {
     await page.setContent(battleRoster, {waitUntil: "domcontentloaded"});
-    return page.evaluate(({starters, recruits, camera}) => {
+    return page.evaluate(({starters, stages, camera}) => {
       if (pitch !== camera.pitch) throw new Error("戦場の投影設定が適用されていません");
       const headingFor = team => (camera.heading + team * 180) % 360;
       const representatives = Object.fromEntries(Object.keys(roles).map(role =>
@@ -30,18 +32,25 @@ async function main() {
         {id: "area", label: "範囲・妨害", ids: [141, 3, 70, 54, 23]},
         {id: "siege", label: "重前衛・大技", ids: [141, 3, 18, 19, 16]},
       ];
-      const ids = [...new Set([...presets.flatMap(entry => entry.ids), ...recruits, ...Object.values(representatives).flat()])];
+      const ids = [...new Set([...presets.flatMap(entry => entry.ids), ...stages.map(stage => stage.recruit),
+        ...Object.values(representatives).flat()])];
       const costumes = ids.map(id => units.find(unit => unit.id === id));
       if (costumes.some(unit => !unit)) throw new Error("図鑑のIDを確認してください");
-      const total = costumes.reduce((sum, unit) => sum + 2 * (walkCycles[unit.travel].length + attackCycles[unit.role][1].length + 1) + 1, 2);
       const sheet = document.createElement("canvas");
       const scratch = document.createElement("canvas");
       const cell = 124;
-      const columns = 12;
-      sheet.width = cell * columns;
-      sheet.height = Math.ceil(total / columns) * cell;
+      const columns = 6;
       const ctx = sheet.getContext("2d");
+      const atlases = {};
       let slot = 0;
+      let atlasId = 0;
+
+      function startAtlas(id, total) {
+        atlasId = id;
+        slot = 0;
+        sheet.width = cell * columns;
+        sheet.height = Math.ceil(total / columns) * cell;
+      }
 
       function pack(pose, heading) {
         drawStack(scratch, pose, heading);
@@ -50,14 +59,15 @@ async function main() {
         const y = Math.floor(slot / columns) * cell;
         ctx.drawImage(scratch, x, y);
         slot++;
-        return [x, y, scratch.width, scratch.height, pose.frameHalf, pose.floor];
+        return [x, y, scratch.width, scratch.height, pose.frameHalf, pose.floor, atlasId];
       }
 
       const cards = costumes.map(unit => {
         const clips = bakeClips(unit);
         const [roleName, ratings] = roles[unit.role];
         const profile = attackCycles[unit.role][1];
-        return {
+        startAtlas(unit.id, 1 + 2 * (1 + clips.walk.length + clips.attack.length));
+        const card = {
           id: unit.id, name: unit.name, type: unit.type, role: unit.role, roleName, ratings, frames: profile.length,
           impactFrames: profile.flatMap((pose, frame) => pose[3] === 1 ? [frame] : []),
           portrait: pack(spriteFor(unit), 337),
@@ -67,24 +77,31 @@ async function main() {
             attack: clips.attack.map(frame => pack(frame, headingFor(team))),
           })),
         };
+        atlases[unit.id] = sheet.toDataURL("image/png");
+        return card;
       });
+      startAtlas(0, 2);
       const forts = [
         "b 0 0 5 28 23 5 3 deep;b 0 0 12 26 20 4 3 slate;b 0 1 22 20 16 11 3 clay;b 0 14 19 8 5 10 2 ink;b 0 16 12 7 5 3 1 red;k 18 -8 29 8 9 18 red;k 18 -8 44 9 9 4 sun;b 0 -2 33 12 9 8 3 red;b 0 -2 43 12 9 3 2 tea;l -2 -3 40 -2 -3 57 1.7 slate;b 4 -3 55 7 2 4 1 gold;k 18 2 22 4 5 4 gold",
         "b 0 0 5 29 22 5 3 deep;b 0 0 12 26 20 4 3 slate;b 0 1 22 20 16 11 3 iv;b 0 14 20 8 5 10 2 plum;b 0 16 12 8 5 3 1 lil;k 18 -8 28 8 9 17 ash;t -18 -8 40 10 10 3 .91 plum;t 18 -8 40 10 10 3 .91 lil;b 0 -4 34 12 8 9 3 lil;b 0 -4 44 13 9 3 2 plum;l 2 -4 43 2 -4 58 1.7 deep;b 8 -4 56 7 2 4 1 sea;k 18 2 24 3 4 5 sky",
       ].map((recipe, team) => pack(sculpt(recipe), headingFor(team)));
+      atlases[0] = sheet.toDataURL("image/png");
       const names = Object.fromEntries(typeCodes.map(code => [code, types[code].slice(0, 3)]));
       const matchups = Object.fromEntries(typeCodes.map(code => [code,
         Object.fromEntries(typeCodes.map(defender => [defender, multiplier(code, [defender])]))]));
-      return {opening, presets, cards, forts, names, matchups, camera, fps: motionFps, atlas: sheet.toDataURL("image/png")};
+      return {opening, presets, cards, forts, names, matchups, camera, stages, fps: motionFps, atlases};
     }, {
-      camera, starters, recruits: rewards.map(reward => reward.id),
+      camera, starters, stages,
     });
   });
   assert.deepEqual(data.opening.map(army => army.length), [5, 5]);
   assert.equal(new Set(data.cards.map(card => card.role)).size, 10);
   assert(data.cards.every(card => card.poses.every(pose => pose.walk.length === 6 &&
     pose.attack.length === card.frames) && card.frames <= 24 && card.impactFrames.length));
-  const html = renderTemplate(template, {ART: inlineJson(data), SIMULATION: engine.trimEnd(), VIEW: view.trimEnd()});
+  const html = renderTemplate(template, {
+    ART: inlineJson(data), SIMULATION: engine.trimEnd(), VIEW: view.trimEnd(),
+    TYPING_ENGINE: typingEngine.trimEnd(), TYPING_RULES: inlineJson(JSON.parse(typingRules)),
+  });
   await writeFile(resolve(preview, "battle-demo.html"), html);
   console.log("バトルデモ", data.cards.length, "体");
 }

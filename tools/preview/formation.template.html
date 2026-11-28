@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f7f6f1">
 <title>部隊編成 | 打鍵戦線</title>
+<link rel="stylesheet" href="play-layout.css">
 <style>
   :root {
     color-scheme: light;
@@ -205,16 +206,17 @@
   }
 </style>
 </head>
-<body>
+<body class="play-page">
 <header class="bar"><div class="wrap">
   <div class="brand"><span class="key" aria-hidden="true">打</span>打鍵戦線</div>
   <nav class="nav" aria-label="ページ">
-    <a href="japan-stage-map.html">日本マップ</a>
-    <a href="character-roster.html">キャラクター図鑑</a>
+    <a id="formation-map" href="japan-stage-map.html">日本マップ</a>
+    <a id="formation-catalog" href="character-roster.html">キャラクター図鑑</a>
+    <a id="formation-matchups" href="character-roster.html#matchups">相性表</a>
     <a href="formation-demo.html" aria-current="page">編成</a>
   </nav>
 </div></header>
-<main class="wrap">
+<main class="wrap landscape-main">
   <header class="intro">
     <h1>部隊編成</h1>
     <div class="wallet">
@@ -287,6 +289,7 @@
   </div>
 </dialog>
 <noscript><p class="wrap">部隊編成の操作にはJavaScriptが必要です。</p></noscript>
+<script src="campaign.js"></script>
 <script id="formation-data" type="application/json">%%FORMATION_DATA%%</script>
 <script>
 "use strict";
@@ -296,7 +299,9 @@ const data = JSON.parse(get("formation-data").textContent);
 const {pitch, pixelColors, outerInk, shadowInk} = data.stackRender;
 %%STACK_RENDERER%%
 
-const owned = new Map(data.cards.map(card => [card.id, card]));
+const session = new URLSearchParams(location.search).has("stage") ? openCampaign(data.starters) : null;
+const availableCards = session ? data.cards.filter(card => session.state.members.includes(card.id)) : data.cards.slice(0, 9);
+const owned = new Map(availableCards.map(card => [card.id, card]));
 const storageKey = "typing-war.formation-demo.v1";
 const number = new Intl.NumberFormat("ja-JP");
 const wideRoster = matchMedia("(min-width: 650px)");
@@ -324,11 +329,11 @@ function statAtLevel(base, level) {
 function restore() {
   const initial = {
     slots: [...data.starters],
-    levels: Object.fromEntries(data.cards.map(card => [card.id, 1])),
+    levels: Object.fromEntries(availableCards.map(card => [card.id, 1])),
     experience: data.experience,
   };
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
+    const saved = session?.state ?? JSON.parse(localStorage.getItem(storageKey));
     if (!saved) return initial;
     if (Number.isSafeInteger(saved.experience) && saved.experience >= 0) initial.experience = saved.experience;
     if (Array.isArray(saved.slots)) {
@@ -354,7 +359,7 @@ let state = restore();
 let activeSlot = 0;
 let selectedId = state.slots[0] ?? data.starters[0];
 let pageSize = wideRoster.matches ? 5 : 3;
-let rosterPage = Math.floor(data.cards.findIndex(card => card.id === selectedId) / pageSize);
+let rosterPage = Math.floor(availableCards.findIndex(card => card.id === selectedId) / pageSize);
 
 function element(tag, className, content) {
   const node = document.createElement(tag);
@@ -439,7 +444,7 @@ const slotNodes = state.slots.map((_, index) => {
   return {button, art, plus, name, level};
 });
 
-const cardNodes = data.cards.map(card => {
+const cardNodes = availableCards.map(card => {
   const item = element("li");
   const button = element("button", "card");
   const art = artBox("card-art");
@@ -478,7 +483,12 @@ function render() {
   const ids = state.slots.filter(id => id !== null);
   get("team-count").value = ids.length + " / " + slotNodes.length;
   const tryBattle = get("try-battle");
-  if (ids.length) {
+  if (session) {
+    tryBattle.textContent = "ステージに戻る";
+    tryBattle.href = get("formation-map").href = session.href("japan-stage-map.html");
+    get("formation-catalog").href = session.href("character-roster.html");
+    get("formation-matchups").href = session.href("character-roster.html", session.stageId, {}, "#matchups");
+  } else if (ids.length) {
     const levels = Object.fromEntries(ids.map(id => [id, state.levels[id]]));
     const params = new URLSearchParams({formation: JSON.stringify({ids, levels})});
     tryBattle.href = "battle-demo.html#" + params;
@@ -487,7 +497,7 @@ function render() {
     tryBattle.removeAttribute("href");
     tryBattle.setAttribute("aria-disabled", "true");
   }
-  get("roster-count").textContent = data.cards.length + "体";
+  get("roster-count").textContent = availableCards.length + "体";
   get("roster-page").value = (rosterPage + 1) + " / " + pageCount;
   get("previous-page").disabled = rosterPage === 0;
   get("next-page").disabled = rosterPage + 1 === pageCount;
@@ -531,10 +541,15 @@ function render() {
 }
 
 function commit(message, statusId = "status") {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(state));
-  } catch {
-    message += " このブラウザーに保存できませんでした。";
+  if (session) {
+    Object.assign(session.state, state);
+    session.save();
+  } else {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {
+      message += " このブラウザーに保存できませんでした。";
+    }
   }
   render();
   get(statusId).textContent = message;
@@ -639,7 +654,7 @@ get("upgrade").addEventListener("click", () => {
 });
 
 window.addEventListener("storage", event => {
-  if (event.key !== storageKey) return;
+  if (session || event.key !== storageKey) return;
   state = restore();
   render();
 });

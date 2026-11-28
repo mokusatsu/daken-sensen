@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const {mkdir, readFile} = require("node:fs/promises");
 const {resolve} = require("node:path");
 const {parseArgs} = require("node:util");
+const {campaignStages} = require("../../preview/campaign.js");
 
 const root = resolve(__dirname, "../..");
 const preview = resolve(root, "preview");
@@ -11,13 +12,11 @@ async function readJapanRoster() {
   const embedded = html.match(/<script id="map-assets" type="application\/json">([\s\S]*?)<\/script>/);
   assert(embedded, "日本マップの編成データが見つかりません");
   const map = JSON.parse(embedded[1]);
-  const areas = map.areas ?? map.prefectures;
+  const stages = campaignStages(map);
   return {
     starters: map.starters.map(guard => guard.id),
-    rewards: map.regions.flatMap(region => region.ids).slice(0, 4).map(id => ({
-      id: map.gates.find(gate => gate.id === id).guard.id,
-      place: areas.find(area => area.id === id).name,
-    })),
+    stages,
+    rewards: stages.map(({recruit: id, name: place}) => ({id, place})),
   };
 }
 
