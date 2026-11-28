@@ -146,6 +146,7 @@
   .next { color: #574093; font-weight: 700; font-size: 12px; white-space: nowrap; }
   .upgrade { display: flex; align-items: center; justify-content: space-between; gap: 5px 9px; flex-wrap: wrap; padding: 8px; border: 1px solid #e6daf1; border-radius: 9px; background: #f3edf9; }
   .level-path { font: 800 15px/1.25 var(--mono); white-space: nowrap; }
+  .level-path small { margin-left: .7em; color: var(--muted); font-size: 11px; }
   .cost-note { margin-top: 4px; color: var(--muted); font-weight: 700; font-size: 11px; }
   .cost-note.short { color: #8b4629; }
   .button {
@@ -283,7 +284,7 @@
         <div><dt>出撃コスト</dt><dd id="deploy-cost"></dd></div>
       </dl>
       <div class="upgrade">
-        <div><p class="level-path" id="level-path"></p><p class="cost-note" id="cost-note"></p></div>
+        <div><p class="level-path"><span id="level-path"></span><small id="level-cap"></small></p><p class="cost-note" id="cost-note"></p></div>
         <button class="button primary" id="upgrade" aria-keyshortcuts="S" type="button" aria-describedby="cost-note">レベルアップ</button>
       </div>
       <p class="status" id="training-status" role="status"></p>
@@ -291,7 +292,7 @@
   </div>
 </dialog>
 <noscript><p class="wrap">部隊編成の操作にはJavaScriptが必要です。</p></noscript>
-<script src="campaign.js"></script>
+<script src="campaign.js?v=325a1bde"></script>
 <script src="command-data.js"></script>
 <script id="formation-data" type="application/json">%%FORMATION_DATA%%</script>
 <template id="campaign-screen" data-players="stage"><script>
@@ -475,8 +476,9 @@ const cardNodes = availableCards.map(card => {
 
 function render() {
   const chosen = owned.get(selectedId);
-  const level = state.levels[selectedId];
-  const atLimit = level >= 999;
+  const cap = allyLevelCap(session?.state);
+  const level = allyLevel(state.levels[selectedId], cap);
+  const atLimit = level === cap;
   const price = levelUpCost(level);
   const remaining = price - state.experience;
   const occupant = state.slots[activeSlot];
@@ -495,7 +497,7 @@ function render() {
     get("formation-catalog").href = session.href("character-roster.html");
     get("formation-matchups").href = session.href("character-roster.html", session.stageId, {}, "#matchups");
   } else if (ids.length) {
-    const levels = Object.fromEntries(ids.map(id => [id, state.levels[id]]));
+    const levels = Object.fromEntries(ids.map(id => [id, allyLevel(state.levels[id], cap)]));
     const params = new URLSearchParams({formation: JSON.stringify({ids, levels})});
     tryBattle.href = "battle-demo.html#" + params;
     tryBattle.removeAttribute("aria-disabled");
@@ -514,14 +516,14 @@ function render() {
     slot.button.classList.toggle("empty", !card);
     slot.plus.hidden = !!card;
     slot.name.textContent = name;
-    slot.level.textContent = card ? "Lv." + state.levels[card.id] : "";
+    slot.level.textContent = card ? "Lv." + allyLevel(state.levels[card.id], cap) : "";
     showPortrait(slot.art, card);
   }
   for (const [position, entry] of cardNodes.entries()) {
     const index = state.slots.indexOf(entry.card.id);
     entry.item.hidden = position < first || position >= first + pageSize;
     entry.button.setAttribute("aria-pressed", String(entry.card.id === selectedId));
-    entry.level.textContent = "Lv." + state.levels[entry.card.id];
+    entry.level.textContent = "Lv." + allyLevel(state.levels[entry.card.id], cap);
     entry.status.textContent = index >= 0 ? "編成 " + (index + 1) : "";
   }
 
@@ -535,7 +537,8 @@ function render() {
     get("next-" + key).textContent = atLimit ? "" : "→ " + number.format(statAtLevel(chosen[key], level + 1));
   }
   get("deploy-cost").textContent = number.format(chosen.cost);
-  get("level-path").textContent = atLimit ? "Lv.999" : "Lv." + level + " → Lv." + (level + 1);
+  get("level-path").textContent = atLimit ? "Lv." + level : "Lv." + level + " → Lv." + (level + 1);
+  get("level-cap").textContent = "上限 Lv." + cap;
   get("cost-note").textContent = atLimit ? "最大レベル" : remaining > 0 ? "あと " + number.format(remaining) + " XP 必要" : "必要経験値 " + number.format(price) + " XP";
   get("cost-note").classList.toggle("short", !atLimit && remaining > 0);
   get("upgrade").disabled = atLimit || remaining > 0;
@@ -672,16 +675,18 @@ get("upgrade").addEventListener("click", () => {
   if (!syncFormation()) return;
   const level = state.levels[selectedId];
   const cost = levelUpCost(level);
-  if (level >= 999 || state.experience < cost) return;
+  if (level >= allyLevelCap(session?.state) || state.experience < cost) return;
   state.experience -= cost;
   state.levels[selectedId]++;
   commit(owned.get(selectedId).name + "が Lv." + state.levels[selectedId] + " になりました。", "training-status");
 });
 
 window.addEventListener("storage", event => {
-  if (session || event.key !== storageKey) return;
-  state = restore();
-  render();
+  if (session) syncFormation();
+  else if (event.key === storageKey) {
+    state = restore();
+    render();
+  }
 });
 
 render();

@@ -94,16 +94,21 @@ kbd { font: 700 11px/1.2 var(--mono); border: 1px solid currentColor; border-rad
 .live-front #winner { display: flex; align-items: center; gap: 10px; }
 .live-front #outcome[data-win="true"] #winner::before { content: ""; width: 22px; height: 23px; background: #f1c881; clip-path: polygon(8% 0,100% 4%,82% 27%,98% 48%,22% 43%,22% 100%,8% 100%); }
 @media (min-width: 681px) {
-  .live-front.field-prompt .stage { position: relative; grid-template-columns: 1fr; }
-  .live-front.field-prompt .type-console { display: contents; }
-  .field-prompt .input-module, .field-prompt .command-block { position: absolute; z-index: 1; border: 1px solid #64817e7a; border-radius: 8px; background: #182932ec; color: #f4f0e6; }
-  .field-prompt .input-module { pointer-events: none; left: clamp(9px,1.3vw,22px); bottom: 34px; padding: 9px 14px; min-width: min(250px,30%); max-width: 46%; gap: 4px; border-left: 3px solid var(--mint); }
-  .field-prompt .command-block { width: clamp(184px,19vw,254px); right: clamp(9px,1.3vw,22px); top: 60px; padding: 8px 10px; }
-  .field-prompt .type-console #type-feedback { margin-top: 2px; }
-  .field-prompt .field-message { top: 4%; }
-  .field-prompt #typing-word { margin-block: 0 3px; }
-  .field-prompt .transmit-head { gap: 15px; }
-  .field-prompt .countdown { z-index: 2; }
+  .live-front.field-prompt .stage { grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr) auto auto; }
+  .live-front.field-prompt .type-console {
+    grid-column: 1; grid-row: 3; display: grid; grid-template-columns: 1fr minmax(0,2fr) 1fr;
+    align-items: center; gap: 12px; padding: 7px 14px; border: 0; border-top: 1px solid var(--rule);
+    background: #22323b;
+  }
+  .live-front.field-prompt .caption { grid-row: 4; }
+  .field-prompt .input-module { display: contents; }
+  .field-prompt .transmit-head { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .field-prompt .prompt-block { text-align: center; }
+  .field-prompt .prompt-title { display: flex; flex-direction: row-reverse; align-items: baseline; justify-content: center; gap: .6em; }
+  .field-prompt #typing-word { margin: 0; font-size: clamp(20px,1.75vw,28px); }
+  .field-prompt #typing-reading:empty { display: none; }
+  .field-prompt .type-console #type-feedback { margin: 1px 0 0; }
+  .field-prompt .command-block { justify-self: end; width: min(100%,250px); }
 }
 @media (min-width: 900px) and (min-height: 550px) and (orientation: landscape) {
   .live-front .arena { overflow: hidden; }
@@ -113,11 +118,17 @@ kbd { font: 700 11px/1.2 var(--mono); border: 1px solid currentColor; border-rad
   .live-front .deploy-head h2 { font-size: 14px; }
 }
 @media (max-height: 700px) and (min-width: 900px) {
-  .live-front.field-prompt.with-keyboard .type-console { display: contents; }
-  .field-prompt.with-keyboard .input-module { bottom: 29px; min-width: 18%; padding: 4px 8px; }
-  .field-prompt.with-keyboard .command-block { top: 49px; padding: 4px 7px; }
+  .live-front .bar .wrap { min-height: 40px; }
+  .live-front > header nav a { min-height: 36px; }
+  .live-front main.landscape-main { gap: 5px; padding-bottom: 6px; }
+  .live-front .intro { padding-top: 4px; }
+  .live-front .battle-heading { display: flex; align-items: baseline; gap: 10px; }
+  .live-front .battle-heading h1 { order: -1; font-size: 25px; }
+  .live-front .tools .button { min-height: 36px; }
+  .live-front .hud { padding-block: 4px; }
+  .live-front .caption { padding-block: 2px; }
   .live-front .type-console { padding: 9px 14px; gap: 3px; }
-  .live-front.with-keyboard .type-console { display: grid; grid-template-rows: auto 1fr auto; }
+  .live-front.with-keyboard:not(.field-prompt) .type-console { display: grid; grid-template-rows: auto 1fr auto; }
   .live-front.with-keyboard .order-buttons button { min-height: 33px; }
   .live-front.with-keyboard .charge-meter { margin: 3px 0; }
   .live-front.with-keyboard #typing-word { font-size: 20px; margin-block: 0; }

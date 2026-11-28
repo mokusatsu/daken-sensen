@@ -158,7 +158,8 @@
   .nav .small-action { color: inherit; white-space: nowrap; }
   .wallet { font: 700 14px/1.2 var(--mono); color: #5a3970; white-space: nowrap; }
   .stage-deck { margin-top: 9px; }
-  .stage-deck h3 { font-size: 13px; }
+  .stage-deck h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; }
+  #enemy-average { color: var(--muted); font: 700 12px var(--mono); }
   .stage-deck ol { display: grid; gap: 3px; padding: 0; margin: 5px 0 0; list-style: none; }
   .enemy-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1px 6px; padding: 4px 7px; border-radius: 6px; background: #f5f1f8; }
   .enemy-line strong { font-size: 12px; overflow-wrap: anywhere; }
@@ -305,7 +306,7 @@
         <div class="guard-tags" id="guard-tags"></div>
       </div>
       <section class="stage-deck" id="stage-deck" aria-labelledby="stage-deck-title" hidden>
-        <h3 id="stage-deck-title">敵の編成</h3><ol id="enemy-lineup"></ol>
+        <h3 id="stage-deck-title">敵の編成 <span id="enemy-average"></span></h3><ol id="enemy-lineup"></ol>
       </section>
       <div class="stage-actions" id="stage-actions" hidden>
         <a class="play-button" id="edit-stage-team" aria-keyshortcuts="G">編成を変更</a><a class="play-button primary" id="launch-stage" aria-keyshortcuts="S">出撃</a>
@@ -330,7 +331,7 @@
   <header class="play-dialog-head"><h2 id="sources-title">地形データ</h2><form method="dialog"><button class="play-button" type="submit" autofocus>閉じる</button></form></header>
   <div class="play-dialog-body"><p>%%MAP_DESCRIPTION%%</p><div class="source-list">%%CREDITS%%</div></div>
 </dialog>
-<script src="campaign.js"></script>
+<script src="campaign.js?v=325a1bde"></script>
 <script src="command-data.js"></script>
 <script id="map-assets" type="application/json">%%MAP_ASSETS%%</script>
 <template id="campaign-screen" data-players="map"><script>
@@ -854,6 +855,8 @@ function showDispatch(stage) {
   get("map-xp").textContent = session.state.experience.toLocaleString("ja-JP") + " XP";
   get("reward-xp").textContent = details.xp.toLocaleString("ja-JP") + " XP";
   get("guard-label").textContent = released ? "加入済み" : "初回攻略で加入";
+  const average = details.enemies.reduce((sum, enemy) => sum + enemy.level, 0) / details.enemies.length;
+  get("enemy-average").textContent = "平均 Lv." + average.toLocaleString("ja-JP", {maximumFractionDigits: 1});
   get("enemy-lineup").replaceChildren(...details.enemies.map(({id, level}) => {
     const unit = unitsById.get(id);
     const line = element("li", undefined, "enemy-line");

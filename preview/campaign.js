@@ -1,11 +1,23 @@
 "use strict";
 
 const japanStageCount = 47;
+const campaignLevels = {
+  japan: {firstEnemy: 1, lastEnemy: 20, allyCap: 30},
+  usa: {firstEnemy: 21, lastEnemy: 40, allyCap: 50},
+};
 
 function usaUnlocked(progress) {
   const cleared = new Set(progress?.cleared);
   for (let id = 1; id <= japanStageCount; id++) if (!cleared.has(id)) return false;
   return true;
+}
+
+function allyLevelCap(progress) {
+  return campaignLevels[usaUnlocked(progress) ? "usa" : "japan"].allyCap;
+}
+
+function allyLevel(trainedLevel, cap) {
+  return Number.isSafeInteger(trainedLevel) && trainedLevel > 0 ? Math.min(trainedLevel, cap) : 1;
 }
 
 function campaignCountry() {
@@ -28,13 +40,18 @@ function campaignStages({prefectures, areas = prefectures, regions, gates, start
   const stages = regions.flatMap(({name: region, ids}) => ids.map((id, index) => ({
     id, name: names.get(id), region, boss: index === ids.length - 1, recruit: recruits.get(id),
   })));
+  const {firstEnemy, lastEnemy} = campaignLevels[country];
   return stages.map((stage, index) => {
     const number = index + 1 + (country === "usa" ? japanStageCount : 0);
     const guards = stages.slice(Math.max(0, index - 4), index + 1).map(entry => entry.recruit).reverse();
     const ids = country === "usa" && guards.length < 5 ? guards.concat(starters.slice(0, 5 - guards.length).map(unit => unit.id)) : guards;
+    const target = firstEnemy + (lastEnemy - firstEnemy) * index / Math.max(1, stages.length - 1);
+    const total = Math.round(target * ids.length);
+    const base = Math.floor(total / ids.length);
+    const extra = total % ids.length;
     return {
       ...stage, country, number, frontNumber: index + 1, xp: 120 + (number - 1) * 15 + (stage.boss ? 80 : 0),
-      enemies: ids.map((id, slot) => ({id, level: 1 + Math.floor((number - 1 + (slot ? 0 : 1)) / 4)})),
+      enemies: ids.map((id, slot) => ({id, level: base + (slot < extra ? 1 : 0)})),
     };
   });
 }
@@ -142,4 +159,4 @@ function openCampaign(starters = []) {
   return {stageId, country, mapFile: country + "-stage-map.html", get front() { return country === "usa" ? state.usa : state; }, state, save, sync, href};
 }
 
-if (typeof module !== "undefined") module.exports = {campaignStages, stageAvailable};
+if (typeof module !== "undefined") module.exports = {campaignStages, stageAvailable, allyLevelCap, allyLevel};

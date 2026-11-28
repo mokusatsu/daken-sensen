@@ -83,10 +83,8 @@ function readFormation() {
     const {ids, levels} = JSON.parse(raw);
     if (!Array.isArray(ids) || !ids.length || ids.length > 5 || new Set(ids).size !== ids.length ||
         ids.some(id => !cardsById.has(id))) return null;
-    const validLevels = Object.fromEntries(ids.map(id => {
-      const level = levels?.[id];
-      return [id, Number.isSafeInteger(level) && level > 0 && level <= 999 ? level : 1];
-    }));
+    const cap = allyLevelCap();
+    const validLevels = Object.fromEntries(ids.map(id => [id, allyLevel(levels?.[id], cap)]));
     return {id: "formation", label: "編成画面の部隊", ids, levels: validLevels};
   } catch {
     return null;
@@ -908,7 +906,7 @@ function recordCampaignBattle(won, stats) {
       next = art.stages.find(entry => entry.country === "usa" && !progress.usa.cleared.includes(entry.id))
         ?? art.stages.find(entry => entry.country === "usa");
       get("winner").textContent = "日本戦線・全拠点制圧";
-      get("result-advice").textContent = first ? "アメリカ戦線が解放されました。育てた部隊でメイン州から50州の攻略に挑めます。"
+      get("result-advice").textContent = first ? "アメリカ戦線を解放。味方のレベル上限がLv." + allyLevelCap(progress) + "に上がりました。"
         : "日本の全47拠点を制圧しました。アメリカ戦線にも出撃できます。";
     } else {
       next = null;
@@ -1180,8 +1178,11 @@ function tick(now) {
 
 async function restart(opening = false) {
   const id = ++restartId;
-  const ally = drill ? plans.get(drill.ally) : stage ? {ids: session.state.slots.filter(id => cardsById.has(id)), levels: session.state.levels} :
-    plans.get(get("ally-plan").value);
+  const cap = allyLevelCap(session?.state);
+  const ally = drill ? plans.get(drill.ally) : stage ? {
+    ids: session.state.slots.filter(id => cardsById.has(id)),
+    levels: Object.fromEntries(Object.entries(session.state.levels).map(([key, level]) => [key, allyLevel(level, cap)])),
+  } : plans.get(get("ally-plan").value);
   const enemy = stage ? {ids: stage.enemies.map(unit => unit.id),
     levels: Object.fromEntries(stage.enemies.map(unit => [unit.id, unit.level]))} : plans.get(get("enemy-plan").value);
   const autoDemo = !stage && get("deploy-mode").value === "auto";

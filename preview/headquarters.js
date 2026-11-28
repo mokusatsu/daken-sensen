@@ -37,6 +37,7 @@ function syncLinks() {
 }
 
 function paintSquad() {
+  const cap = allyLevelCap(profile);
   node("squad").replaceChildren(...squadCards.map(card => {
     const li = element("li");
     const img = element("canvas");
@@ -49,7 +50,7 @@ function paintSquad() {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(portraits.get(card.country), x, y, w, h, (85 - w * scale) / 2, 62 - h * scale, w * scale, h * scale);
     }
-    li.append(img, element("strong", card?.name ?? "空き枠"), element("small", card ? card.role + " Lv." + (profile.levels[card.id] ?? 1) : "未編成"));
+    li.append(img, element("strong", card?.name ?? "空き枠"), element("small", card ? card.role + " Lv." + allyLevel(profile.levels[card.id], cap) : "未編成"));
     return li;
   }));
 }

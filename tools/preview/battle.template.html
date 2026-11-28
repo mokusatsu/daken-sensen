@@ -215,7 +215,7 @@
     .deck { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
-<link rel="stylesheet" href="front.css">
+<link rel="stylesheet" href="front.css?v=b9155aee">
 <link rel="stylesheet" href="recruit.css">
 <link rel="stylesheet" href="players.css">
 <link rel="stylesheet" href="keyboard.css">
@@ -262,7 +262,7 @@
     <section class="type-console" id="type-console" aria-label="タイピングと号令" hidden>
       <div class="input-module"><div class="transmit-head"><strong><i aria-hidden="true"></i> 指令入力</strong><span id="chain">0 連続</span></div>
       <div class="prompt-block">
-        <span id="typing-reading"></span><h2 id="typing-word"></h2>
+        <div class="prompt-title"><span id="typing-reading"></span><h2 id="typing-word"></h2></div>
         <code aria-label="ローマ字入力ガイド"><b id="typed"></b><span id="to-type"><em id="next-key"></em><span id="type-tail"></span></span></code>
         <p id="type-feedback"></p>
       </div></div>
@@ -358,7 +358,7 @@
         <label id="enemy-plan-label">敵の編成<select id="enemy-plan" disabled></select></label>
         <label id="mode-label"><span id="battle-mode-label">味方の出撃</span><select id="deploy-mode" disabled><option value="auto">自動</option><option value="manual">手動</option></select></label>
         <label>効果音 <input id="battle-volume" type="range" min="0" max="100" value="60"></label>
-        <label id="guide-position-label" hidden>指令の位置 <select id="guide-position"><option value="field">戦場の左下</option><option value="side">サイドパネル</option></select></label>
+        <label id="guide-position-label" hidden>指令の位置 <select id="guide-position"><option value="field">戦場下・中央</option><option value="side">右サイドパネル</option></select></label>
       </div>
       <button class="play-button" type="button" data-player-switch aria-keyshortcuts="G" aria-haspopup="dialog" hidden>ユーザー切替</button>
       <details class="custom" id="sandbox-custom">
@@ -389,7 +389,7 @@
     </section>
   </div>
 </dialog>
-<script src="campaign.js"></script>
+<script src="campaign.js?v=325a1bde"></script>
 <script src="command-data.js"></script>
 <script src="orders.js"></script><script src="media/sfx/bank.js"></script><script src="sound.js"></script>
 <script id="battle-art" type="application/json">%%ART%%</script>
