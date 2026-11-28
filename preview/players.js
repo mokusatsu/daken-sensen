@@ -140,6 +140,7 @@ const GamePlayers = (() => {
       <label for="player-name">ユーザー名</label><div class="player-fields"><input id="player-name" type="text" maxlength="24" autocomplete="off" required aria-describedby="player-feedback">
       <button type="submit">作成して始める</button></div>
       <p id="player-feedback" role="status"></p></form></div>`;
+    GameKeys.addGuide(dialog);
     document.body.append(dialog);
     const input = dialog.querySelector("input");
     const feedback = dialog.querySelector("#player-feedback");

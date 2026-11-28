@@ -275,13 +275,14 @@
   }
 </style>
 <link rel="stylesheet" href="players.css">
+<link rel="stylesheet" href="keyboard.css">
 </head>
 <body class="play-page">
 <header class="masthead">
   <div class="wrap">
     <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="brand-key" aria-hidden="true">打</span><span class="brand-name">打鍵戦線</span></a>
     <nav class="nav" aria-label="図鑑のメニュー">
-      <a id="roster-map" href="japan-stage-map.html">戦区マップ</a>
+      <a id="roster-map" data-key-back href="japan-stage-map.html">戦区マップ</a>
       <a href="#roster" aria-current="page">キャラクター</a>
       <a href="#matchups">タイプ相性</a>
       <a href="#design">能力設計</a>
@@ -299,7 +300,7 @@
       <label id="collection-filter-label" hidden>登録状況 <select id="collection-filter"><option value="">すべて</option><option value="owned">手持ち</option><option value="seen">対戦済み</option></select></label>
       <button type="reset" class="plain-button">リセット</button>
     </form>
-    <div class="cards" id="cards"></div>
+    <div class="cards" id="cards" data-key-start></div>
     <p class="empty" id="empty" hidden>条件に合うキャラクターがいません。</p>
     <div class="pager" aria-label="図鑑のページ切り替え">
       <button class="plain-button" id="roster-prev" type="button" aria-controls="cards">前へ</button>
@@ -390,7 +391,7 @@
   </header>
   <div class="detail-content">
     <div>
-      <figure class="turn-stage" id="turn-stage" aria-label="回転プレビュー。左右の矢印キーで回転" tabindex="0">
+      <figure class="turn-stage" id="turn-stage" data-key-arrows aria-label="回転プレビュー。A・Dまたは左右の矢印キーで回転" tabindex="0">
         <canvas id="turn-canvas" aria-hidden="true"></canvas>
         <figcaption class="turn-hint">ドラッグで回転</figcaption>
       </figure>
@@ -1634,6 +1635,6 @@ function route() {
 window.addEventListener("hashchange", route);
 route();
 </script></template>
-<script src="players.js"></script>
+<script src="keyboard.js"></script><script src="players.js"></script>
 </body>
 </html>

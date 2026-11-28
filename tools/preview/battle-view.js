@@ -503,15 +503,23 @@ function render(now) {
 
 const deckNodes = [new Map(), new Map()];
 function canSummon() {
-  return battle && !loading && (!stage || !paused) && !guide.open && !details.open && !outcome.open &&
+  return battle && !loading && !guide.open && !details.open && !outcome.open &&
     !countdownRemaining && battle.winner === null;
+}
+
+function finishCommand() {
+  if (stage && paused) {
+    get("pause").click();
+  } else {
+    updateHud();
+    queueFrame();
+  }
 }
 
 function summon(cardId) {
   if (!canSummon() || !deploy(battle, 1, cardId)) return;
   radio.play("deploy");
-  updateHud();
-  queueFrame();
+  finishCommand();
 }
 
 function showAutoMode() {
@@ -527,8 +535,7 @@ function toggleAuto() {
   army.nextCard = null;
   if (army.auto) army.nextBuy = battle.time;
   showAutoMode();
-  updateHud();
-  queueFrame();
+  finishCommand();
 }
 
 function fillDeck(team) {
@@ -723,6 +730,7 @@ function updateHud() {
   get("pause").textContent = paused ? "再開" : "一時停止";
   get("pause").disabled = finished || loading;
   get("pause").setAttribute("aria-pressed", String(paused));
+  document.body.toggleAttribute("data-key-typing", Boolean(stage && !finished && !paused));
   if (stage) get("reset").hidden = !(paused && !finished);
   if (score) {
     const ready = canOrder && score.charge === FieldOrders.fullCharge;
@@ -734,7 +742,7 @@ function updateHud() {
     get("assault").classList.toggle("active-order", orderActive);
     get("assault").lastElementChild.textContent = orderActive ? "発令中　残り" + Math.ceil(army.assaultUntil - battle.time) + "秒" : "6秒間 威力×1.5";
     get("field-message").hidden = !messageUntil || battle.time >= messageUntil;
-    get("touch-board").classList.toggle("inactive", !canOrder);
+    get("touch-board").classList.toggle("inactive", paused || !canOrder);
   }
   get("show-outcome").hidden = !finished;
   if (finished && !resultShown) showResult();
@@ -842,9 +850,14 @@ function showRecruit(card) {
   }
   draw(start);
 }
+function openOutcome() {
+  outcome.showModal();
+  const action = get("result-next").hidden ? get(drill ? "result-map" : "again") : get("result-next");
+  action.focus();
+}
 reveal.addEventListener("close", () => {
   cancelAnimationFrame(joinFrame);
-  if (resultShown && !outcome.open) outcome.showModal();
+  if (resultShown && !outcome.open) openOutcome();
 });
 
 function recordCampaignBattle(won, stats) {
@@ -934,7 +947,7 @@ function showResult() {
   }
   if (details.open) details.close();
   if (get("result-join").hidden) {
-    outcome.showModal();
+    openOutcome();
     radio.play(won ? "victory" : "defeat");
   } else {
     showRecruit(cardsById.get(stage.recruit));
@@ -965,7 +978,7 @@ function showPrompt(message, fault = false) {
 }
 
 function receiveLetter(letter) {
-  if (!typingEngine || !canSummon()) return;
+  if (!typingEngine || paused || !canSummon()) return;
   const previousCharge = score.charge;
   const result = typingEngine.step(letter);
   FieldOrders.strike(score, result);
@@ -1020,7 +1033,7 @@ function issueOrder(kind) {
   fieldMessage(message);
   recordEvent(battle, message, 1);
   showPrompt(message);
-  updateHud();
+  finishCommand();
 }
 for (const kind of ["assault", "supply"]) get(kind).addEventListener("click", () => issueOrder(kind));
 
@@ -1067,7 +1080,7 @@ document.addEventListener("keydown", event => {
     get("pause").click();
     return;
   }
-  if (!canSummon()) return;
+  if (paused || !canSummon()) return;
   if (event.shiftKey) {
     const key = event.code.startsWith("Key") ? event.code.slice(3) : event.key.toUpperCase();
     const slot = summonKeys.indexOf(key);
@@ -1162,6 +1175,8 @@ async function restart(opening = false) {
     levels: Object.fromEntries(stage.enemies.map(unit => [unit.id, unit.level]))} : plans.get(get("enemy-plan").value);
   const autoDemo = !stage && get("deploy-mode").value === "auto";
   loading = true;
+  if (stage) document.body.setAttribute("data-key-typing", "");
+  get("pause").disabled = true;
   showCountdown();
   if (outcome.open) outcome.close();
   get("show-outcome").hidden = true;
@@ -1171,6 +1186,7 @@ async function restart(opening = false) {
   } catch {
     if (id === restartId) {
       loading = false;
+      document.body.removeAttribute("data-key-typing");
       get("phase").textContent = "素材の読み込みに失敗";
       get("reset").disabled = false;
       get("reset").hidden = false;
@@ -1237,7 +1253,7 @@ get("pause").addEventListener("click", () => {
 get("reset").addEventListener("click", () => restart());
 get("auto-summon").addEventListener("click", toggleAuto);
 get("again").addEventListener("click", () => restart());
-get("show-outcome").addEventListener("click", () => outcome.showModal());
+get("show-outcome").addEventListener("click", openOutcome);
 get("show-battle-details").addEventListener("click", () => { details.showModal(); priorTime = 0; showCountdown(); });
 details.addEventListener("close", () => { priorTime = 0; showCountdown(); queueFrame(); });
 get("show-battle-guide").addEventListener("click", () => {

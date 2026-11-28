@@ -1,0 +1,24 @@
+.key-guide {
+  display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 5px 16px;
+  padding: 4px 12px; background: #1c2932; color: #dce7e3;
+  font: 600 12px/1.45 "Barlow", "Yu Gothic UI", Meiryo, sans-serif;
+}
+.key-guide .key-menu, .key-guide .key-combat, .key-guide .key-editing { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px 14px; }
+.key-guide span > span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.key-guide kbd {
+  min-width: 1.5em; padding: 0 3px; border: 1px solid #718286; border-bottom-width: 2px; border-radius: 4px;
+  background: #2b3a44; color: #fff6e2; text-align: center; font: 700 11px/1.35 Consolas, monospace;
+}
+.key-guide .key-editing, .key-guide .key-combat, [data-key-typing] > header .key-menu { display: none; }
+[data-key-typing] > header .key-combat { display: flex; }
+#player-picker:has(input:focus:not([data-key-field])) .key-menu, body:has(input[type="search"]:focus:not([data-key-field])) > header .key-menu { display: none; }
+#player-picker:has(input:focus:not([data-key-field])) .key-editing, body:has(input[type="search"]:focus:not([data-key-field])) > header .key-editing { display: flex; }
+#player-picker .key-adjust, #player-picker:has(.player-close[hidden]) .key-back { display: none; }
+.key-context { font-size: 12px; color: var(--muted, #505c68); }
+.join-frame .key-guide { margin-top: 12px; background: transparent; }
+.home-keys :is(a,button,input,select,textarea,summary,[tabindex="0"]):focus {
+  outline: 3px solid #ffbd71; outline-offset: -2px; box-shadow: 0 0 0 2px #293943;
+}
+@media (hover: none) and (pointer: coarse) {
+  html:not(.home-keys) :is(.key-guide,.key-context) { display: none; }
+}

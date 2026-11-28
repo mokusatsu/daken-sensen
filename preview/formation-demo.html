@@ -206,12 +206,13 @@
   }
 </style>
 <link rel="stylesheet" href="players.css">
+<link rel="stylesheet" href="keyboard.css">
 </head>
 <body class="play-page">
 <header class="bar"><div class="wrap">
   <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span>打鍵戦線</a>
   <nav class="nav" aria-label="ページ">
-    <a id="formation-map" href="japan-stage-map.html">戦区マップ</a>
+    <a id="formation-map" data-key-back href="japan-stage-map.html">戦区マップ</a>
     <a id="formation-catalog" href="character-roster.html">キャラクター図鑑</a>
     <a id="formation-matchups" href="character-roster.html#matchups">相性表</a>
     <span aria-current="page">編成</span>
@@ -230,7 +231,7 @@
       <h2 id="team-title">出撃枠</h2>
       <div class="team-actions"><output class="count" id="team-count" aria-label="編成数"></output><a id="try-battle">この編成で試す</a></div>
     </div>
-    <ol class="slots" id="slots"></ol>
+    <ol class="slots" id="slots" data-key-start></ol>
   </section>
   <section class="roster" aria-labelledby="roster-title">
     <div class="section-head">
@@ -263,11 +264,11 @@
   </div>
   <div class="detail-body">
     <div>
-      <div class="art detail-art" id="portrait" tabindex="0" role="group" aria-label="キャラの回転プレビュー" aria-describedby="rotation-hint">
+      <div class="art detail-art" id="portrait" tabindex="0" data-key-arrows role="group" aria-label="キャラの回転プレビュー" aria-describedby="rotation-hint">
         <canvas id="detail-canvas" width="1" height="1" aria-hidden="true"></canvas>
       </div>
       <div class="rotation-tools">
-        <p id="rotation-hint">ドラッグ・← →で回転</p>
+        <p id="rotation-hint">ドラッグ・A/D・← →で回転</p>
         <button class="button" id="auto-rotate" type="button" aria-pressed="true">自動回転</button>
       </div>
     </div>
@@ -729,6 +730,6 @@ window.addEventListener("storage", event => {
 
 render();
 </script></template>
-<script src="players.js"></script>
+<script src="keyboard.js"></script><script src="players.js"></script>
 </body>
 </html>

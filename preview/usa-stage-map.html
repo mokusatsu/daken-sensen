@@ -245,10 +245,11 @@
   }
 </style>
 <link rel="stylesheet" href="players.css">
+<link rel="stylesheet" href="keyboard.css">
 </head>
 <body class="play-page" data-country="usa">
 <header class="masthead"><div class="wrap">
-  <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></a>
+  <a class="brand" data-command-home data-key-back href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span><span>打鍵戦線</span></a>
   <nav class="nav" aria-label="ページ"><a data-map-country="japan" href="japan-stage-map.html">日本マップ</a><a data-map-country="usa" href="usa-stage-map.html" aria-current="page">アメリカマップ</a><a id="map-formation" href="formation-demo.html">編成</a><a id="map-roster" href="character-roster.html">図鑑</a><a id="map-matchups" hidden>相性表</a><button class="small-action" id="open-guide" type="button" aria-haspopup="dialog">初回ガイド</button></nav>
 </div></header>
 <main class="wrap landscape-main">
@@ -260,7 +261,7 @@
     <section class="sheet map-card" aria-label="ステージマップ">
       <div class="region-bar" id="region-bar" role="group" aria-label="表示する地方"></div>
       <div class="water" id="water">
-        <canvas id="map" tabindex="0" aria-label="州の地図" aria-describedby="map-tip">州は選択欄から選べます。</canvas>
+        <canvas id="map" tabindex="0" data-key-arrows aria-label="州の地図" aria-describedby="map-tip">州は選択欄から選べます。</canvas>
         <div class="map-tools" role="group" aria-label="地図の拡大と移動">
           <button id="zoom-out" type="button" aria-label="縮小" title="縮小">−</button>
           <output id="zoom" aria-label="表示倍率" aria-live="off">100%</output>
@@ -281,7 +282,8 @@
       </div>
     </section>
     <aside class="sheet stage-card" aria-labelledby="stage-name">
-      <label class="selector">州<select id="stage-select"></select></label>
+      <label class="selector">州<select id="stage-select" data-key-start data-key-submit="launch-stage" aria-describedby="stage-key-tip"></select></label>
+      <small class="key-context" id="stage-key-tip">A・Dで拠点を選び、Enterで出撃</small>
       <div class="stage-heading">
         <div class="stage-meta"><span id="stage-region"></span><span class="number" id="stage-number"></span></div>
         <h2 id="stage-name"></h2>
@@ -1093,6 +1095,6 @@ Promise.all([imageFor(assets.guardAtlas), ...regions.map(region => Promise.all([
     if (session.country === "japan" && !session.state.mapGuide && !cleared.size) guide.showModal();
   });
 </script></template>
-<script src="players.js"></script>
+<script src="keyboard.js"></script><script src="players.js"></script>
 </body>
 </html>

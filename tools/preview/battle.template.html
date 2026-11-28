@@ -218,12 +218,13 @@
 <link rel="stylesheet" href="front.css">
 <link rel="stylesheet" href="recruit.css">
 <link rel="stylesheet" href="players.css">
+<link rel="stylesheet" href="keyboard.css">
 </head>
 <body class="play-page">
 <header class="bar"><div class="wrap">
   <a class="brand" data-command-home href="../index.html" aria-label="打鍵戦線 作戦本部"><span class="key" aria-hidden="true">打</span>打鍵戦線</a>
   <nav class="nav" aria-label="ページ">
-    <a id="battle-map" href="japan-stage-map.html">戦区マップ</a>
+    <a id="battle-map" data-key-back href="japan-stage-map.html">戦区マップ</a>
     <a id="battle-formation" href="formation-demo.html">編成</a>
     <span aria-current="page">拠点戦</span>
   </nav>
@@ -232,12 +233,12 @@
   <header class="intro">
     <div class="battle-heading"><p id="battle-subtitle">模擬戦 ／ 10レーン</p><h1 id="battle-title">草丘の関所</h1></div>
     <div class="tools" role="group" aria-label="バトルの操作">
-      <button class="button primary" id="pause" type="button" disabled>一時停止</button>
+      <button class="button primary" id="pause" data-key-start type="button" disabled>一時停止</button>
       <label id="speed-label">速度 <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
       <button class="button" id="reset" type="button" disabled>最初から</button>
       <button class="button" id="show-battle-details" type="button" aria-haspopup="dialog">戦況・設定</button>
       <button class="button" id="show-battle-guide" type="button" aria-haspopup="dialog" hidden>操作</button>
-      <button class="button primary" id="show-outcome" type="button" aria-haspopup="dialog" hidden>結果を見る</button>
+      <button class="button primary" id="show-outcome" data-key-start type="button" aria-haspopup="dialog" hidden>結果を見る</button>
     </div>
   </header>
   <section class="stage" aria-label="戦場">
@@ -334,7 +335,7 @@
     <ol class="guide-notes">
       <li><strong>文字を打って出撃</strong><p>お題のローマ字を入力。正しい1打でコストが18増え、オート召喚で味方が出撃します。敵拠点のHPを0にすると勝利です。</p></li>
       <li><strong>正確に打って号令を出す</strong><p>1語で指揮ゲージが1つ、ノーミスなら2つたまります。満タンで <kbd>1</kbd> 総攻撃か <kbd>2</kbd> 補給を選べます。</p></li>
-      <li><strong>送り出す部隊を選ぶ</strong><p>カードか Shift＋A・S・D・F・G で個別に召喚。Shift＋J でオートを切り替え、Esc で一時停止できます。</p></li>
+      <li><strong>送り出す部隊を選ぶ</strong><p>Spaceで一時停止。J・Kで号令や出撃カードを選び、Enterで実行して再開します。Fでも戦闘に戻れます。Shift＋A・S・D・F・Gで即時召喚、Shift＋Jでオート切替。</p></li>
     </ol>
   </div>
   <footer class="play-dialog-actions">
@@ -402,6 +403,6 @@
 <template id="campaign-screen" data-players="stage"><script>
 %%VIEW%%
 </script></template>
-<script src="players.js"></script>
+<script src="keyboard.js"></script><script src="players.js"></script>
 </body>
 </html>

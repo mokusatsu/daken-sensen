@@ -8,13 +8,14 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="preview/headquarters.css">
   <link rel="stylesheet" href="preview/players.css">
+  <link rel="stylesheet" href="preview/keyboard.css">
 </head>
 <body>
   <header class="mast">
     <div class="shell mast-inner">
       <a class="wordmark" href="#main" aria-label="打鍵戦線 作戦本部"><i class="keyboard-mark" aria-hidden="true"></i><span>打鍵戦線<small>DAKEN SENSEN</small></span></a>
       <nav aria-label="メインメニュー"><a href="#main" aria-current="page">作戦本部</a><a id="nav-map" href="preview/japan-stage-map.html">戦区マップ</a><a id="nav-roster" href="preview/character-roster.html">図鑑</a></nav>
-      <div class="mast-tools"><span class="wallet" aria-label="所持経験値"><b>XP</b> <output id="hq-xp">0</output></span><button class="player-switch" data-player-switch aria-haspopup="dialog" hidden><strong data-player-name></strong><small>ユーザー切替</small></button><button class="sound-button" id="sound-settings" aria-label="サウンド設定" title="サウンド設定"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button></div>
+      <div class="mast-tools"><span class="wallet" aria-label="所持経験値"><b>XP</b> <output id="hq-xp">0</output></span><button class="player-switch" data-player-switch data-key-back aria-haspopup="dialog" hidden><strong data-player-name></strong><small>ユーザー切替</small></button><button class="sound-button" id="sound-settings" aria-label="サウンド設定" title="サウンド設定"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button></div>
     </div>
   </header>
   <main class="shell" id="main">
@@ -28,7 +29,7 @@
         <p class="theatre"><span></span><b id="front-name">日本戦線</b> <i>/</i> 拠点攻略</p>
         <h1 id="title">打鍵戦線</h1>
         <p class="objective">文字を打って部隊を送り出し、敵拠点を制圧せよ。</p>
-        <div class="hero-actions"><a class="launch" id="launch" href="preview/japan-stage-map.html">前線へ出撃 <span aria-hidden="true">→</span></a><button class="how" id="open-help">遊び方</button></div>
+        <div class="hero-actions"><a class="launch" id="launch" data-key-start href="preview/japan-stage-map.html">前線へ出撃 <span aria-hidden="true">→</span></a><button class="how" id="open-help">遊び方</button></div>
       </div>
       <div class="target-tab"><span class="target-mark" aria-hidden="true"></span><div><small id="target-index"></small><strong id="target-place"></strong><span id="target-landmark"></span></div></div>
     </section>
@@ -54,6 +55,6 @@
   <script src="preview/campaign.js"></script><script src="preview/orders.js"></script><script src="preview/command-data.js"></script>
   <script src="preview/media/sfx/bank.js"></script><script src="preview/sound.js"></script>
   <template id="campaign-screen" data-players="home"><script src="preview/headquarters.js"></script></template>
-  <script src="preview/players.js"></script>
+  <script src="preview/keyboard.js"></script><script src="preview/players.js"></script>
 </body>
 </html>

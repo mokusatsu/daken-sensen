@@ -116,6 +116,7 @@ function note(heading, body) {
   return item;
 }
 node("open-help").addEventListener("click", () => openPanel("遊び方",
+  note("キーボード操作", "Jで次の項目、Kで前の項目へ移動。A・D（またはH・L）で拠点や設定値を変更し、EnterまたはSpaceで決定します。Fで戻れます。戦闘中はSpaceで一時停止して操作を選べます。"),
   note("敵拠点を制圧する", "お題をローマ字で打つと出撃コストが増えます。オート召喚で味方が進軍し、敵拠点のHPを0にすると勝利です。"),
   note("号令を選ぶ", "お題を打ち切ると指揮ゲージが1つ、ノーミスなら2つたまります。6つで「総攻撃」か「補給」を発令できます。"),
   note("部隊を育てる", "勝つと経験値を獲得し、初回制圧で門番が仲間になります。部隊編成で出撃枠と育成する仲間を選べます。")));
@@ -148,10 +149,4 @@ node("sound-settings").addEventListener("click", () => {
     radio.play("word");
   });
   openPanel("サウンド設定", row);
-});
-document.addEventListener("keydown", event => {
-  if (event.key === "Enter" && !event.repeat && !event.isComposing && !dialog.open && document.activeElement === document.body) {
-    event.preventDefault();
-    node("launch").click();
-  }
 });
